@@ -84,6 +84,7 @@ def crawlBasicInformation(companyType):
     html_df = pd.read_html(StringIO(result.text))
     print("parsing html to df")
     ret = html_df[0]
+    ret.replace(to_replace=r'[\,]', value='/', regex=True)
     ret = ret.fillna("")
 
     return ret
