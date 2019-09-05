@@ -86,7 +86,10 @@ def crawlBasicInformation(companyType):
     ret = html_df[0]
     ret.replace(to_replace=r'[\,]', value='/', regex=True)
     ret = ret.fillna("")
-
+    ret.columns = ret.columns.str.replace('(','')
+    ret.columns = ret.columns.str.replace(')','')
+    ret = ret.set_index("公司代號", inplace=True)
+    
     return ret
 
 
