@@ -81,14 +81,14 @@ def crawlBasicInformation(companyType):
     result = requests.get(url, headers)
     print("crawler complete.")
     result.encoding = 'utf-8'
-    html_df = pd.read_html(StringIO(result.text))
+    html_df = pd.read_html(StringIO(result.text), header=0)
     print("parsing html to df")
     ret = html_df[0]
-    ret.replace(to_replace=r'[\,]', value='/', regex=True)
-    ret = ret.fillna("")
-    ret.columns = ret.columns.str.replace('(','')
-    ret.columns = ret.columns.str.replace(')','')
-    ret = ret.set_index("公司代號", inplace=True)
+    ret = ret.replace(r'\,', '/', regex=True)
+    ret = ret.fillna("0")
+    ret.columns = ret.columns.astype(str).str.replace('(','')
+    ret.columns = ret.columns.astype(str).str.replace(')','')
+    #ret = ret.set_index("公司代號", inplace=True)
     
     return ret
 

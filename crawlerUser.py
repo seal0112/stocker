@@ -8,10 +8,10 @@ def getBasicInfo(dataType='sii'):
     fileName = "test_%s.csv" % dataType
     with open(fileName, 'w', encoding='utf8') as fo:
         for idx, row in data.iterrows():
-            if row[0]=='1402':
-                print(",".join(row))
-            stri = ",".join(row)+'\n'
+            stri = ','.join(row)+'\n'
             fo.write(stri)
+            
+    # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
             
 
 if __name__ == '__main__':
