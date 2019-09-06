@@ -84,11 +84,19 @@ def crawlBasicInformation(companyType):
     html_df = pd.read_html(StringIO(result.text), header=0)
     print("parsing html to df")
     ret = html_df[0]
+    
+    # take out all special char out
     ret = ret.replace(r'\,', '/', regex=True)
     ret = ret.fillna("0")
     ret.columns = ret.columns.astype(str).str.replace('(','')
     ret.columns = ret.columns.astype(str).str.replace(')','')
-    #ret = ret.set_index("公司代號", inplace=True)
+    
+    # remove invalid row
+    drop_index = []
+    for i in ret.index:
+        if ret.iloc[i]["公司代號"] == "公司代號":
+            drop_index.append(i)
+    ret = ret.drop(ret.index[drop_index])
     
     return ret
 
