@@ -65,7 +65,7 @@ def crawlCriticalInformation(parse_to_json=False):
 
 
 def crawlBasicInformation(companyType):
-    url = " https://mops.twse.com.tw/mops/web/ajax_t51sb01"
+    url = "https://mops.twse.com.tw/mops/web/ajax_t51sb01"
     headers = {
         'User-Agent': """Mozilla/5.0
                       (Macintosh; Intel Mac OS X 10_10_1)
