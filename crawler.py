@@ -100,6 +100,44 @@ def crawlBasicInformation(companyType):
     
     return ret
 
+def crawlMonthlyRevenue(westernYearIn, monthIn):
+    year = str(westernYearIn - 1911)
+    month = str(monthIn)
+
+    urlOtcDomestic = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                     + year  + "_"  + month  + "_0.html"
+    urlOtcForiegn = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                     + year + "_"+ month + "_1.html"
+    urlSiiDomestic = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                     + year  + "_"  + month  + "_0.html"
+    urlSiiForiegn = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                     + year + "_"+ month + "_1.html"
+
+    urls = [urlOtcDomestic, urlOtcForiegn, urlSiiDomestic, urlSiiForiegn]
+
+    results = pd.DataFrame()
+    for url in urls:
+        print("crawling...: "+url)
+        req = requests.get(url)
+        req.encoding = "big5"
+        print("parsing html to df")
+        html_df = pd.read_html(StringIO(req.text))
+        dfs = pd.DataFrame()
+        for df in html_df:
+            if df.shape[1] == 11:
+                dfs = pd.concat([dfs,df], axis=0, ignore_index=True)
+        dfs.columns = dfs.columns.droplevel()
+
+        drop_index = []
+        for i in dfs.index:
+            try:
+                int(dfs.iloc[i]["公司代號"])
+            except:
+                drop_index.append(i)
+        dfs = dfs.drop(dfs.index[drop_index])
+
+        results = results.append(dfs)
+    return results
 
 if __name__ == "__main__":
     siiCompany = crawlBasicInformation('sii')
