@@ -139,6 +139,51 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         results = results.append(dfs)
     return results
 
+def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
+    coID = str(companyID)
+    year = str(westernYearIn - 1911)
+    season = str(seasonIn)
+
+    url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "encodeURIComponent": "1",
+        "step": "1",
+        "firstin": "1",
+        "off": "1",
+        "queryName": "co_id",
+        "inpuType": "co_id",
+        "TYPEK": "all",
+        "isnew": "false",
+        "co_id": coID,
+        "year": year,
+        "season": season
+    }
+
+    req = requests.post(url, headers)
+    req.encoding = "utf-8"
+    html_df = pd.read_html(StringIO(req.text))
+    results = html_df[1]
+    results.columns = results.columns.droplevel([0,1])
+
+    # drop invalid column
+    results = results.iloc[:, 0:3]
+
+    # rename columns
+    amount = results.columns[1][0] + "-" + results.columns[1][1]
+    percent = results.columns[2][0] + "-" + results.columns[2][1]
+    results.columns = results.columns.droplevel(1)
+    results.columns = [results.columns[0], amount, percent]
+
+    # drop nan rows
+    dropRowIndex = []
+    for i in results.index:
+        if results.iloc[i].isnull().any():
+            dropRowIndex.append(i)
+    results = results.drop(results.index[dropRowIndex])
+
+    return results
+
 if __name__ == "__main__":
     siiCompany = crawlBasicInformation('sii')
     #otcCompany = crawlBasicInformation('otc')
