@@ -84,34 +84,35 @@ def crawlBasicInformation(companyType):
     html_df = pd.read_html(StringIO(result.text), header=0)
     print("parsing html to df")
     ret = html_df[0]
-    
+
     # take out all special char out
     ret = ret.replace(r'\,', '/', regex=True)
     ret = ret.fillna("0")
-    ret.columns = ret.columns.astype(str).str.replace('(','')
-    ret.columns = ret.columns.astype(str).str.replace(')','')
-    
+    ret.columns = ret.columns.astype(str).str.replace('(', '')
+    ret.columns = ret.columns.astype(str).str.replace(')', '')
+
     # remove invalid row
     drop_index = []
     for i in ret.index:
         if ret.iloc[i]["公司代號"] == "公司代號":
             drop_index.append(i)
     ret = ret.drop(ret.index[drop_index])
-    
+
     return ret
+
 
 def crawlMonthlyRevenue(westernYearIn, monthIn):
     year = str(westernYearIn - 1911)
     month = str(monthIn)
 
     urlOtcDomestic = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                     + year  + "_"  + month  + "_0.html"
+                     + year + "_" + month + "_0.html"
     urlOtcForiegn = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                     + year + "_"+ month + "_1.html"
+                    + year + "_" + month + "_1.html"
     urlSiiDomestic = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                     + year  + "_"  + month  + "_0.html"
+                     + year + "_" + month + "_0.html"
     urlSiiForiegn = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                     + year + "_"+ month + "_1.html"
+                    + year + "_" + month + "_1.html"
 
     urls = [urlOtcDomestic, urlOtcForiegn, urlSiiDomestic, urlSiiForiegn]
 
@@ -125,7 +126,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         dfs = pd.DataFrame()
         for df in html_df:
             if df.shape[1] == 11:
-                dfs = pd.concat([dfs,df], axis=0, ignore_index=True)
+                dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
         dfs.columns = dfs.columns.droplevel()
 
         drop_index = []
@@ -138,6 +139,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
         results = results.append(dfs)
     return results
+
 
 def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     coID = str(companyID)
@@ -164,7 +166,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     req.encoding = "utf-8"
     html_df = pd.read_html(StringIO(req.text))
     results = html_df[1]
-    results.columns = results.columns.droplevel([0,1])
+    results.columns = results.columns.droplevel([0, 1])
 
     # drop invalid column
     results = results.iloc[:, 0:3]
@@ -183,6 +185,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     results = results.drop(results.index[dropRowIndex])
 
     return results
+
 
 def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     coID = str(companyID)
@@ -204,13 +207,13 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         "year": year,
         "season": season
     }
-    
+
     req = requests.post(url, headers)
     req.encoding = "utf-8"
     # print(req.text)
     html_df = pd.read_html(StringIO(req.text))
     results = html_df[1]
-    results.columns = results.columns.droplevel([0,1])
+    results.columns = results.columns.droplevel([0, 1])
 
     # drop invalid column
     results = results.iloc[:, 0:3]
@@ -229,6 +232,54 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     results = results.drop(results.index[dropRowIndex])
 
     return results
+
+
+def crawlCashFlow(companyID, westernYearIn, seasonIn):
+    coID = str(companyID)
+    year = str(westernYearIn - 1911)
+    season = str(seasonIn)
+
+    url = "https://mops.twse.com.tw/mops/web/ajax_t164sb05"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "encodeURIComponent": "1",
+        "step": "1",
+        "firstin": "1",
+        "off": "1",
+        "queryName": "co_id",
+        "inpuType": "co_id",
+        "TYPEK": "all",
+        "isnew": "false",
+        "co_id": coID,
+        "year": year,
+        "season": season
+    }
+
+    req = requests.post(url, headers)
+    req.encoding = "utf-8"
+    # print(req.text)
+    html_df = pd.read_html(StringIO(req.text))
+    results = html_df[1]
+    results.columns = results.columns.droplevel([0, 1])
+
+    # drop invalid column
+    results = results.iloc[:, 0:3]
+
+    # rename columns
+    amount = results.columns[1][0] + "-" + results.columns[1][1]
+    percent = results.columns[2][0] + "-" + results.columns[2][1]
+    results.columns = results.columns.droplevel(1)
+    results.columns = [results.columns[0], amount, percent]
+
+    # drop nan rows
+    dropRowIndex = []
+    for i in results.index:
+        if results.iloc[i].isnull().any():
+            dropRowIndex.append(i)
+    results = results.drop(results.index[dropRowIndex])
+
+    return results
+
 
 if __name__ == "__main__":
     siiCompany = crawlBasicInformation('sii')
