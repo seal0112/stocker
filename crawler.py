@@ -88,8 +88,6 @@ def crawlBasicInformation(companyType):
     # take out all special char out
     ret = ret.replace(r'\,', '/', regex=True)
     ret = ret.fillna("0")
-    ret.columns = ret.columns.astype(str).str.replace('(', '')
-    ret.columns = ret.columns.astype(str).str.replace(')', '')
 
     # remove invalid row
     drop_index = []
