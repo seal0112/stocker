@@ -281,6 +281,72 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
     return results
 
 
+def crawlDailyPrice(datetime):
+    dateSii = datetime.strftime("%Y%m%d")
+    # dateSii = '"' + "20190909" + '"'
+    urlSii = "https://www.twse.com.tw/exchangeReport/"\
+        + "MI_INDEX?response=html&date="\
+        + dateSii + "&type=ALLBUT0999"
+
+    dateOtc = str(datetime.year-1911) + "/"\
+        + str(datetime.month).zfill(2) + "/"\
+        + str(datetime.day).zfill(2)
+    # dateOtc = "108/09/09"
+    urlOtc = "https://www.tpex.org.tw/web/stock/aftertrading/"\
+        + "daily_close_quotes/stk_quote_result.php?l=zh-tw"\
+        + "&o=htm&d=" + dateOtc + "&s=0,asc,0"
+
+    print("crawling sii daily price.")
+    print(urlSii)
+    reqSii = requests.get(urlSii)
+    reqSii.encoding = 'utf-8'
+    print("parsing sii daily price.")
+    resultSii = pd.read_html(StringIO(reqSii.text))
+    resultSii = resultSii[8]
+    resultSii.columns = resultSii.columns.droplevel([0, 1])
+
+    print("crawling otc daily price.")
+    print(urlOtc)
+    reqOtc = requests.get(urlOtc)
+    reqOtc.encoding = 'utf-8'
+    print("parsing otc daily price")
+    resultOtc = pd.read_html(StringIO(reqOtc.text))
+    resultOtc = resultOtc[0]
+    resultOtc.columns = resultOtc.columns.droplevel(0)
+
+    results = {'sii': resultSii, 'otc': resultOtc}
+
+    return results
+
+
+def crawlShareholderCount(companyID, datetime):
+    coID = str(companyID)
+    date = datetime.strftime("%Y%m%d")
+
+    url = "https://www.tdcc.com.tw/smWeb/QryStockAjax.do"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "scaDates": date,
+        "scaDate": date,
+        "SqlMethod": "StockNo",
+        "StockNo": coID,
+        "REQ_OPR": "SELECT",
+        "clkStockNo": coID
+    }
+
+    print('crawling shareholderCount')
+    req = requests.post(url, headers)
+    req.encoding = 'big5'
+    print('crawler complete.')
+
+    print('parsing data')
+    html_df = pd.read_html(StringIO(req.text))
+    result = html_df[6]
+    print('parsor complete.')
+
+    return result
+
+
 if __name__ == "__main__":
     siiCompany = crawlBasicInformation('sii')
     #otcCompany = crawlBasicInformation('otc')
