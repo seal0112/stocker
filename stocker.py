@@ -73,7 +73,9 @@ def showMain():
     newB = Basic_information()
 
     print(newB)
-    #return jsonify(newB.serialize)
+    for idx in payload:
+        newB[idx] = payload[idx]
+    return jsonify(newB.serialize)
     return jsonify(res)
 
 
@@ -86,72 +88,40 @@ def handleBasicInfo(basic_information_id):
     if request.method == 'GET':
         return basicInfo.serialize
     elif request.method == 'POST':
-        # try:
+        try:
             payload = json.loads(request.data)
             if basicInfo is not None:
-                for index in payload:
-                    changeFlag = False
-                    if basicInfo[index] != payload[index]:
-                        print("%s || %s" % (basicInfo[index], payload[index]))
+                changeFlag = False
+                for key in payload:
+                    if basicInfo[key] != payload[key]:
+                        print("%s || %s" % (basicInfo[key], payload[key]))
                         changeFlag = True
-                        basicInfo[index] = payload[index]
-                if changeFlag:
-                    basicInfo['update_date']=datetime.datetime.now().strftime("%Y-%m-%d") 
+                        basicInfo[key] = payload[key]
+                
+                # If there is no data to modify, then return 200
+                if not changeFlag:
+                    print("200")
+                    return make_response(json.dumps('OK'), 200)
+                # if there is any data to modify, 
+                # then record currennt date for update_date 
+                basicInfo['update_date']=datetime.datetime.now().strftime("%Y-%m-%d") 
             else:
-                basicInfo = Basic_information(
-                    id=basic_information_id,
-                    type=payload['type'],
-                    公司名稱=payload['公司名稱'],
-                    公司簡稱=payload['公司簡稱'],
-                    產業類別=payload['產業類別'],
-                    外國企業註冊地國=payload['外國企業註冊地國'],
-                    住址=payload['住址'],
-                    營利事業統一編號=payload['營利事業統一編號'],
-                    董事長=payload['董事長'],
-                    總經理=payload['總經理'],
-                    發言人=payload['發言人'],
-                    發言人職稱=payload['發言人職稱'],
-                    代理發言人=payload['代理發言人'],
-                    總機電話=payload['總機電話'],
-                    成立日期=payload['成立日期'],
-                    上市上櫃興櫃公開發行日期=payload['上市上櫃興櫃公開發行日期'],
-                    普通股每股面額=payload['普通股每股面額'],
-                    實收資本額=payload['實收資本額'],
-                    已發行普通股數或TDR原發行股數=payload['已發行普通股數或TDR原發行股數'],
-                    私募普通股=payload['私募普通股'],
-                    特別股=payload['特別股'],
-                    編製財務報告類型=payload['編製財務報告類型'],
-                    普通股盈餘分派或虧損撥補頻率=payload['普通股盈餘分派或虧損撥補頻率'],
-                    普通股年度現金股息及紅利決議層級=payload['普通股年度現金股息及紅利決議層級'],
-                    股票過戶機構=payload['股票過戶機構'],
-                    過戶電話=payload['過戶電話'],
-                    過戶地址=payload['過戶地址'],
-                    簽證會計師事務所=payload['簽證會計師事務所'],
-                    簽證會計師一=payload['簽證會計師一'],
-                    簽證會計師二=payload['簽證會計師二'],
-                    英文簡稱=payload['英文簡稱'],
-                    英文通訊地址=payload['英文通訊地址'],
-                    傳真機號碼=payload['傳真機號碼'],
-                    電子郵件信箱=payload['電子郵件信箱'],
-                    公司網址=payload['公司網址'],
-                    投資人關係聯絡人=payload['投資人關係聯絡人'],
-                    投資人關係聯絡人職稱=payload['投資人關係聯絡人職稱'],
-                    投資人關係聯絡電話=payload['投資人關係聯絡電話'],
-                    投資人關係聯絡電子郵件=payload['投資人關係聯絡電子郵件'],
-                    公司網站內利害關係人專區網址=payload['公司網站內利害關係人專區網址'])
+                basicInfo = Basic_information(id=basic_information_id)
+                for key in payload:
+                    basicInfo[key] = payload[key]
 
             session.add(basicInfo)
             session.commit()
 
             res = make_response(
-                json.dumps('Create Ok!'), 201)
+                json.dumps('Create'), 201)
             return res
-        # except Exception as ex:
-        #     print(ex)
-        #     res = make_response(            
-        #         json.dumps(
-        #             'Failed to upgrade.'), 406)
-        #     return res
+        except Exception as ex:
+            print(ex)
+            res = make_response(            
+                json.dumps(
+                    'Failed to upgrade.'), 406)
+            return res
 
 
 if __name__ == '__main__':
