@@ -3,7 +3,7 @@ import json
 import requests
 
 def getBasicInfo(dataType='sii'):
-    data = crawlBasicInformation(dataType)
+    """data = crawlBasicInformation(dataType)
 
     # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
     with open('./noun_conversion/basic_information.json') as basic_information:
@@ -18,12 +18,12 @@ def getBasicInfo(dataType='sii'):
             new_index.append(basicInfoNounConvers.get(column))
         else:
             new_index.append(column)
-    data.columns = new_index
+    data.columns = new_index"""
 
-    """
-    API(v0): basic_information test case
+    
+    # API(v0): basic_information test case
     payload = {
-            "公司代號":"1101",
+            "id":"1101",
             "公司名稱":"台灣水泥股份有限公司",
             "公司簡稱":"台泥",
             "產業類別":"水泥工業",
@@ -63,12 +63,17 @@ def getBasicInfo(dataType='sii'):
             "投資人關係聯絡電子郵件":"ir@taiwancement.com",
             "公司網站內利害關係人專區網址":"http://www.taiwancement.com/tw/csr/csr5-1.html",
             "type": 'sii'
-        }"""
-    for i in range(len(data)):
+        }
+
+    print(payload['id'])
+    url = 'http://localhost:5000/api/v0/basic_information/%s' % payload['id']
+    res = requests.post(url, data=json.dumps(payload))        
+        
+    """for i in range(len(data)):
         dataPayload = data.iloc[i].to_json(force_ascii=False)
         url = 'http://localhost:5000/api/v0/basic_information/%s' % dataPayload['公司代號']
         res = requests.post(url, data=json.dumps(dataPayload))
-        print(res)
+        print(res)"""
 
 
 if __name__ == '__main__':

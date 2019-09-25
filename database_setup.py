@@ -1,10 +1,13 @@
 from sqlalchemy import Column, Integer, String, Date, TEXT, BIGINT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
+import json
 import datetime
 
 Base = declarative_base()
 
+with open('./critical_flie/databaseAccount.json') as accountReader:
+    dbAccount = json.loads(accountReader.read())
 
 class Basic_information(Base):
     __tablename__ = 'basic_information'
@@ -26,8 +29,8 @@ class Basic_information(Base):
     發言人職稱 = Column(String(20))
     代理發言人 = Column(String(30))
     總機電話 = Column(String(30))
-    成立日期 = Column(Date)
-    上市上櫃興櫃公開發行日期 = Column(Date)
+    成立日期 = Column(String(10))
+    上市上櫃興櫃公開發行日期 = Column(String(10))
     普通股每股面額 = Column(String(15))
     實收資本額 = Column(BIGINT)
     已發行普通股數或TDR原發行股數 = Column(BIGINT)
@@ -52,8 +55,8 @@ class Basic_information(Base):
     投資人關係聯絡電話 = Column(String(30))
     投資人關係聯絡電子郵件 = Column(TEXT)
     公司網站內利害關係人專區網址 = Column(TEXT)
-    # Add add a decorator property to serialize data from the database
 
+    # Add add a decorator property to serialize data from the database
     @property
     def serialize(self):
         return {
@@ -92,6 +95,7 @@ class Basic_information(Base):
             '英文通訊地址': self['英文通訊地址'],
             '傳真機號碼': self['傳真機號碼'],
             '電子郵件信箱': self['電子郵件信箱'],
+            '公司網址': self['公司網址'],
             '投資人關係聯絡人': self['投資人關係聯絡人'],
             '投資人關係聯絡人職稱': self['投資人關係聯絡人職稱'],
             '投資人關係聯絡電話': self['投資人關係聯絡電話'],
@@ -99,7 +103,23 @@ class Basic_information(Base):
             '公司網站內利害關係人專區網址': self['公司網站內利害關係人專區網址'],
         }
 
+    @property
+    def serialize(self):
+        res = {}
+        for attr,val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr]=val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
 
 engine = create_engine(
-    """mysql+pymysql://newuser:123456@localhost/stocker?charset=utf8""")
+    """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
+            dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
 Base.metadata.create_all(engine)
