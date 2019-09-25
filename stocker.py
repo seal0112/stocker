@@ -86,7 +86,11 @@ def handleBasicInfo(basic_information_id):
     basicInfo = session.query(Basic_information).filter_by(
         id=basic_information_id).one_or_none()
     if request.method == 'GET':
-        return basicInfo.serialize
+        if basicInfo is None:
+            return make_response(
+                json.dumps('Not Found'), 404)
+        else:
+            return basicInfo.serialize
     elif request.method == 'POST':
         try:
             payload = json.loads(request.data)
