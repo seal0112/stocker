@@ -125,6 +125,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         for df in html_df:
             if df.shape[1] == 11:
                 dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
+        print(dfs.columns.shape)
         dfs.columns = dfs.columns.droplevel()
 
         drop_index = []
@@ -134,6 +135,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             except:
                 drop_index.append(i)
         dfs = dfs.drop(dfs.index[drop_index])
+        dfs = dfs.drop(columns=['公司名稱'])
 
         results = results.append(dfs)
     return results

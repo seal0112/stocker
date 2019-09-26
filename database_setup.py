@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy import Integer, String, Date, TEXT
+from sqlalchemy import Integer, String, Date, TEXT, Enum
 from sqlalchemy import BIGINT, SmallInteger, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -84,7 +84,8 @@ class Month_revenue(Base):
     stock_id = Column(
         String(4), ForeignKey('basic_information.id'), nullable=False)
     year = Column(Integer, nullable=False)
-    month = Column(SmallInteger(), nullable=False)
+    month = Column(
+        Enum('1','2','3','4','5','6','7','8','9','10','11','12'), nullable=False)
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
