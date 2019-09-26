@@ -1,5 +1,8 @@
-from sqlalchemy import Column, Integer, String, Date, TEXT, BIGINT
+from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Integer, String, Date, TEXT
+from sqlalchemy import BIGINT, SmallInteger, DECIMAL
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
 import json
 import datetime
@@ -8,6 +11,7 @@ Base = declarative_base()
 
 with open('./critical_flie/databaseAccount.json') as accountReader:
     dbAccount = json.loads(accountReader.read())
+
 
 class Basic_information(Base):
     __tablename__ = 'basic_information'
@@ -60,10 +64,49 @@ class Basic_information(Base):
     @property
     def serialize(self):
         res = {}
-        for attr,val in self.__dict__.items():
+        for attr, val in self.__dict__.items():
             if attr == '_sa_instance_state':
                 continue
-            res[attr]=val
+            res[attr] = val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
+class Month_revenue(Base):
+    __tablename__ = 'month_revenue'
+
+    id = Column(Integer, primary_key=True)
+    stock_id = Column(
+        String(4), ForeignKey('basic_information.id'), nullable=False)
+    year = Column(Integer, nullable=False)
+    month = Column(SmallInteger(), nullable=False)
+    update_date = Column(
+        Date, nullable=False,
+        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+    當月營收 = Column(BIGINT)
+    上月營收 = Column(BIGINT)
+    去年當月營收 = Column(BIGINT)
+    上月比較增減 = Column(DECIMAL(8, 2))
+    去年同月增減 = Column(DECIMAL(8, 2))
+    當月累計營收 = Column(BIGINT)
+    去年累計營收 = Column(BIGINT)
+    前期比較增減 = Column(DECIMAL(8, 2))
+    備註 = Column(TEXT)
+    basic_information = relationship(Basic_information)
+
+    # Add add a decorator property to serialize data from the database
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
         return res
 
     def __getitem__(self, key):
