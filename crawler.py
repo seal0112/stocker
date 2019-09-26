@@ -8,9 +8,9 @@ from io import StringIO
 
 def crawlCriticalInformation(parse_to_json=False):
     '''
-    @description: 
+    @description:
         爬取當日重大訊息，並整理留下與財報相關的訊息
-    @return: 
+    @return:
         dataFrame/json (wrt parm parse_to_json)
     @param:
         parse_to_json => boolean (default: False)
@@ -159,6 +159,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             except:
                 drop_index.append(i)
         dfs = dfs.drop(dfs.index[drop_index])
+        dfs = dfs.drop(columns=['公司名稱'])
 
         results = results.append(dfs)
 
