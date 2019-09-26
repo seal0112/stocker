@@ -7,6 +7,14 @@ from io import StringIO
 
 
 def crawlCriticalInformation(parse_to_json=False):
+    '''
+    @description:
+        爬取當日重大訊息，並整理留下與財報相關的訊息
+    @return:
+        dataFrame/json (wrt parm parse_to_json)
+    @param:
+        parse_to_json => boolean (default: False)
+    '''
     res = requests.get('https://mops.twse.com.tw/mops/web/ajax_t05sr01_1')
     res.encode = 'utf-8'
     dfs = pd.read_html(StringIO(res.text), header=0, flavor='bs4')
@@ -65,6 +73,14 @@ def crawlCriticalInformation(parse_to_json=False):
 
 
 def crawlBasicInformation(companyType):
+    """
+    @description:
+        爬取上市/上櫃/興櫃/公開發行個股的基本資料
+    @return:
+        dataFrame (sorted basicInfo)
+    @param:
+        companyType => string("sii", "otc", "rotc", "pub")
+    """
     url = "https://mops.twse.com.tw/mops/web/ajax_t51sb01"
     headers = {
         'User-Agent': """Mozilla/5.0
@@ -100,6 +116,15 @@ def crawlBasicInformation(companyType):
 
 
 def crawlMonthlyRevenue(westernYearIn, monthIn):
+    """
+    @description:
+        爬取上市/上櫃公司月營收
+    @return:
+        dataFrame (sorted monthly revenue)
+    @param:
+        westernYearIn => int (西元年)
+        monthIn => int
+    """
     year = str(westernYearIn - 1911)
     month = str(monthIn)
 
@@ -138,10 +163,21 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         dfs = dfs.drop(columns=['公司名稱'])
 
         results = results.append(dfs)
+
     return results
 
 
 def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
+    """
+    @description:
+        爬取個股每季的資產負債表
+    @return:
+        dataFrame (sorted balance sheet)
+    @param:
+        companyID => int
+        westernYearIn => int (西元年)
+        monthIn => int (1, 2...11, 12)
+    """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -188,6 +224,16 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
 
 
 def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
+    """
+    @description:
+        爬取個股每季的現金流量表
+    @return:
+        dataFrame (sorted income sheet)
+    @param:
+        companyID => int
+        westernYearIn => int (西元年)
+        monthIn => int (1,2...11,12)
+    """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -235,6 +281,16 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
 
 
 def crawlCashFlow(companyID, westernYearIn, seasonIn):
+    """
+    @description:
+        爬取個股每季的現金流量表
+    @return: 
+        dataFrame (sorted cash flow)
+    @param:
+        companyID => int
+        westernYearIn => int (西元年)
+        monthIn => int (1,2...11,12)
+    """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -282,6 +338,14 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
 
 
 def crawlDailyPrice(datetime):
+    """
+    @description:
+        爬取上市/上櫃每日股價，並以dict回傳
+    @return: 
+        dataFrame in Dictionary (access with "sii", "otc")
+    @param:
+        datetime => datetime
+    """
     dateSii = datetime.strftime("%Y%m%d")
     # dateSii = '"' + "20190909" + '"'
     urlSii = "https://www.twse.com.tw/exchangeReport/"\
@@ -320,6 +384,14 @@ def crawlDailyPrice(datetime):
 
 
 def crawlShareholderCount(companyID, datetime):
+    """
+    @description:
+        爬取千張持股股東人數，通常在週五
+    @return: 
+        dataFrame
+    @param:
+        datetime => datetime
+    """
     coID = str(companyID)
     date = datetime.strftime("%Y%m%d")
 
@@ -342,7 +414,7 @@ def crawlShareholderCount(companyID, datetime):
     print('parsing data')
     html_df = pd.read_html(StringIO(req.text))
     result = html_df[6]
-    print('parsor complete.')
+    print('parse complete.')
 
     return result
 
