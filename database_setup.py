@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Integer, String, Date, TEXT, Enum
-from sqlalchemy import BIGINT, SmallInteger, DECIMAL
+from sqlalchemy import BIGINT, SmallInteger, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -92,11 +92,11 @@ class Month_revenue(Base):
     當月營收 = Column(BIGINT)
     上月營收 = Column(BIGINT)
     去年當月營收 = Column(BIGINT)
-    上月比較增減 = Column(DECIMAL(8, 2))
-    去年同月增減 = Column(DECIMAL(8, 2))
+    上月比較增減 = Column(Float)
+    去年同月增減 = Column(Float)
     當月累計營收 = Column(BIGINT)
     去年累計營收 = Column(BIGINT)
-    前期比較增減 = Column(DECIMAL(8, 2))
+    前期比較增減 = Column(Float)
     備註 = Column(TEXT)
     basic_information = relationship(Basic_information)
 

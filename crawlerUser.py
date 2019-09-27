@@ -54,8 +54,7 @@ def getBasicInfo(dataType='sii'):
             "簽證會計師一": "翁雅玲",
             "簽證會計師二": "邵志明",
             "英文簡稱": "TCC",
-            "英文通訊地址": """No.113/ Sec.2/ Zhongshan N. Rd./
-                Taipei City 104/Taiwan (R.O.C.)""",
+            "英文通訊地址": """No.113/ Sec.2/ Zhongshan N. Rd./Taipei City 104/Taiwan (R.O.C.)""",
             "傳真機號碼": "(02)2531-6529",
             "電子郵件信箱": "finance@taiwancement.com",
             "公司網址": "http://www.taiwancement.com",
@@ -123,5 +122,5 @@ def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
 
 
 if __name__ == '__main__':
-    # getBasicInfo('sii')
-    getMonthlyRevenue(2019, 8)
+    getBasicInfo('sii')
+    #getMonthlyRevenue(2019, 8)

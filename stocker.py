@@ -136,23 +136,24 @@ def handleBasicInfo(basic_information_id):
     '/api/v0/month_revenue/<string:month_revenue_id>',
     methods=['GET', 'POST'])
 def handleMonthRevenue(month_revenue_id):
-    payload = json.loads(request.data)
-
-    monthReve = session.query(Month_revenue).filter_by(
-        stock_id=month_revenue_id).filter_by(
-        year=payload['year']).filter_by(month=payload['month']).one_or_none()
-
     if request.method == 'GET':
-        if basicInfo is None:
+        monthReve = session.query(Month_revenue).filter_by(
+            stock_id=month_revenue_id).one_or_none()
+        if monthReve is None:
             return make_response(
                 json.dumps("404 Not Found"), 404)
         else:
             print(monthReve.serialize)
             return jsonify(monthReve.serialize) 
     elif request.method == 'POST':
+        payload = json.loads(request.data)
         print(payload)
+        monthReve = session.query(Month_revenue).filter_by(
+            stock_id=month_revenue_id).filter_by(
+                year=payload['year']).filter_by(month=payload['month']).one_or_none()
         try:
             payload = json.loads(request.data)
+            print(monthReve)
             if monthReve is not None:
                 changeFlag = False
                 for key in payload:
@@ -169,6 +170,7 @@ def handleMonthRevenue(month_revenue_id):
                 monthReve['update_date'] = datetime.datetime.now(
                     ).strftime("%Y-%m-%d")
             else:
+                print('I am NONE')
                 monthReve = Month_revenue()
                 for key in payload:
                     monthReve[key] = payload[key]
