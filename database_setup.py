@@ -85,7 +85,8 @@ class Month_revenue(Base):
         String(4), ForeignKey('basic_information.id'), nullable=False)
     year = Column(Integer, nullable=False)
     month = Column(
-        Enum('1','2','3','4','5','6','7','8','9','10','11','12'), nullable=False)
+        Enum('1', '2', '3', '4', '5', '6',
+             '7', '8', '9', '10', '11', '12'), nullable=False)
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))

@@ -100,15 +100,21 @@ def handleBasicInfo(basic_information_id):
             payload = json.loads(request.data)
             if basicInfo is not None:
                 changeFlag = False
+
+                aSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
+                            "私募普通股", "特別股"))
                 for key in payload:
+                    if key in aSet:
+                        payload[key] = int(payload[key])
                     if basicInfo[key] != payload[key]:
-                        print("%s || %s" % (basicInfo[key], payload[key]))
                         changeFlag = True
                         basicInfo[key] = payload[key]
+
                 # If there is no data to modify, then return 200
                 if not changeFlag:
                     print("200")
                     return make_response(json.dumps('OK'), 200)
+
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 basicInfo['update_date'] = datetime.datetime.now(
@@ -144,13 +150,15 @@ def handleMonthRevenue(month_revenue_id):
                 json.dumps("404 Not Found"), 404)
         else:
             print(monthReve.serialize)
-            return jsonify(monthReve.serialize) 
+            return jsonify(monthReve.serialize)
+
     elif request.method == 'POST':
         payload = json.loads(request.data)
         print(payload)
         monthReve = session.query(Month_revenue).filter_by(
             stock_id=month_revenue_id).filter_by(
-                year=payload['year']).filter_by(month=payload['month']).one_or_none()
+                year=payload['year']).filter_by(
+                    month=payload['month']).one_or_none()
         try:
             payload = json.loads(request.data)
             print(monthReve)

@@ -5,7 +5,7 @@ import requests
 
 
 def getBasicInfo(dataType='sii'):
-    """data = crawlBasicInformation(dataType)
+    data = crawlBasicInformation(dataType)
 
     # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
     with open('./noun_conversion/basic_information.json') as basic_information:
@@ -13,16 +13,16 @@ def getBasicInfo(dataType='sii'):
 
     # Use noun_conversion file: basic_information.json
     # to change specific index in Dataframe.
-    columns = data.columns;
+    columns = data.columns
     new_index = []
     for idx, column in enumerate(columns):
         if basicInfoNounConvers.get(column) is not None:
             new_index.append(basicInfoNounConvers.get(column))
         else:
             new_index.append(column)
-    data.columns = new_index"""
+    data.columns = new_index
 
-    # API(v0): basic_information test case
+    """# API(v0): basic_information test case
     payload = {
             "id": "1101",
             "公司名稱": "台灣水泥股份有限公司",
@@ -54,7 +54,8 @@ def getBasicInfo(dataType='sii'):
             "簽證會計師一": "翁雅玲",
             "簽證會計師二": "邵志明",
             "英文簡稱": "TCC",
-            "英文通訊地址": """No.113/ Sec.2/ Zhongshan N. Rd./Taipei City 104/Taiwan (R.O.C.)""",
+            "英文通訊地址": "No.113/ Sec.2/ Zhongshan N. Rd./\
+            Taipei City 104/Taiwan (R.O.C.)",
             "傳真機號碼": "(02)2531-6529",
             "電子郵件信箱": "finance@taiwancement.com",
             "公司網址": "http://www.taiwancement.com",
@@ -68,14 +69,15 @@ def getBasicInfo(dataType='sii'):
 
     print(payload['id'])
     url = 'http://localhost:5000/api/v0/basic_information/%s' % payload['id']
-    res = requests.post(url, data=json.dumps(payload))
+    res = requests.post(url, data=json.dumps(payload))"""
 
-    # for i in range(len(data)):
-    #     dataPayload = data.iloc[i].to_json(force_ascii=False)
-    #     url = """http://localhost:5000
-    #         /api/v0/basic_information/%s""" % dataPayload['id']
-    #     res = requests.post(url, data=json.dumps(dataPayload))
-    #     print(res)
+    for i in range(len(data)):
+        dataPayload = json.loads(
+            data.iloc[i].to_json(force_ascii=False))
+        url = "http://localhost:5000/api/v0/\
+        basic_information/%s" % dataPayload['id']
+        res = requests.post(url, data=json.dumps(dataPayload))
+        break
 
 
 def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
@@ -123,4 +125,4 @@ def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
 
 if __name__ == '__main__':
     getBasicInfo('sii')
-    #getMonthlyRevenue(2019, 8)
+    # getMonthlyRevenue(2019, 8)
