@@ -226,7 +226,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
 def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     """
     @description:
-        爬取個股每季的現金流量表
+        爬取個股每季的損益表
     @return:
         dataFrame (sorted income sheet)
     @param:

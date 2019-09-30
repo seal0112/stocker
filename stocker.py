@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, url_for
 from flask import jsonify, make_response
-from sqlalchemy import create_engine, asc
+from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
 from database_setup import Basic_information, Month_revenue
@@ -83,11 +83,32 @@ def showMain():
 
 
 @app.route(
-    '/api/v0/basic_information/<string:basic_information_id>',
+    '/api/v0/basic_information/<string:stock_id>',
     methods=['GET', 'POST'])
-def handleBasicInfo(basic_information_id):
+def handleBasicInfo(stock_id):
+    """this api is used to handle basic information request.
+
+    According to the received stock_id and request method,
+    if request method is GET, then return stock_id's basic information.
+    if request method is POST, then to the information entered,
+    decide whether to update or add new information.
+
+    Args:
+        stock_id: a string of stock number.
+
+    Return:
+        if request method is GET,
+            then return basic_information_id's basic information.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+
+    Raises:
+        Exception: An error occurred accessing the bigtable.Table object.
+    """
     basicInfo = session.query(Basic_information).filter_by(
-        id=basic_information_id).one_or_none()
+        id=stock_id).one_or_none()
     if request.method == 'GET':
         if basicInfo is None:
             return make_response(
@@ -99,24 +120,24 @@ def handleBasicInfo(basic_information_id):
         try:
             payload = json.loads(request.data)
             if basicInfo is not None:
-                changeFlag = False
 
-                aSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
-                            "私募普通股", "特別股"))
+                typeConversKey = set(("實收資本額", "已發行普通股數或TDR原發行股數",
+                                      "私募普通股", "特別股"))
+                changeFlag = False
                 for key in payload:
-                    if key in aSet:
+                    if key in typeConversKey:
                         payload[key] = int(payload[key])
                     if basicInfo[key] != payload[key]:
                         changeFlag = True
                         basicInfo[key] = payload[key]
 
-                # If there is no data to modify, then return 200
+                # If no data has been modified, then return 200
                 if not changeFlag:
                     print("200")
                     return make_response(json.dumps('OK'), 200)
 
-                # if there is any data to modify,
-                # then record currennt date for update_date
+                # If any data is modified,
+                # update update_date to today's date
                 basicInfo['update_date'] = datetime.datetime.now(
                     ).strftime("%Y-%m-%d")
             else:
