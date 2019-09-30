@@ -16,7 +16,7 @@ with open('./critical_flie/databaseAccount.json') as accountReader:
 class Basic_information(Base):
     __tablename__ = 'basic_information'
 
-    id = Column(String(4), primary_key=True, autoincrement=False)
+    id = Column(String(6), primary_key=True, autoincrement=False)
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
@@ -27,11 +27,11 @@ class Basic_information(Base):
     外國企業註冊地國 = Column(String(10))
     住址 = Column(TEXT)
     營利事業統一編號 = Column(String(8))
-    董事長 = Column(String(30))
-    總經理 = Column(String(30))
-    發言人 = Column(String(30))
+    董事長 = Column(String(50))
+    總經理 = Column(String(50))
+    發言人 = Column(String(50))
     發言人職稱 = Column(String(20))
-    代理發言人 = Column(String(30))
+    代理發言人 = Column(String(50))
     總機電話 = Column(String(30))
     成立日期 = Column(String(10))
     上市上櫃興櫃公開發行日期 = Column(String(10))
@@ -44,7 +44,7 @@ class Basic_information(Base):
     普通股盈餘分派或虧損撥補頻率 = Column(String(6))
     普通股年度現金股息及紅利決議層級 = Column(String(3))
     股票過戶機構 = Column(TEXT)
-    過戶電話 = Column(String(12))
+    過戶電話 = Column(String(30))
     過戶地址 = Column(TEXT)
     簽證會計師事務所 = Column(TEXT)
     簽證會計師一 = Column(String(20))
@@ -54,7 +54,7 @@ class Basic_information(Base):
     傳真機號碼 = Column(String(30))
     電子郵件信箱 = Column(TEXT)
     公司網址 = Column(TEXT)
-    投資人關係聯絡人 = Column(String(20))
+    投資人關係聯絡人 = Column(String(50))
     投資人關係聯絡人職稱 = Column(String(20))
     投資人關係聯絡電話 = Column(String(30))
     投資人關係聯絡電子郵件 = Column(TEXT)
@@ -77,12 +77,17 @@ class Basic_information(Base):
         setattr(self, key, value)
 
 
+# class Income_sheet(Base):
+#     __tablename__ = 'income_sheet'
+
+#     id = 
+
 class Month_revenue(Base):
     __tablename__ = 'month_revenue'
 
     id = Column(Integer, primary_key=True)
     stock_id = Column(
-        String(4), ForeignKey('basic_information.id'), nullable=False)
+        String(6), ForeignKey('basic_information.id'), nullable=False)
     year = Column(Integer, nullable=False)
     month = Column(
         Enum('1', '2', '3', '4', '5', '6',
