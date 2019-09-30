@@ -74,8 +74,9 @@ def getBasicInfo(dataType='sii'):
     for i in range(len(data)):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
-        url = "http://localhost:5000/api/v0/\
-        basic_information/%s" % dataPayload['id']
+        url = \
+            "http://localhost:5000/api/v0/basic_information/%s"\
+            % dataPayload['id']
         res = requests.post(url, data=json.dumps(dataPayload))
         break
 
@@ -124,5 +125,5 @@ def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
 
 
 if __name__ == '__main__':
-    getBasicInfo('sii')
-    # getMonthlyRevenue(2019, 8)
+    #getBasicInfo('sii')
+     getMonthlyRevenue(2019, 8)

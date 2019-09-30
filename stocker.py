@@ -73,12 +73,6 @@ def showMain():
     b = session.query(Basic_information).filter_by(
                 id='1101').one_or_none()
     res = b.serialize
-    newB = Basic_information()
-
-    print(newB)
-    for idx in payload:
-        newB[idx] = payload[idx]
-    return jsonify(newB.serialize)
     return jsonify(res)
 
 
@@ -90,22 +84,22 @@ def handleBasicInfo(stock_id):
 
     According to the received stock_id and request method,
     if request method is GET, then return stock_id's basic information.
-    if request method is POST, then to the information entered,
-    decide whether to update or add new information.
+    if request method is POST, then according to the data entered,
+    decide whether to update or add new data into database.
 
     Args:
         stock_id: a string of stock number.
 
     Return:
         if request method is GET,
-            then return basic_information_id's basic information.
+            then return stock_id's basic information.
         if request method is POST,
             According to whether the data is written into the database
             if true, then return http status 201(Create).
             if not, then return http status 200(Ok).
 
     Raises:
-        Exception: An error occurred accessing the bigtable.Table object.
+        Exception: An error occurred.
     """
     basicInfo = session.query(Basic_information).filter_by(
         id=stock_id).one_or_none()
@@ -160,12 +154,33 @@ def handleBasicInfo(stock_id):
 
 
 @app.route(
-    '/api/v0/month_revenue/<string:month_revenue_id>',
+    '/api/v0/month_revenue/<string:stock_id>',
     methods=['GET', 'POST'])
-def handleMonthRevenue(month_revenue_id):
+def handleMonthRevenue(stock_id):
+    """this api is used to handle month revenue request.
+
+    According to the received stock_id and request method,
+    if request method is GET, then return stock_id's month reveune.
+    if request method is POST, then according to the data entered,
+    decide whether to update or add new data into database.
+
+    Args:
+        stock_id: a string of stock number.
+
+    Return:
+        if request method is GET,
+            then return stock_id's month revenue.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+
+    Raises:
+        Exception: An error occurred.
+    """
     if request.method == 'GET':
         monthReve = session.query(Month_revenue).filter_by(
-            stock_id=month_revenue_id).one_or_none()
+            stock_id=stock_id_id).one_or_none()
         if monthReve is None:
             return make_response(
                 json.dumps("404 Not Found"), 404)
@@ -177,7 +192,7 @@ def handleMonthRevenue(month_revenue_id):
         payload = json.loads(request.data)
         print(payload)
         monthReve = session.query(Month_revenue).filter_by(
-            stock_id=month_revenue_id).filter_by(
+            stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
         try:
