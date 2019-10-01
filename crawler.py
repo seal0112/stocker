@@ -260,7 +260,6 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     html_df = pd.read_html(StringIO(req.text))
     results = html_df[1]
     results.columns = results.columns.droplevel([0, 1])
-
     # drop invalid column
     results = results.iloc[:, 0:3]
 
@@ -269,11 +268,14 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     percent = results.columns[2][0] + "-" + results.columns[2][1]
     results.columns = results.columns.droplevel(1)
     results.columns = [results.columns[0], amount, percent]
+    
+    resultsCopy = results.copy()
+    resultsCopy.set_index("會計項目", inplace=True)
 
     # drop nan rows
     dropRowIndex = []
     for i in results.index:
-        if results.iloc[i].isnull().any():
+        if resultsCopy.iloc[i].isnull().all():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
 
