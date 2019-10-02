@@ -31,6 +31,19 @@ def showMain():
     return jsonify(res)
 
 
+@app.route('/api/v0/sotck_number', methods=['GET'])
+def getStockNumber():
+    type = request.args.get('type')
+    if type is None:
+        stockNum = session.query(Basic_information.id).all()
+    else:
+        stockNum = session.query(
+            Basic_information.id).filter_by(type=type).all()
+    res = [{'id':i[0]} for i in stockNum]
+
+    return jsonify(res)
+
+
 @app.route(
     '/api/v0/basic_information/<string:stock_id>',
     methods=['GET', 'POST'])
@@ -63,7 +76,6 @@ def handleBasicInfo(stock_id):
             return make_response(
                 json.dumps("404 Not Found"), 404)
         else:
-            print(basicInfo.serialize)
             return jsonify(basicInfo.serialize)
     elif request.method == 'POST':
         try:
@@ -139,36 +151,31 @@ def handleMonthRevenue(stock_id):
             return make_response(
                 json.dumps("404 Not Found"), 404)
         else:
-            print(monthReve.serialize)
             return jsonify(monthReve.serialize)
 
     elif request.method == 'POST':
         payload = json.loads(request.data)
-        print(payload)
         monthReve = session.query(Month_revenue).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
         try:
             payload = json.loads(request.data)
-            print(monthReve)
             if monthReve is not None:
                 changeFlag = False
                 for key in payload:
                     if monthReve[key] != payload[key]:
-                        print("%s || %s" % (monthReve[key], payload[key]))
+                        # print("%s || %s" % (monthReve[key], payload[key]))
                         changeFlag = True
                         monthReve[key] = payload[key]
                 # If there is no data to modify, then return 200
                 if not changeFlag:
-                    print("200")
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 monthReve['update_date'] = datetime.datetime.now(
                     ).strftime("%Y-%m-%d")
             else:
-                print('I am NONE')
                 monthReve = Month_revenue()
                 for key in payload:
                     monthReve[key] = payload[key]
