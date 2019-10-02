@@ -206,7 +206,6 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
 
     # drop invalid column
     results = results.iloc[:, 0:3]
-    print(results)
     # rename columns
     amount = results.columns[1][0] + "-" + results.columns[1][1]
     percent = results.columns[2][0] + "-" + results.columns[2][1]
@@ -329,7 +328,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
     results.columns = results.columns.droplevel([0, 1])
 
     # drop invalid column
-    results = results.iloc[:, 0:3]
+    results = results.iloc[:, 0:2]
 
     # rename columns
     amount = results.columns[1][0] + "-" + results.columns[1][1]
