@@ -157,7 +157,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         for i in dfs.index:
             try:
                 int(dfs.iloc[i]["公司代號"])
-            except:
+            except Exception:
                 drop_index.append(i)
         dfs = dfs.drop(dfs.index[drop_index])
         dfs = dfs.drop(columns=['公司名稱'])
@@ -206,17 +206,20 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
 
     # drop invalid column
     results = results.iloc[:, 0:3]
-
+    print(results)
     # rename columns
     amount = results.columns[1][0] + "-" + results.columns[1][1]
     percent = results.columns[2][0] + "-" + results.columns[2][1]
     results.columns = results.columns.droplevel(1)
     results.columns = [results.columns[0], amount, percent]
 
+    resultsCopy = results.copy()
+    resultsCopy.set_index("會計項目", inplace=True)
+
     # drop nan rows
     dropRowIndex = []
     for i in results.index:
-        if results.iloc[i].isnull().any():
+        if resultsCopy.iloc[i].isnull().all():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
 
@@ -257,8 +260,13 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     req = requests.post(url, headers)
     req.encoding = "utf-8"
     # print(req.text)
-    html_df = pd.read_html(StringIO(req.text))
-    results = html_df[1]
+    try:
+        html_df = pd.read_html(StringIO(req.text))
+        results = html_df[1]
+    except Exception as ex:
+        print(ex)
+        return None
+
     results.columns = results.columns.droplevel([0, 1])
     # drop invalid column
     results = results.iloc[:, 0:3]
@@ -268,7 +276,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     percent = results.columns[2][0] + "-" + results.columns[2][1]
     results.columns = results.columns.droplevel(1)
     results.columns = [results.columns[0], amount, percent]
-    
+
     resultsCopy = results.copy()
     resultsCopy.set_index("會計項目", inplace=True)
 
@@ -286,7 +294,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
     """
     @description:
         爬取個股每季的現金流量表
-    @return: 
+    @return:
         dataFrame (sorted cash flow)
     @param:
         companyID => int
@@ -343,7 +351,7 @@ def crawlDailyPrice(datetime):
     """
     @description:
         爬取上市/上櫃每日股價，並以dict回傳
-    @return: 
+    @return:
         dataFrame in Dictionary (access with "sii", "otc")
     @param:
         datetime => datetime
@@ -389,7 +397,7 @@ def crawlShareholderCount(companyID, datetime):
     """
     @description:
         爬取千張持股股東人數，通常在週五
-    @return: 
+    @return:
         dataFrame
     @param:
         datetime => datetime
@@ -423,6 +431,6 @@ def crawlShareholderCount(companyID, datetime):
 
 if __name__ == "__main__":
     siiCompany = crawlBasicInformation('sii')
-    #otcCompany = crawlBasicInformation('otc')
+    # otcCompany = crawlBasicInformation('otc')
     print(type(siiCompany))
-    #print(otcCompany)
+    # print(otcCompany)
