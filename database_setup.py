@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey
-from sqlalchemy import Integer, String, Date, TEXT, Enum
-from sqlalchemy import BIGINT, SmallInteger, Float
+from sqlalchemy import Date, Enum, Integer, String, TEXT
+from sqlalchemy import BIGINT, Float, SmallInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -20,7 +20,7 @@ class Basic_information(Base):
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
-    type = Column(String(3), nullable=False)
+    type = Column(String(4), nullable=False)
     公司名稱 = Column(TEXT, nullable=False)
     公司簡稱 = Column(String(10))
     產業類別 = Column(String(10))
@@ -80,7 +80,13 @@ class Basic_information(Base):
 # class Income_sheet(Base):
 #     __tablename__ = 'income_sheet'
 
-#     id = 
+#     id = Column(Integer, primary_key=True)
+#     stock_id = Column(
+#         String(6), ForeignKey('basic_information.id'), nullable=False)
+#     year = Column(Integer, nullable=False)
+#     month = Column(
+#         Enum('1', '2', '3', '4'), nullable=False)
+
 
 class Month_revenue(Base):
     __tablename__ = 'month_revenue'
