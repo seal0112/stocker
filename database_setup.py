@@ -77,15 +77,54 @@ class Basic_information(Base):
         setattr(self, key, value)
 
 
-# class Income_sheet(Base):
-#     __tablename__ = 'income_sheet'
+class Income_sheet(Base):
+    __tablename__ = 'income_sheet'
 
-#     id = Column(Integer, primary_key=True)
-#     stock_id = Column(
-#         String(6), ForeignKey('basic_information.id'), nullable=False)
-#     year = Column(Integer, nullable=False)
-#     month = Column(
-#         Enum('1', '2', '3', '4'), nullable=False)
+    id = Column(Integer, primary_key=True)
+    stock_id = Column(
+        String(6), ForeignKey('basic_information.id'), nullable=False)
+    year = Column(Integer, nullable=False)
+    season = Column(
+        Enum('1', '2', '3', '4'), nullable=False)
+    營業收入合計 = Column(BIGINT)
+    營業成本合計 = Column(BIGINT)
+    營業毛利 = Column(BIGINT)
+    營業毛利率 = Column(Float)
+    推銷費用 = Column(BIGINT)
+    推銷費用率 = Column(Float)
+    管理費用 = Column(BIGINT)
+    管理費用率 = Column(Float)
+    研究發展費用 = Column(BIGINT)
+    研究發展費用率 = Column(Float)
+    營業費用合計 = Column(BIGINT)
+    營業費用率 = Column(Float)
+    營業利益 = Column(BIGINT)
+    營業利益率 = Column(Float)
+    營業外收入及支出合計 = Column(BIGINT)
+    稅前淨利 = Column(BIGINT)
+    稅前淨利率 = Column(Float)
+    所得稅費用合計 = Column(BIGINT)
+    所得稅費用率 = Column(Float)
+    本期淨利 = Column(BIGINT)
+    稅後淨利率 = Column(Float)
+    基本每股盈餘 = Column(Float)
+    稀釋每股盈餘 = Column(Float)
+
+    # Add add a decorator property to serialize data from the database
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
 
 
 class Month_revenue(Base):
