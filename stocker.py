@@ -83,7 +83,7 @@ def handleBasicInfo(stock_id):
             payload = json.loads(request.data)
             if basicInfo is not None:
 
-                # typeConversSet is used to converse datatype from user input. 
+                # typeConversSet is used to converse datatype from user input.
                 typeConversSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
                                       "私募普通股", "特別股"))
                 changeFlag = False
@@ -123,10 +123,31 @@ def handleBasicInfo(stock_id):
 
 @app.route(
     '/api/v0/income_sheet/<string:stock_id>',
-    methods=['GET','POST'])
+    methods=['GET', 'POST'])
 def handleIncomeSheet(stock_id):
+    """this api is used to handle income sheet request.
+
+    According to the received stock_id and request method,
+    if request method is GET, then return stock_id's income sheet.
+    if request method is POST, then according to the data entered,
+    decide whether to update or add new income sheet data into database.
+
+    Args:
+        stock_id: a string of stock number.
+
+    Return:
+        if request method is GET,
+            then return stock_id's income sheet.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+
+    Raises:
+        Exception: An error occurred.
+    """
     if request.method == 'GET':
-        return 'income_sheet: %s'% stock_id
+        return 'income_sheet: %s' % stock_id
 
     elif request.method == 'POST':
         payload = json.loads(request.data)
@@ -139,7 +160,6 @@ def handleIncomeSheet(stock_id):
                 changeFlag = False
                 for key in payload:
                     if incomeSheet[key] != payload[key]:
-                        # print("%s || %s" % (monthReve[key], payload[key]))
                         changeFlag = True
                         incomeSheet[key] = payload[key]
                 # If there is no data to modify, then return 200
@@ -214,7 +234,6 @@ def handleMonthRevenue(stock_id):
                 changeFlag = False
                 for key in payload:
                     if monthReve[key] != payload[key]:
-                        # print("%s || %s" % (monthReve[key], payload[key]))
                         changeFlag = True
                         monthReve[key] = payload[key]
                 # If there is no data to modify, then return 200
