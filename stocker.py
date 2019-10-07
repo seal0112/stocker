@@ -3,7 +3,7 @@ from flask import jsonify, make_response
 from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
-from database_setup import Basic_information, Month_revenue
+from database_setup import Basic_information, Month_revenue, Income_sheet
 import json
 import datetime
 
@@ -17,16 +17,17 @@ app.config['JSON_AS_ASCII'] = False
 
 engine = create_engine(
     """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-            dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
+        dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 @app.route('/')
 def showMain():
     b = session.query(Basic_information).filter_by(
-                id='1101').one_or_none()
+        id='1101').one_or_none()
     res = b.serialize
     return jsonify(res)
 
@@ -39,7 +40,7 @@ def getStockNumber():
     else:
         stockNum = session.query(
             Basic_information.id).filter_by(type=type).all()
-    res = [{'id':i[0]} for i in stockNum]
+    res = [{'id': i[0]} for i in stockNum]
 
     return jsonify(res)
 
@@ -82,11 +83,12 @@ def handleBasicInfo(stock_id):
             payload = json.loads(request.data)
             if basicInfo is not None:
 
-                typeConversKey = set(("實收資本額", "已發行普通股數或TDR原發行股數",
+                # typeConversSet is used to converse datatype from user input. 
+                typeConversSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
                                       "私募普通股", "特別股"))
                 changeFlag = False
                 for key in payload:
-                    if key in typeConversKey:
+                    if key in typeConversSet:
                         payload[key] = int(payload[key])
                     if basicInfo[key] != payload[key]:
                         changeFlag = True
@@ -99,7 +101,7 @@ def handleBasicInfo(stock_id):
                 # If any data is modified,
                 # update update_date to today's date
                 basicInfo['update_date'] = datetime.datetime.now(
-                    ).strftime("%Y-%m-%d")
+                ).strftime("%Y-%m-%d")
             else:
                 basicInfo = Basic_information()
                 for key in payload:
@@ -112,6 +114,54 @@ def handleBasicInfo(stock_id):
             res = make_response(
                 json.dumps(
                     'Failed to update basic_information.'), 406)
+            return res
+
+        res = make_response(
+            json.dumps('Create'), 201)
+        return res
+
+
+@app.route(
+    '/api/v0/income_sheet/<string:stock_id>',
+    methods=['GET','POST'])
+def handleIncomeSheet(stock_id):
+    if request.method == 'GET':
+        return 'income_sheet: %s'% stock_id
+
+    elif request.method == 'POST':
+        payload = json.loads(request.data)
+        incomeSheet = session.query(Income_sheet).filter_by(
+            stock_id=stock_id).filter_by(
+                year=payload['year']).filter_by(
+                    season=payload['season']).one_or_none()
+        try:
+            if incomeSheet is not None:
+                changeFlag = False
+                for key in payload:
+                    if incomeSheet[key] != payload[key]:
+                        # print("%s || %s" % (monthReve[key], payload[key]))
+                        changeFlag = True
+                        incomeSheet[key] = payload[key]
+                # If there is no data to modify, then return 200
+                if changeFlag is not True:
+                    return make_response(json.dumps('OK'), 200)
+                # if there is any data to modify,
+                # then record currennt date for update_date
+                incomeSheet['update_date'] = datetime.datetime.now(
+                    ).strftime("%Y-%m-%d")
+            else:
+                incomeSheet = Income_sheet()
+                incomeSheet['stock_id'] = stock_id
+                for key in payload:
+                    incomeSheet[key] = payload[key]
+
+            session.add(incomeSheet)
+            session.commit()
+        except Exception as ex:
+            print(ex)
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s balance sheet.' % (stock_id)), 406)
             return res
 
         res = make_response(
@@ -160,7 +210,6 @@ def handleMonthRevenue(stock_id):
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
         try:
-            payload = json.loads(request.data)
             if monthReve is not None:
                 changeFlag = False
                 for key in payload:
@@ -169,12 +218,12 @@ def handleMonthRevenue(stock_id):
                         changeFlag = True
                         monthReve[key] = payload[key]
                 # If there is no data to modify, then return 200
-                if not changeFlag:
+                if changeFlag is not True:
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 monthReve['update_date'] = datetime.datetime.now(
-                    ).strftime("%Y-%m-%d")
+                ).strftime("%Y-%m-%d")
             else:
                 monthReve = Month_revenue()
                 for key in payload:
@@ -186,11 +235,12 @@ def handleMonthRevenue(stock_id):
             print(ex)
             res = make_response(
                 json.dumps(
-                    'Failed to update month month_revenue.'), 406)
+                    'Failed to update %s month revenue.' % (stock_id)), 406)
             return res
+
         res = make_response(
             json.dumps('Create'), 201)
-        return 'res'
+        return res
 
 
 if __name__ == '__main__':

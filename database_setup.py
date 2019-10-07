@@ -81,6 +81,9 @@ class Income_sheet(Base):
     __tablename__ = 'income_sheet'
 
     id = Column(Integer, primary_key=True)
+    update_date = Column(
+        Date, nullable=False,
+        default=datetime.datetime.now().strftime("%Y-%m-%d"))
     stock_id = Column(
         String(6), ForeignKey('basic_information.id'), nullable=False)
     year = Column(Integer, nullable=False)
@@ -96,17 +99,17 @@ class Income_sheet(Base):
     管理費用率 = Column(Float)
     研究發展費用 = Column(BIGINT)
     研究發展費用率 = Column(Float)
-    營業費用合計 = Column(BIGINT)
+    營業費用 = Column(BIGINT)
     營業費用率 = Column(Float)
     營業利益 = Column(BIGINT)
     營業利益率 = Column(Float)
     營業外收入及支出合計 = Column(BIGINT)
     稅前淨利 = Column(BIGINT)
     稅前淨利率 = Column(Float)
-    所得稅費用合計 = Column(BIGINT)
+    所得稅費用 = Column(BIGINT)
     所得稅費用率 = Column(Float)
     本期淨利 = Column(BIGINT)
-    稅後淨利率 = Column(Float)
+    本期淨利率 = Column(Float)
     基本每股盈餘 = Column(Float)
     稀釋每股盈餘 = Column(Float)
 
@@ -170,5 +173,5 @@ class Month_revenue(Base):
 
 engine = create_engine(
     """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-            dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
+        dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
 Base.metadata.create_all(engine)

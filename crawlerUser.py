@@ -1,10 +1,17 @@
 from crawler import crawlBasicInformation
+from crawler import crawlBalanceSheet
+from crawler import crawlCashFlow
+from crawler import crawlIncomeSheet
 from crawler import crawlMonthlyRevenue
 import json
 import requests
+import time
+import random
+import math
 
 
 def getBasicInfo(dataType='sii'):
+    # dataType: otc, sii, rotc, pub
     data = crawlBasicInformation(dataType)
 
     # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
@@ -14,13 +21,13 @@ def getBasicInfo(dataType='sii'):
     # Use noun_conversion file: basic_information.json
     # to change specific index in Dataframe.
     columns = data.columns
-    new_index = []
+    new_column = []
     for idx, column in enumerate(columns):
         if basicInfoNounConvers.get(column) is not None:
-            new_index.append(basicInfoNounConvers.get(column))
+            new_column.append(basicInfoNounConvers.get(column))
         else:
-            new_index.append(column)
-    data.columns = new_index
+            new_column.append(column)
+    data.columns = new_column
 
     """# API(v0): basic_information test case
     payload = {
@@ -74,30 +81,30 @@ def getBasicInfo(dataType='sii'):
     for i in range(len(data)):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
+        dataPayload['type'] = dataType
         url = \
             "http://localhost:5000/api/v0/basic_information/%s"\
             % dataPayload['id']
         res = requests.post(url, data=json.dumps(dataPayload))
-        break
+        print(res)
 
 
-def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
+def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
+    # year, month: start at 2013, 1
     data = crawlMonthlyRevenue(westernYearIn, monthIn)
-    year = westernYearIn
-    month = monthIn
 
     # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
     with open('./noun_conversion/month_revenue.json') as month_revenue:
         monthReveNounConvers = json.loads(month_revenue.read())
 
     columns = data.columns
-    new_index = []
+    new_column = []
     for idx, column in enumerate(columns):
         if monthReveNounConvers.get(column) is not None:
-            new_index.append(monthReveNounConvers.get(column))
+            new_column.append(monthReveNounConvers.get(column))
         else:
-            new_index.append(column)
-    data.columns = new_index
+            new_column.append(column)
+    data.columns = new_column
 
     # print(data.columns)
     # fileName = "revenue_%d-%d.csv" % (year, month)
@@ -114,16 +121,152 @@ def getMonthlyRevenue(westernYearIn=2019, monthIn=8):
     for i in range(len(data)):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
         # print(dataPayload)
-        dataPayload['year'] = year
-        dataPayload['month'] = str(month)
+        dataPayload['year'] = westernYearIn
+        dataPayload['month'] = str(monthIn)
+        print(dataPayload)
         url = "http://localhost:5000/api/v0/month_revenue/%s" % str(
             dataPayload['stock_id'])
-        print(url)
-        print(dataPayload)
         res = requests.post(url, data=json.dumps(dataPayload))
-        break
+        print(res)
+
+
+def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
+
+    # url = "http://localhost:5000/api/v0/sotck_number"
+    # payload = requests.get(url)
+    # stock_num = json.loads(payload.text)
+
+    data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
+    data.set_index("會計項目", inplace=True)
+
+    with open('./noun_conversion/income_sheet_convers.json') \
+            as income_sheet_convers:
+        incomeSheetNounConvers = json.loads(income_sheet_convers.read())
+
+    indexs = data.index
+    new_indexs = []
+    for idx, index in enumerate(indexs):
+        if incomeSheetNounConvers.get(index) is not None:
+            new_indexs.append(incomeSheetNounConvers.get(index))
+        else:
+            new_indexs.append(index)
+    data.index = new_indexs
+    dataPayload = {}
+
+    with open('./data_key_select/income_sheet_key_select.txt') \
+            as income_sheet_key_select:
+        incomeSheetKeySel = set(
+            line.strip() for line in income_sheet_key_select)
+
+    ratioIgnore = set(["營業收入合計", "營業成本合計", "營業外收入及支出合計"])
+    for key in incomeSheetKeySel:
+        dataPayload[key] = data.loc[key][0]
+        if not math.isnan(data.loc[key][1])\
+                and key not in ratioIgnore:
+            dataPayload[key+'率'] = data.loc[key][1]
+
+    dataPayload['year'] = westernYearIn
+    dataPayload['season'] = str(seasonIn)
+
+    balanceSheetApi = "http://localhost:5000/api/v0/income_sheet/%s" % str(
+            companyID)
+    res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
+    print(res)
+
+
+def getBalanceSheet(
+        companyID=2330, westernYearIn=2019, seasonIn=2):
+    # TODO
+    # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
+
+    aSet = set()
+    url = "http://localhost:5000/api/v0/sotck_number"
+    payload = requests.get(url)
+    stock_num = json.loads(payload.text)
+
+    for i in stock_num:
+        print(i['id'])
+        try:
+            data = crawlBalanceSheet(i['id'], westernYearIn, seasonIn)
+        except Exception as ex:
+            data = None
+        if data is None:
+            time.sleep(5 + random.randrange(-3, 3))
+            continue
+        data.set_index("會計項目", inplace=True)
+        data = data.reset_index()
+
+        for i in data.index:
+            aSet.add(data.iloc[i][0])
+
+        time.sleep(5 + random.randrange(-3, 3))
+
+    # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
+    # print(data)
+    # data.set_index("會計項目", inplace=True)
+    # data = data.reset_index()
+    # for i in data.index:
+    #     print(i, data.iloc[i][0])
+    #     aSet.add(data.iloc[i][0])
+
+    aSet = sorted(aSet)
+
+    fileName = "balance_sheet_title.csv"
+    with open(fileName, 'w', encoding='utf8') as fo:
+        for item in aSet:
+            stri = item + '\n'
+            fo.write(stri)
+
+
+def getCashFlow(
+        companyID=2330, westernYearIn=2019, seasonIn=2):
+    # TODO
+    # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
+
+    aSet = set()
+    url = "http://localhost:5000/api/v0/sotck_number"
+    payload = requests.get(url)
+    stock_num = json.loads(payload.text)
+
+    for i in stock_num:
+        print(i['id'])
+        try:
+            data = crawlCashFlow(i['id'], westernYearIn, seasonIn)
+        except Exception as ex:
+            print(ex)
+            data = None
+
+        if data is None:
+            time.sleep(5 + random.randrange(-3, 3))
+            continue
+        data.set_index("會計項目", inplace=True)
+        data = data.reset_index()
+
+        for i in data.index:
+            aSet.add(data.iloc[i][0])
+
+        time.sleep(6 + random.randrange(-3, 3))
+
+    # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
+    # print(data)
+    # data.set_index("會計項目", inplace=True)
+    # data = data.reset_index()
+    # for i in data.index:
+    #     print(i, data.iloc[i][0])
+    #     aSet.add(data.iloc[i][0])
+
+    aSet = sorted(aSet)
+
+    fileName = "cashflow_title.csv"
+    with open(fileName, 'w', encoding='utf8') as fo:
+        for item in aSet:
+            stri = item + '\n'
+            fo.write(stri)
 
 
 if __name__ == '__main__':
-    #getBasicInfo('sii')
-     getMonthlyRevenue(2019, 8)
+    # getBasicInfo('otc')
+    # getMonthlyRevenue(2019, 9)
+    getIncomeSheet(2330, 2019, 2)
+    # getBalanceSheet(2337, 2019, 2)
+    # getCashFlow()
