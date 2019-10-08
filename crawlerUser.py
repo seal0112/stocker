@@ -13,21 +13,7 @@ import math
 def getBasicInfo(dataType='sii'):
     # dataType: otc, sii, rotc, pub
     data = crawlBasicInformation(dataType)
-
-    # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
-    with open('./noun_conversion/basic_information.json') as basic_information:
-        basicInfoNounConvers = json.loads(basic_information.read())
-
-    # Use noun_conversion file: basic_information.json
-    # to change specific index in Dataframe.
-    columns = data.columns
-    new_column = []
-    for idx, column in enumerate(columns):
-        if basicInfoNounConvers.get(column) is not None:
-            new_column.append(basicInfoNounConvers.get(column))
-        else:
-            new_column.append(column)
-    data.columns = new_column
+    data = transformHeaderNoun(data, 'basic_information')
 
     """# API(v0): basic_information test case
     payload = {
@@ -88,42 +74,50 @@ def getBasicInfo(dataType='sii'):
         res = requests.post(url, data=json.dumps(dataPayload))
         print(res)
 
+def transformHeaderNoun(data, fileName):
+    # this method use noun_conversion file(fileName)
+    # to change specific index or column in Dataframe.
+
+    direct = {
+        "basic_information": "columns",
+        "month_revenue": "columns",
+        "income_sheet": "index"
+    }
+
+    with open(
+        './noun_conversion/%s.json' % fileName) as converFile:
+        nounConvers = json.loads(converFile.read())
+
+    if direct[fileName] == 'columns':
+        headers = data.columns
+    elif direct[fileName] == 'index':
+        headers = data.index
+
+    # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
+    new_headers = []
+    for idx, header in enumerate(headers):
+        if nounConvers.get(header) is not None:
+            new_headers.append(nounConvers.get(header))
+        else:
+            new_headers.append(header)
+
+    if direct[fileName] == 'columns':
+        data.columns = new_headers
+    elif direct[fileName] == 'index':
+        data.index = new_headers
+
+    return data
 
 def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
     # year, month: start at 2013, 1
     data = crawlMonthlyRevenue(westernYearIn, monthIn)
-
-    # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
-    with open('./noun_conversion/month_revenue.json') as month_revenue:
-        monthReveNounConvers = json.loads(month_revenue.read())
-
-    columns = data.columns
-    new_column = []
-    for idx, column in enumerate(columns):
-        if monthReveNounConvers.get(column) is not None:
-            new_column.append(monthReveNounConvers.get(column))
-        else:
-            new_column.append(column)
-    data.columns = new_column
-
-    # print(data.columns)
-    # fileName = "revenue_%d-%d.csv" % (year, month)
-    # with open(fileName, 'w', encoding='utf8') as fo:
-    #     fo.write(",".join(data.columns)+"\n")
-    #     for idx, row in data.iterrows():
-    #         stri = ""
-    #         for i in row:
-    #             i=str(i).replace(',', '，')
-    #             stri+=i+','
-    #         stri+='\n'
-    #         fo.write(stri)
+    data = transformHeaderNoun(data, 'month_revenue')
 
     for i in range(len(data)):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
         # print(dataPayload)
         dataPayload['year'] = westernYearIn
         dataPayload['month'] = str(monthIn)
-        print(dataPayload)
         url = "http://localhost:5000/api/v0/month_revenue/%s" % str(
             dataPayload['stock_id'])
         res = requests.post(url, data=json.dumps(dataPayload))
@@ -138,27 +132,20 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
     data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
     data.set_index("會計項目", inplace=True)
+    data = transformHeaderNoun(data, 'income_sheet')
 
-    with open('./noun_conversion/income_sheet_convers.json') \
-            as income_sheet_convers:
-        incomeSheetNounConvers = json.loads(income_sheet_convers.read())
-
-    indexs = data.index
-    new_indexs = []
-    for idx, index in enumerate(indexs):
-        if incomeSheetNounConvers.get(index) is not None:
-            new_indexs.append(incomeSheetNounConvers.get(index))
-        else:
-            new_indexs.append(index)
-    data.index = new_indexs
     dataPayload = {}
-
+    # Key-select is used to select the data to be saved.
     with open('./data_key_select/income_sheet_key_select.txt') \
             as income_sheet_key_select:
         incomeSheetKeySel = set(
             line.strip() for line in income_sheet_key_select)
 
+    # ratioIgnore is used to ignore the proportion of data 
+    # that does not need to be stored in the database.
     ratioIgnore = set(["營業收入合計", "營業成本合計", "營業外收入及支出合計"])
+
+    # if the key is in key_select file, 
     for key in incomeSheetKeySel:
         dataPayload[key] = data.loc[key][0]
         if not math.isnan(data.loc[key][1])\
