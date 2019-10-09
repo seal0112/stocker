@@ -77,6 +77,57 @@ class Basic_information(Base):
         setattr(self, key, value)
 
 
+class Cashflow(Base):
+    __tablename__ = 'cashflow'
+
+    id = Column(Integer, primary_key=True)
+    update_date = Column(
+        Date, nullable=False,
+        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+    stock_id = Column(
+        String(6), ForeignKey('basic_information.id'), nullable=False)
+    year = Column(Integer, nullable=False)
+    season = Column(
+        Enum('1', '2', '3', '4'), nullable=False)
+    折舊費用 = Column(BIGINT, default=0)
+    攤銷費用 = Column(BIGINT, default=0)
+    營業活動之淨現金流入 = Column(BIGINT, nullable=False)
+    資本支出= Column(BIGINT, default=0)
+    不動產廠房及設備轉列費用數 = Column(BIGINT, default=0)
+    取得不動產廠房及設備 = Column(BIGINT, default=0)
+    處分不動產廠房及設備 = Column(BIGINT, default=0)
+    取得不動產及設備 = Column(BIGINT, default=0)
+    處分不動產及設備 = Column(BIGINT, default=0)
+    取得投資性不動產 = Column(BIGINT, default=0)
+    處分投資性不動產 = Column(BIGINT, default=0)
+    投資性不動產公允價值調整損失 = Column(BIGINT, default=0)
+    處分及報廢不動產廠房及設備損失 = Column(BIGINT, default=0)
+    處分投資性不動產損失 = Column(BIGINT, default=0)
+    無形資產金流 = Column(BIGINT, default=0)
+    取得無形資產 = Column(BIGINT, default=0)
+    處分無形資產 = Column(BIGINT, default=0)
+    處分無形資產損失 = Column(BIGINT, default=0)
+    投資活動之淨現金流入 = Column(BIGINT, nullable=False)
+    籌資活動之淨現金流入 = Column(BIGINT, nullable=False)
+    本期現金及約當現金增加數 = Column(BIGINT, nullable=False)
+
+    # Add add a decorator property to serialize data from the database
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
 class Income_sheet(Base):
     __tablename__ = 'income_sheet'
 
