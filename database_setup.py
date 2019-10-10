@@ -4,8 +4,9 @@ from sqlalchemy import BIGINT, Float, SmallInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
-import json
+import enum
 import datetime
+import json
 
 Base = declarative_base()
 
@@ -20,7 +21,7 @@ class Basic_information(Base):
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
-    type = Column(String(4), nullable=False)
+    type = Column(Enum('sii', 'otc', 'rotc', 'pub'), nullable=False)
     公司名稱 = Column(TEXT, nullable=False)
     公司簡稱 = Column(String(10))
     產業類別 = Column(String(10))
