@@ -142,7 +142,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     results = pd.DataFrame()
     for url in urls:
         print("crawling...: "+url)
-        req = requests.get(url)
+        req = requests.get(url, timeout=1)
         req.encoding = "big5"
         print("parsing html to df")
         html_df = pd.read_html(StringIO(req.text))
@@ -288,7 +288,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     return results
 
 
-def crawlCashFlow(companyID, westernYearIn, seasonIn):
+def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     """
     @description:
         爬取個股每季的現金流量表
@@ -298,6 +298,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
         companyID => int
         westernYearIn => int (西元年)
         monthIn => int (1,2...11,12)
+        recursiveBreak => boolean
     """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
@@ -319,10 +320,14 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
         "season": season
     }
 
+    print(coID + " " + year + "S" + season + " crawling cashflow" , end='\r')
     req = requests.post(url, headers)
+    print(coID + " " + year + "S" + season + " crawling complete" , end='\r')
     req.encoding = "utf-8"
     # print(req.text)
     html_df = pd.read_html(StringIO(req.text))
+    print(coID + " " + year + "S" + season + " crawl cashflow complete")
+
     results = html_df[1]
     results.columns = results.columns.droplevel([0, 1])
 
@@ -340,6 +345,21 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
         if results.iloc[i].isnull().any():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
+
+    # set row name
+    results = results.set_index(results.columns[0])
+
+    if recursiveBreak:
+        return results
+
+    if seasonIn != 1:
+        prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
+        for index in results.index:
+            try:
+                results.loc[index] = results.loc[index][0] - prev.loc[index][0]
+            except:
+                pass
+        
 
     return results
 
