@@ -4,6 +4,8 @@ from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
 from database_setup import Basic_information, Month_revenue, Income_sheet
+import logging
+from logging.handlers import TimedRotatingFileHandler
 import json
 import datetime
 
@@ -111,6 +113,9 @@ def handleBasicInfo(stock_id):
             session.commit()
         except Exception as ex:
             print(ex)
+            app.logger.warning(
+                "406 %s is failed to update basic_information. Reason: %s"\
+                % (stock_id, ex))
             res = make_response(
                 json.dumps(
                     'Failed to update basic_information.'), 406)
@@ -179,6 +184,9 @@ def handleIncomeSheet(stock_id):
             session.commit()
         except Exception as ex:
             print(ex)
+            app.logger.warning(
+                "406 %s is failed to update income_sheet. Reason: %s"\
+                % (stock_id, ex))
             res = make_response(
                 json.dumps(
                     'Failed to update %s balance sheet.' % (stock_id)), 406)
@@ -252,6 +260,9 @@ def handleMonthRevenue(stock_id):
             session.commit()
         except Exception as ex:
             print(ex)
+            app.logger.warning(
+                "406 %s is failed to update income_sheet. Reason: %s"\
+                % (stock_id, ex))            
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 406)
@@ -262,6 +273,22 @@ def handleMonthRevenue(stock_id):
         return res
 
 
+@app.errorhandler(404)
+def pageNotfound(error):
+    app.logger.info('Page not found: %s', (request.path))
+    return render_template('500 server error.'), 500
+
+
+@app.errorhandler(500)
+def internalServerError(error):
+    app.logger.error('Server Error: %s', (error))
+    return render_template('500 server error.'), 500
+
+
 if __name__ == '__main__':
     app.debug = True
+    handler = TimedRotatingFileHandler(
+        'log/app.log', when='D', interval=1,
+        backupCount=15, encoding='UTF-8', delay=False, utc=True)
+    app.logger.addHandler(handler)
     app.run(host='0.0.0.0', port=5000)
