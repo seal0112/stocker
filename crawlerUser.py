@@ -74,23 +74,36 @@ def getBasicInfo(dataType='sii'):
         res = requests.post(url, data=json.dumps(dataPayload))
         print(res)
 
-def transformHeaderNoun(data, fileName):
-    # this method use noun_conversion file(fileName)
-    # to change specific index or column in Dataframe.
 
-    direct = {
+def transformHeaderNoun(data, fileName):
+    """this method is used to transefer header noun.
+
+    Use receive fileName to get noun_conversion file,
+    and use direction going to decide to replace the columns or index.
+
+    Args:
+        data: dataframe from crawler.
+        file: a string of noun_conversion file.
+
+    Return:
+        dataframe
+
+    Raises:
+        Exception: An error occurred.
+    """
+    direction = {
         "basic_information": "columns",
         "month_revenue": "columns",
         "income_sheet": "index"
     }
 
     with open(
-        './noun_conversion/%s.json' % fileName) as converFile:
+            './noun_conversion/%s.json' % fileName) as converFile:
         nounConvers = json.loads(converFile.read())
 
-    if direct[fileName] == 'columns':
+    if direction[fileName] == 'columns':
         headers = data.columns
-    elif direct[fileName] == 'index':
+    elif direction[fileName] == 'index':
         headers = data.index
 
     # 讀取noun_conversion時請記得使用 if key in dict 檢查是否需要替換key值
@@ -101,12 +114,13 @@ def transformHeaderNoun(data, fileName):
         else:
             new_headers.append(header)
 
-    if direct[fileName] == 'columns':
+    if direction[fileName] == 'columns':
         data.columns = new_headers
-    elif direct[fileName] == 'index':
+    elif direction[fileName] == 'index':
         data.index = new_headers
 
     return data
+
 
 def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
     # year, month: start at 2013, 1
@@ -141,11 +155,13 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         incomeSheetKeySel = set(
             line.strip() for line in income_sheet_key_select)
 
-    # ratioIgnore is used to ignore the proportion of data 
+    # ratioIgnore is used to ignore the proportion of data
     # that does not need to be stored in the database.
     ratioIgnore = set(["營業收入合計", "營業成本合計", "營業外收入及支出合計"])
 
-    # if the key is in key_select file, 
+    # if the key is in key_select file, then put data into datapayload
+    # if key need to store ration,
+    # key+'率' becomes the new key value for store
     for key in incomeSheetKeySel:
         dataPayload[key] = data.loc[key][0]
         if not math.isnan(data.loc[key][1])\
@@ -166,27 +182,34 @@ def getBalanceSheet(
     # TODO
     # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
 
-    aSet = set()
+    aDict = {}
     url = "http://localhost:5000/api/v0/sotck_number"
     payload = requests.get(url)
     stock_num = json.loads(payload.text)
 
     for i in stock_num:
         print(i['id'])
+        stockNum = i['id']
         try:
             data = crawlBalanceSheet(i['id'], westernYearIn, seasonIn)
         except Exception as ex:
+            print(ex)
             data = None
         if data is None:
-            time.sleep(5 + random.randrange(-3, 3))
+            time.sleep(4 + random.randrange(-3, 3))
             continue
         data.set_index("會計項目", inplace=True)
         data = data.reset_index()
 
         for i in data.index:
-            aSet.add(data.iloc[i][0])
+            if data.iloc[i][0] not in aDict:
+                aDict[str(data.iloc[i][0])] = [stockNum]
+            else:
+                tempList = aDict[str(data.iloc[i][0])]
+                tempList.append(stockNum)
+                aDict[str(data.iloc[i][0])] = tempList
 
-        time.sleep(5 + random.randrange(-3, 3))
+        time.sleep(4 + random.randrange(-3, 3))
 
     # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
     # print(data)
@@ -195,13 +218,17 @@ def getBalanceSheet(
     # for i in data.index:
     #     print(i, data.iloc[i][0])
     #     aSet.add(data.iloc[i][0])
+    print(aDict)
+    keys = sorted(aDict.keys())
+    aDict = {i: aDict[i] for i in keys}
 
-    aSet = sorted(aSet)
-
-    fileName = "balance_sheet_title.csv"
+    fileName = "balance_sheet_title_with_no.csv"
     with open(fileName, 'w', encoding='utf8') as fo:
-        for item in aSet:
-            stri = item + '\n'
+        for item in aDict:
+            stri = item + ':\t'
+            for num in aDict[item]:
+                stri = stri + num + ', '
+            stri+='\n'
             fo.write(stri)
 
 
@@ -210,13 +237,14 @@ def getCashFlow(
     # TODO
     # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
 
-    aSet = set()
+    aDict = {}
     url = "http://localhost:5000/api/v0/sotck_number"
     payload = requests.get(url)
     stock_num = json.loads(payload.text)
 
     for i in stock_num:
         print(i['id'])
+        stockNum = i['id']
         try:
             data = crawlCashFlow(i['id'], westernYearIn, seasonIn)
         except Exception as ex:
@@ -230,9 +258,14 @@ def getCashFlow(
         data = data.reset_index()
 
         for i in data.index:
-            aSet.add(data.iloc[i][0])
+            if data.iloc[i][0] not in aDict:
+                aDict[str(data.iloc[i][0])] = [stockNum]
+            else:
+                tempList = aDict[str(data.iloc[i][0])]
+                tempList.append(stockNum)
+                aDict[str(data.iloc[i][0])] = tempList
 
-        time.sleep(6 + random.randrange(-3, 3))
+        time.sleep(4 + random.randrange(-3, 3))
 
     # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
     # print(data)
@@ -241,19 +274,23 @@ def getCashFlow(
     # for i in data.index:
     #     print(i, data.iloc[i][0])
     #     aSet.add(data.iloc[i][0])
+    print(aDict)
+    keys = sorted(aDict.keys())
+    aDict = {i: aDict[i] for i in keys}
 
-    aSet = sorted(aSet)
-
-    fileName = "cashflow_title.csv"
+    fileName = "cashflow_title_with_no.csv"
     with open(fileName, 'w', encoding='utf8') as fo:
-        for item in aSet:
-            stri = item + '\n'
+        for item in aDict:
+            stri = item + ':\t'
+            for num in aDict[item]:
+                stri = stri + num + ', '
+            stri+='\n'
             fo.write(stri)
 
 
 if __name__ == '__main__':
     # getBasicInfo('otc')
     # getMonthlyRevenue(2019, 9)
-    getIncomeSheet(2330, 2019, 2)
+    # getIncomeSheet(2330, 2019, 2)
     # getBalanceSheet(2337, 2019, 2)
-    # getCashFlow()
+    getCashFlow()
