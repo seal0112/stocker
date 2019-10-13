@@ -142,7 +142,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     results = pd.DataFrame()
     for url in urls:
         print("crawling...: "+url)
-        req = requests.get(url)
+        req = requests.get(url, timeout=1)
         req.encoding = "big5"
         print("parsing html to df")
         html_df = pd.read_html(StringIO(req.text))
@@ -182,25 +182,39 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "encodeURIComponent": "1",
-        "step": "1",
-        "firstin": "1",
-        "off": "1",
-        "queryName": "co_id",
-        "inpuType": "co_id",
-        "TYPEK": "all",
-        "isnew": "false",
-        "co_id": coID,
-        "year": year,
-        "season": season
-    }
+    if (companyID >= 5820) and (companyID <= 5880):
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1'
+        }
+    else:
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "encodeURIComponent": "1",
+            "step": "1",
+            "firstin": "1",
+            "off": "1",
+            "queryName": "co_id",
+            "inpuType": "co_id",
+            "TYPEK": "all",
+            "isnew": "false",
+            "co_id": coID,
+            "year": year,
+            "season": season
+        }
 
     req = requests.post(url, headers)
     req.encoding = "utf-8"
-    html_df = pd.read_html(StringIO(req.text))
-    results = html_df[1]
+    try:
+        html_df = pd.read_html(StringIO(req.text))
+        results = html_df[1]
+    except Exception as ex:
+        print(ex)
+        return None
+    
     results.columns = results.columns.droplevel([0, 1])
 
     # drop invalid column
@@ -220,6 +234,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
         if resultsCopy.iloc[i].isnull().all():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
+    results = results.set_index(results.columns[0])
 
     return results
 
@@ -240,20 +255,30 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb04"
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "encodeURIComponent": "1",
-        "step": "1",
-        "firstin": "1",
-        "off": "1",
-        "queryName": "co_id",
-        "inpuType": "co_id",
-        "TYPEK": "all",
-        "isnew": "false",
-        "co_id": coID,
-        "year": year,
-        "season": season
-    }
+    
+    if (companyID >= 5820) and (companyID <= 5880):
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1'
+        }
+    else:
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "encodeURIComponent": "1",
+            "step": "1",
+            "firstin": "1",
+            "off": "1",
+            "queryName": "co_id",
+            "inpuType": "co_id",
+            "TYPEK": "all",
+            "isnew": "false",
+            "co_id": coID,
+            "year": year,
+            "season": season
+        }
 
     req = requests.post(url, headers)
     req.encoding = "utf-8"
@@ -284,11 +309,12 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         if resultsCopy.iloc[i].isnull().all():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
+    results = results.set_index(results.columns[0])
 
     return results
 
 
-def crawlCashFlow(companyID, westernYearIn, seasonIn):
+def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     """
     @description:
         爬取個股每季的現金流量表
@@ -298,33 +324,46 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
         companyID => int
         westernYearIn => int (西元年)
         monthIn => int (1,2...11,12)
+        recursiveBreak => boolean
     """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb05"
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "encodeURIComponent": "1",
-        "step": "1",
-        "firstin": "1",
-        "off": "1",
-        "queryName": "co_id",
-        "inpuType": "co_id",
-        "TYPEK": "all",
-        "isnew": "false",
-        "co_id": coID,
-        "year": year,
-        "season": season
-    }
+    if (companyID >= 5820) and (companyID <= 5880):
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1'
+        }
+    else:
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "encodeURIComponent": "1",
+            "step": "1",
+            "firstin": "1",
+            "off": "1",
+            "queryName": "co_id",
+            "inpuType": "co_id",
+            "TYPEK": "all",
+            "isnew": "false",
+            "co_id": coID,
+            "year": year,
+            "season": season
+        }
 
     req = requests.post(url, headers)
     req.encoding = "utf-8"
     # print(req.text)
-    html_df = pd.read_html(StringIO(req.text))
-    results = html_df[1]
-    results.columns = results.columns.droplevel([0, 1])
+    try:
+        html_df = pd.read_html(StringIO(req.text))
+        results = html_df[1]
+    except Exception as ex:
+        print(ex)
+        return None
 
     # drop invalid column
     results = results.iloc[:, 0:2]
@@ -340,6 +379,22 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn):
         if results.iloc[i].isnull().any():
             dropRowIndex.append(i)
     results = results.drop(results.index[dropRowIndex])
+
+    # set row name
+    results = results.set_index(results.columns[0])
+
+    if recursiveBreak:
+        return results
+    
+    # transfer accumulative cashflow into single season
+    if seasonIn != 1:
+        prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
+        for index in results.index:
+            try:
+                results.loc[index] = results.loc[index][0] - prev.loc[index][0]
+            except:
+                pass
+        
 
     return results
 
