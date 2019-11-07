@@ -14,6 +14,7 @@ with open('./critical_flie/databaseAccount.json') as accountReader:
     dbAccount = json.loads(accountReader.read())
 
 
+# done
 class Basic_information(Base):
     __tablename__ = 'basic_information'
 
@@ -78,6 +79,37 @@ class Basic_information(Base):
         setattr(self, key, value)
 
 
+class BalanceSheet(Base):
+    __tablename__ = 'balance_sheet'
+
+    id = Column(Integer, primary_key=True)
+    update_date = Column(
+        Date, nullable=False,
+        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+    stock_id = Column(
+        String(6), ForeignKey('basic_information.id'), nullable=False)
+    year = Column(Integer, nullable=False)
+    season = Column(
+        Enum('1', '2', '3', '4'), nullable=False)
+    # TODO: balance sheet schema init
+    # Add add a decorator property to serialize data from the database
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
+# prototype done
 class Cashflow(Base):
     __tablename__ = 'cashflow'
 
@@ -90,27 +122,28 @@ class Cashflow(Base):
     year = Column(Integer, nullable=False)
     season = Column(
         Enum('1', '2', '3', '4'), nullable=False)
+    停業單位稅前淨利淨損 = Column(BIGINT, default=0)
+    繼續營業單位稅前淨利淨損 = Column(BIGINT, default=0)
+    本期稅前淨利淨損 = Column(BIGINT)
     折舊費用 = Column(BIGINT, default=0)
     攤銷費用 = Column(BIGINT, default=0)
-    營業活動之淨現金流入 = Column(BIGINT, nullable=False)
-    資本支出= Column(BIGINT, default=0)
-    不動產廠房及設備轉列費用數 = Column(BIGINT, default=0)
-    取得不動產廠房及設備 = Column(BIGINT, default=0)
-    處分不動產廠房及設備 = Column(BIGINT, default=0)
-    取得不動產及設備 = Column(BIGINT, default=0)
-    處分不動產及設備 = Column(BIGINT, default=0)
-    取得投資性不動產 = Column(BIGINT, default=0)
-    處分投資性不動產 = Column(BIGINT, default=0)
-    投資性不動產公允價值調整損失 = Column(BIGINT, default=0)
-    處分及報廢不動產廠房及設備損失 = Column(BIGINT, default=0)
-    處分投資性不動產損失 = Column(BIGINT, default=0)
-    無形資產金流 = Column(BIGINT, default=0)
-    取得無形資產 = Column(BIGINT, default=0)
-    處分無形資產 = Column(BIGINT, default=0)
-    處分無形資產損失 = Column(BIGINT, default=0)
-    投資活動之淨現金流入 = Column(BIGINT, nullable=False)
-    籌資活動之淨現金流入 = Column(BIGINT, nullable=False)
-    本期現金及約當現金增加數 = Column(BIGINT, nullable=False)
+    利息收入 = Column(BIGINT, default=0)
+    利息費用 = Column(BIGINT, default=0)
+    退還支付所得稅 = Column(BIGINT, default=0)
+    營業活動之淨現金流入流出 = Column(BIGINT, nullable=False)
+    取得處分不動產廠房及設備 = Column(BIGINT, default=0)
+    取得處分無形資產 = Column(BIGINT, default=0)
+    投資活動之淨現金流入流出 = Column(BIGINT, nullable=False)
+    現金增資 = Column(BIGINT, default=0)
+    現金減資 = Column(BIGINT, default=0)
+    庫藏股現金增減 = Column(BIGINT, default=0)
+    發放現金股利 = Column(BIGINT, default=0)
+    償還公司債 = Column(BIGINT, default=0)
+    發行公司債 = Column(BIGINT, default=0)
+    籌資活動之淨現金流入流出 = Column(BIGINT, nullable=False)
+    期初現金及約當現金餘額 = Column(BIGINT, nullable=False)
+    期末現金及約當現金餘額 = Column(BIGINT, nullable=False)
+    本期現金及約當現金增加減少數 = Column(BIGINT, nullable=False)
 
     # Add add a decorator property to serialize data from the database
     @property
@@ -129,6 +162,7 @@ class Cashflow(Base):
         setattr(self, key, value)
 
 
+# prototype done
 class Income_sheet(Base):
     __tablename__ = 'income_sheet'
 
@@ -182,6 +216,7 @@ class Income_sheet(Base):
         setattr(self, key, value)
 
 
+# done
 class Month_revenue(Base):
     __tablename__ = 'month_revenue'
 
