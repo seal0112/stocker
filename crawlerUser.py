@@ -139,13 +139,13 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
 
 
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
+    # protype version is done.
 
     # url = "http://localhost:5000/api/v0/sotck_number"
     # payload = requests.get(url)
     # stock_num = json.loads(payload.text)
 
     data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
-    data.set_index("會計項目", inplace=True)
     data = transformHeaderNoun(data, 'income_sheet')
 
     dataPayload = {}
@@ -163,10 +163,16 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     # if key need to store ration,
     # key+'率' becomes the new key value for store
     for key in incomeSheetKeySel:
-        dataPayload[key] = data.loc[key][0]
-        if not math.isnan(data.loc[key][1])\
-                and key not in ratioIgnore:
-            dataPayload[key+'率'] = data.loc[key][1]
+        try:
+            if key in data.index:
+                dataPayload[key] = data.loc[key][0]
+                if not math.isnan(data.loc[key][1])\
+                        and key not in ratioIgnore:
+                    dataPayload[key+'率'] = round(data.loc[key][1], 2)
+            else:
+                dataPayload[key] = None
+        except Exception as ex:
+            print(ex)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -291,6 +297,6 @@ def getCashFlow(
 if __name__ == '__main__':
     # getBasicInfo('otc')
     # getMonthlyRevenue(2019, 9)
-    # getIncomeSheet(2330, 2019, 2)
+    getIncomeSheet(2905, 2019, 3)
     # getBalanceSheet(2337, 2019, 2)
-    getCashFlow()
+    # getCashFlow()

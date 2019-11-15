@@ -288,6 +288,8 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         results = html_df[1]
     except Exception as ex:
         print(ex)
+        # TODO 
+        # if ex is no table found, then put null datq into database.
         return None
 
     results.columns = results.columns.droplevel([0, 1])
