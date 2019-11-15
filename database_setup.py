@@ -79,6 +79,7 @@ class Basic_information(Base):
         setattr(self, key, value)
 
 
+# done
 class BalanceSheet(Base):
     __tablename__ = 'balance_sheet'
 
@@ -91,7 +92,39 @@ class BalanceSheet(Base):
     year = Column(Integer, nullable=False)
     season = Column(
         Enum('1', '2', '3', '4'), nullable=False)
-    # TODO: balance sheet schema init
+    現金及約當現金 = Column(BIGINT)
+    透過其他綜合損益按公允價值衡量之金融資產流動 = Column(BIGINT)
+    透過損益按公允價值衡量之金融資產流動 = Column(BIGINT)
+    按攤銷後成本衡量之金融資產流動 = Column(BIGINT)
+    存貨 = Column(BIGINT)
+    應收帳款淨額 = Column(BIGINT)
+    應收票據淨額 = Column(BIGINT)
+    流動資產合計 = Column(BIGINT)
+    透過其他綜合損益按公允價值衡量之金融資產非流動 = Column(BIGINT)
+    透過損益按公允價值衡量之金融資產非流動 = Column(BIGINT)
+    按攤銷後成本衡量之金融資產非流動 = Column(BIGINT)
+    採用權益法之投資 = Column(BIGINT)
+    不動產廠房及設備 = Column(BIGINT)
+    無形資產 = Column(BIGINT)
+    非流動資產合計 = Column(BIGINT)
+    資產總計 = Column(BIGINT)
+    短期借款 = Column(BIGINT)
+    一年或一營業週期內到期長期負債 = Column(BIGINT)
+    應付帳款 = Column(BIGINT)
+    應付票據 = Column(BIGINT)
+    流動負債合計 = Column(BIGINT)
+    長期借款 = Column(BIGINT)
+    應付公司債 = Column(BIGINT)
+    非流動負債合計 = Column(BIGINT)
+    負債總計 = Column(BIGINT)
+    股本合計 = Column(BIGINT)
+    資本公積合計 = Column(BIGINT)
+    保留盈餘合計 = Column(BIGINT)
+    非控制權益 = Column(BIGINT)
+    歸屬於母公司業主之權益 = Column(BIGINT)
+    權益總計 = Column(BIGINT)
+    負債及權益總計 = Column(BIGINT)
+
     # Add add a decorator property to serialize data from the database
     @property
     def serialize(self):
@@ -122,28 +155,28 @@ class Cashflow(Base):
     year = Column(Integer, nullable=False)
     season = Column(
         Enum('1', '2', '3', '4'), nullable=False)
-    停業單位稅前淨利淨損 = Column(BIGINT, default=0)
-    繼續營業單位稅前淨利淨損 = Column(BIGINT, default=0)
+    停業單位稅前淨利淨損 = Column(BIGINT)
+    繼續營業單位稅前淨利淨損 = Column(BIGINT)
     本期稅前淨利淨損 = Column(BIGINT)
-    折舊費用 = Column(BIGINT, default=0)
-    攤銷費用 = Column(BIGINT, default=0)
-    利息收入 = Column(BIGINT, default=0)
-    利息費用 = Column(BIGINT, default=0)
-    退還支付所得稅 = Column(BIGINT, default=0)
-    營業活動之淨現金流入流出 = Column(BIGINT, nullable=False)
-    取得處分不動產廠房及設備 = Column(BIGINT, default=0)
-    取得處分無形資產 = Column(BIGINT, default=0)
-    投資活動之淨現金流入流出 = Column(BIGINT, nullable=False)
-    現金增資 = Column(BIGINT, default=0)
-    現金減資 = Column(BIGINT, default=0)
-    庫藏股現金增減 = Column(BIGINT, default=0)
-    發放現金股利 = Column(BIGINT, default=0)
-    償還公司債 = Column(BIGINT, default=0)
-    發行公司債 = Column(BIGINT, default=0)
-    籌資活動之淨現金流入流出 = Column(BIGINT, nullable=False)
-    期初現金及約當現金餘額 = Column(BIGINT, nullable=False)
-    期末現金及約當現金餘額 = Column(BIGINT, nullable=False)
-    本期現金及約當現金增加減少數 = Column(BIGINT, nullable=False)
+    折舊費用 = Column(BIGINT)
+    攤銷費用 = Column(BIGINT)
+    利息收入 = Column(BIGINT)
+    利息費用 = Column(BIGINT)
+    退還支付所得稅 = Column(BIGINT)
+    營業活動之淨現金流入流出 = Column(BIGINT)
+    取得處分不動產廠房及設備 = Column(BIGINT)
+    取得處分無形資產 = Column(BIGINT)
+    投資活動之淨現金流入流出 = Column(BIGINT)
+    現金增資 = Column(BIGINT)
+    現金減資 = Column(BIGINT)
+    庫藏股現金增減 = Column(BIGINT)
+    發放現金股利 = Column(BIGINT)
+    償還公司債 = Column(BIGINT)
+    發行公司債 = Column(BIGINT)
+    籌資活動之淨現金流入流出 = Column(BIGINT)
+    期初現金及約當現金餘額 = Column(BIGINT)
+    期末現金及約當現金餘額 = Column(BIGINT)
+    本期現金及約當現金增加減少數 = Column(BIGINT)
 
     # Add add a decorator property to serialize data from the database
     @property

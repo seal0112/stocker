@@ -10,6 +10,7 @@ import random
 import math
 
 
+# done
 def getBasicInfo(dataType='sii'):
     # dataType: otc, sii, rotc, pub
     data = crawlBasicInformation(dataType)
@@ -75,6 +76,7 @@ def getBasicInfo(dataType='sii'):
         print(res)
 
 
+# done
 def transformHeaderNoun(data, fileName):
     """this method is used to transefer header noun.
 
@@ -122,6 +124,7 @@ def transformHeaderNoun(data, fileName):
     return data
 
 
+# done
 def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
     # year, month: start at 2013, 1
     data = crawlMonthlyRevenue(westernYearIn, monthIn)
@@ -138,6 +141,7 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
         print(res)
 
 
+# prototype
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
     # url = "http://localhost:5000/api/v0/sotck_number"
@@ -177,6 +181,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     print(res)
 
 
+# TODO
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
     # TODO
@@ -228,10 +233,11 @@ def getBalanceSheet(
             stri = item + ':\t'
             for num in aDict[item]:
                 stri = stri + num + ', '
-            stri+='\n'
+            stri += '\n'
             fo.write(stri)
 
 
+# TODO
 def getCashFlow(
         companyID=2330, westernYearIn=2019, seasonIn=2):
     # TODO
@@ -284,7 +290,7 @@ def getCashFlow(
             stri = item + ':\t'
             for num in aDict[item]:
                 stri = stri + num + ', '
-            stri+='\n'
+            stri += '\n'
             fo.write(stri)
 
 
