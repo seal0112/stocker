@@ -42,12 +42,12 @@ def crawlCriticalInformation(parse_to_json=False):
                     match = False
 
             if(match):
-                    try:
-                        tmp = dfs[1].iloc[index]
-                        ret = ret.append(tmp)
-                    except Exception as err:
-                        print(err)
-                    break
+                try:
+                    tmp = dfs[1].iloc[index]
+                    ret = ret.append(tmp)
+                except Exception as err:
+                    print(err)
+                break
     if parse_to_json:
         colHeader = list(ret.columns.values)
         colHeader.pop(0)
@@ -138,13 +138,16 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                     + year + "_" + month + "_1.html"
 
     urls = [urlOtcDomestic, urlOtcForiegn, urlSiiDomestic, urlSiiForiegn]
+    urlname = ['OtcDomestic', 'OtcForiegn', 'SiiDomestic', 'SiiForiegn']
 
     results = pd.DataFrame()
+    index = 0
     for url in urls:
-        print("crawling...: "+url)
+        print("crawling monthRevene " + urlname[index], end='...')
+        index = index + 1
         req = requests.get(url, timeout=1)
         req.encoding = "big5"
-        print("parsing html to df")
+        print("done.")
         html_df = pd.read_html(StringIO(req.text))
         dfs = pd.DataFrame()
         for df in html_df:
@@ -214,7 +217,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     except Exception as ex:
         print(ex)
         return None
-    
+
     results.columns = results.columns.droplevel([0, 1])
 
     # drop invalid column
@@ -255,7 +258,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb04"
-    
+
     if (companyID >= 5820) and (companyID <= 5880):
         headers = {
             'step': '2',
@@ -288,7 +291,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         results = html_df[1]
     except Exception as ex:
         print(ex)
-        # TODO 
+        # TODO
         # if ex is no table found, then put null datq into database.
         return None
 
@@ -387,17 +390,15 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
 
     if recursiveBreak:
         return results
-    
+
     # transfer accumulative cashflow into single season
     if seasonIn != 1:
         prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
         for index in results.index:
             try:
                 results.loc[index] = results.loc[index][0] - prev.loc[index][0]
-            except:
+            except Exception as ex:
                 pass
-        
-
     return results
 
 
