@@ -94,11 +94,11 @@ def crawlBasicInformation(companyType):
         'off': '1',
         'TYPEK': companyType,
     }
+    print("crawling basicInfo " + companyType, end='...')
     result = requests.get(url, headers)
-    print("crawler complete.")
+    print("done")
     result.encoding = 'utf-8'
     html_df = pd.read_html(StringIO(result.text), header=0)
-    print("parsing html to df")
     ret = html_df[0]
 
     # take out all special char out
