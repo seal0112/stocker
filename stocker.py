@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, url_for
-from flask import jsonify, make_response
+from flask import jsonify, make_response, render_template
 from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
@@ -224,12 +224,13 @@ def handleMonthRevenue(stock_id):
     """
     if request.method == 'GET':
         monthReve = session.query(Month_revenue).filter_by(
-            stock_id=stock_id).one_or_none()
+            stock_id=stock_id).order_by(Month_revenue.year.desc()).all()
+        print(monthReve)
         if monthReve is None:
-            return make_response(
-                json.dumps("404 Not Found"), 404)
+            return make_response(404)
         else:
-            return jsonify(monthReve.serialize)
+            result = [i.serialize for i in monthReve]
+            return jsonify(result)
 
     elif request.method == 'POST':
         payload = json.loads(request.data)
@@ -259,9 +260,9 @@ def handleMonthRevenue(stock_id):
             session.add(monthReve)
             session.commit()
         except Exception as ex:
-            print(ex)
-            app.logger.warning(
-                "406 %s is failed to update income_sheet. Reason: %s"\
+            print("%s: %s" % (stock_id, ex))
+            logging.warning(
+                "406 %s is failed to update month revenue. Reason: %s"\
                 % (stock_id, ex))            
             res = make_response(
                 json.dumps(
@@ -275,20 +276,39 @@ def handleMonthRevenue(stock_id):
 
 @app.errorhandler(404)
 def pageNotfound(error):
-    app.logger.info('Page not found: %s', (request.path))
-    return render_template('500 server error.'), 500
+    logging.info('Page not found: %s', (request.path))
+    return make_response(json.dumps('404 not foundss'), 404)
 
 
 @app.errorhandler(500)
 def internalServerError(error):
-    app.logger.error('Server Error: %s', (error))
-    return render_template('500 server error.'), 500
+    logging.error('Server Error: %s', (error))
+    return make_response(json.dumps('404 not found'), 404)
 
 
 if __name__ == '__main__':
     app.debug = True
+
     handler = TimedRotatingFileHandler(
         'log/app.log', when='D', interval=1,
         backupCount=15, encoding='UTF-8', delay=False, utc=True)
-    app.logger.addHandler(handler)
+
+    logger = logging.getLogger()
+    BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
+    DATE_FORMAT = '%m-%d %H:%M'
+    formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
+
+    fileHandler = logging.FileHandler("log/app.log")
+    fileHandler.setFormatter(formatter)
+    if app.debug is True:
+        fileHandler.setLevel(logging.DEBUG)
+    else:
+        fileHandler.setLevel(logging.WARNING)
+    logger.addHandler(fileHandler)
+
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    # app.logger.addHandler(handler)
     app.run(host='0.0.0.0', port=5000)

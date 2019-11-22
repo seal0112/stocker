@@ -132,7 +132,7 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
 
     for i in range(len(data)):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
-        # print(dataPayload)
+        print(dataPayload)
         dataPayload['year'] = westernYearIn
         dataPayload['month'] = str(monthIn)
         url = "http://localhost:5000/api/v0/month_revenue/%s" % str(
@@ -302,7 +302,7 @@ def getCashFlow(
 
 if __name__ == '__main__':
     # getBasicInfo('otc')
-    # getMonthlyRevenue(2019, 9)
-    getIncomeSheet(2905, 2019, 3)
+    getMonthlyRevenue(2013, 1)
+    # getIncomeSheet(2905, 2019, 3)
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
