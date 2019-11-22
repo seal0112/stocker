@@ -17,6 +17,16 @@ with open('./critical_flie/databaseAccount.json') as accountReader:
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
+logger = logging.getLogger()
+BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
+DATE_FORMAT = '%m-%d %H:%M'
+formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(formatter)
+logger.addHandler(console)
+
 engine = create_engine(
     """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
         dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
@@ -113,7 +123,7 @@ def handleBasicInfo(stock_id):
             session.commit()
         except Exception as ex:
             print(ex)
-            app.logger.warning(
+            logger.warning(
                 "406 %s is failed to update basic_information. Reason: %s"\
                 % (stock_id, ex))
             res = make_response(
@@ -184,7 +194,7 @@ def handleIncomeSheet(stock_id):
             session.commit()
         except Exception as ex:
             print(ex)
-            app.logger.warning(
+            logger.warning(
                 "406 %s is failed to update income_sheet. Reason: %s"\
                 % (stock_id, ex))
             res = make_response(
@@ -289,26 +299,14 @@ def internalServerError(error):
 if __name__ == '__main__':
     app.debug = True
 
-    handler = TimedRotatingFileHandler(
+    fileHandler = TimedRotatingFileHandler(
         'log/app.log', when='D', interval=1,
-        backupCount=15, encoding='UTF-8', delay=False, utc=True)
-
-    logger = logging.getLogger()
-    BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-    DATE_FORMAT = '%m-%d %H:%M'
-    formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
-
-    fileHandler = logging.FileHandler("log/app.log")
+        backupCount=30, encoding='UTF-8', delay=False, utc=True)
     fileHandler.setFormatter(formatter)
     if app.debug is True:
-        fileHandler.setLevel(logging.DEBUG)
+        fileHandler.setLevel(logging.WARNING)
     else:
         fileHandler.setLevel(logging.WARNING)
     logger.addHandler(fileHandler)
 
-    console = logging.StreamHandler()
-    console.setLevel(logging.INFO)
-    console.setFormatter(formatter)
-    logger.addHandler(console)
-    # app.logger.addHandler(handler)
     app.run(host='0.0.0.0', port=5000)
