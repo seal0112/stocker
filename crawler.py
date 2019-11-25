@@ -483,8 +483,60 @@ def crawlShareholderCount(companyID, datetime):
     return result
 
 
+def crawlAllIncomeSheetStockNo(type='sii', westernYearIn=2019, seasonIn=3):
+    """this method is used to crawler entire income sheet stock number.
+
+    According to the received parameter type, westernYearIn and seasonIn,
+    Go to the specific website and 
+    crawler stock number that has released the income sheet.
+
+    Args:
+        type: a string of stock(sii, otc)
+        westernYearIn: Year of the West
+        seasonIn: Financial quarter(1, 2, 3, 4)
+
+    Return:
+        result: a list with stock numbers inside
+
+    Raises:
+        Exception: no table in request result or others things.
+    """
+    year = str(westernYearIn - 1911)
+    season = str(seasonIn)
+
+    url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "encodeURIComponent": "1",
+        "step": "1",
+        "firstin": "1",
+        "off": "1",
+        "isQuery": 'Y',
+        "TYPEK": type,
+        "year": year,
+        "season": season
+    }
+
+    req = requests.post(url, headers)
+    req.encoding = "utf-8"
+
+    try:
+        html_df = pd.read_html(StringIO(req.text))
+    except Exception as ex:
+        print(ex)
+        return None
+
+    stockNums = []
+    for idx in range(1,len(html_df)):
+        #print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
+        stockNums += list(html_df[idx]['公司代號'])
+
+    return stockNums
+
+
 if __name__ == "__main__":
-    siiCompany = crawlBasicInformation('sii')
+    #siiCompany = crawlBasicInformation('sii')
     # otcCompany = crawlBasicInformation('otc')
-    print(type(siiCompany))
+    #print(type(siiCompany))
     # print(otcCompany)
+    crawlAllIncomeSheet('sii', 2019, 3)
