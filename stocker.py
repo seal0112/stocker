@@ -124,7 +124,7 @@ def handleBasicInfo(stock_id):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update basic_information. Reason: %s"\
+                "406 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
@@ -195,7 +195,7 @@ def handleIncomeSheet(stock_id):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update income_sheet. Reason: %s"\
+                "406 %s is failed to update income_sheet. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
@@ -248,6 +248,11 @@ def handleMonthRevenue(stock_id):
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
+        # check payload
+        for key in payload:
+            if payload[key] == '不適用':
+                payload[key] = None
+
         try:
             if monthReve is not None:
                 changeFlag = False
@@ -272,8 +277,8 @@ def handleMonthRevenue(stock_id):
         except Exception as ex:
             print("%s: %s" % (stock_id, ex))
             logging.warning(
-                "406 %s is failed to update month revenue. Reason: %s"\
-                % (stock_id, ex))            
+                "406 %s is failed to update month revenue. Reason: %s"
+                % (stock_id, ex))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 406)
