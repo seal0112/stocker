@@ -3,6 +3,7 @@ from crawler import crawlBalanceSheet
 from crawler import crawlCashFlow
 from crawler import crawlIncomeSheet
 from crawler import crawlMonthlyRevenue
+from datetime import datetime
 import json
 import requests
 import time
@@ -63,17 +64,21 @@ def getBasicInfo(dataType='sii'):
 
     print(payload['id'])
     url = 'http://localhost:5000/api/v0/basic_information/%s' % payload['id']
-    res = requests.post(url, data=json.dumps(payload))"""
+    res = requests.post(url, data=json.dumps(payload))
+    """
 
     for i in range(len(data)):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
         dataPayload['type'] = dataType
         url = \
-            "http://localhost:5000/api/v0/basic_information/%s"\
+            "http://127.0.0.1:5000/api/v0/basic_information/%s"\
             % dataPayload['id']
         res = requests.post(url, data=json.dumps(dataPayload))
+        print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
+        print(dataPayload['id'], end=' ')
         print(res)
+        time.sleep(0.05)
 
 
 # done
@@ -100,7 +105,8 @@ def transformHeaderNoun(data, fileName):
     }
 
     with open(
-            './noun_conversion/%s.json' % fileName) as converFile:
+            './noun_conversion/%s.json' % fileName,
+            encoding='utf-8') as converFile:
         nounConvers = json.loads(converFile.read())
 
     if direction[fileName] == 'columns':
@@ -132,13 +138,16 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
 
     for i in range(len(data)):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
-        print(dataPayload)
         dataPayload['year'] = westernYearIn
         dataPayload['month'] = str(monthIn)
-        url = "http://localhost:5000/api/v0/month_revenue/%s" % str(
+        url = "http://127.0.0.1:5000/api/v0/month_revenue/%s" % str(
             dataPayload['stock_id'])
         res = requests.post(url, data=json.dumps(dataPayload))
+        print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
+        print(dataPayload['stock_id'], end=' ')
+        print(str(westernYearIn) + "-" + str(monthIn), end=' ')
         print(res)
+        time.sleep(0.05)
 
 
 # prototype
@@ -181,7 +190,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    balanceSheetApi = "http://localhost:5000/api/v0/income_sheet/%s" % str(
+    balanceSheetApi = "http://127.0.0.1:5000/api/v0/income_sheet/%s" % str(
             companyID)
     res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
     print(res)
@@ -250,7 +259,7 @@ def getCashFlow(
     # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
 
     aDict = {}
-    url = "http://localhost:5000/api/v0/sotck_number"
+    url = "http://127.0.0.1:5000/api/v0/sotck_number"
     payload = requests.get(url)
     stock_num = json.loads(payload.text)
 
@@ -301,8 +310,27 @@ def getCashFlow(
 
 
 if __name__ == '__main__':
+    '''
+    usage: get basic information
+    '''
+    # getBasicInfo('sii')
     # getBasicInfo('otc')
-    getMonthlyRevenue(2013, 1)
+    # getBasicInfo('pub')
+    # getBasicInfo('rotc')
+    '''
+    usage: get monthly revenue
+    '''
+    # getMonthlyRevenue(2013, 1)
+    startTime = datetime.now()
+    for month in range(8, 13, 1):
+        getMonthlyRevenue(2018, month)
+    for month in range(1, 11, 1):
+        getMonthlyRevenue(2019, month)
+    completeTime = datetime.now()
+    print("start time   : " + str(startTime))
+    print("complete time: " + str(completeTime))
+    print("total time   : " + str(completeTime - startTime))
+
     # getIncomeSheet(2905, 2019, 3)
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
