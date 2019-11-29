@@ -4,6 +4,7 @@ from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
 from database_setup import Basic_information, Month_revenue, Income_sheet
+from database_setup import Balance_Sheet
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
@@ -44,17 +45,52 @@ def showMain():
     return jsonify(res)
 
 
-@app.route('/api/v0/sotck_number', methods=['GET'])
+@app.route(
+    '/api/v0/stock_number',
+    methods=['GET', 'POST'])
 def getStockNumber():
-    type = request.args.get('type')
-    if type is None:
-        stockNum = session.query(Basic_information.id).all()
-    else:
-        stockNum = session.query(
-            Basic_information.id).filter_by(type=type).all()
-    res = [{'id': i[0]} for i in stockNum]
+    if request.method == 'GET':
+        type = request.args.get('type')
+        if type is None:
+            stockNum = session.query(Basic_information.id).all()
+        else:
+            stockNum = session.query(
+                Basic_information.id).filter_by(type=type).all()
+        res = [{'id': i[0]} for i in stockNum]
 
-    return jsonify(res)
+        return jsonify(res)
+    elif request.method == 'POST':
+        payload = json.loads(request.data)
+        reportTypeSet = set(["balance_sheet", "income_sheet"])
+        try:
+            if payload['reportType'] not in reportTypeSet:
+                raise KeyError
+            reportType = payload['reportType']
+            if reportType == 'balance_sheet':
+                stockNums = session.query(Balance_Sheet.stock_id).filter_by(
+                    year=payload['year']).filter_by(
+                        season=payload['season']).all()
+            elif reportType == 'income_sheet':
+                stockNums = session.query(Income_sheet.stock_id).filter_by(
+                    year=payload['year']).filter_by(
+                        season=payload['season']).all()
+            res = [{'stock_id': i[0]} for i in stockNums]
+        except Exception as ex:
+            if ex == KeyError:
+                logger.warning(
+                    "406 report type %s not found." % (reportType))
+                res = make_response(
+                    json.dumps('Failed to fetch stock number'), 406)
+            else:
+                print(ex)
+                logger.warning(
+                    "406 stock id not found. Reason: %s" % (ex))
+                res = make_response(
+                    json.dumps(
+                        'Failed to update basic_information.'), 406)
+            return res
+
+        return jsonify(res)
 
 
 @app.route(
