@@ -190,66 +190,16 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    balanceSheetApi = "http://127.0.0.1:5000/api/v0/income_sheet/%s" % str(
+    incomeSheetApi = "http://127.0.0.1:5000/api/v0/income_sheet/%s" % str(
             companyID)
-    res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
+    res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
     print(res)
 
 
 # TODO
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    # TODO
-    # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
-
-    aDict = {}
-    url = "http://localhost:5000/api/v0/sotck_number"
-    payload = requests.get(url)
-    stock_num = json.loads(payload.text)
-
-    for i in stock_num:
-        print(i['id'])
-        stockNum = i['id']
-        try:
-            data = crawlBalanceSheet(i['id'], westernYearIn, seasonIn)
-        except Exception as ex:
-            print(ex)
-            data = None
-        if data is None:
-            time.sleep(4 + random.randrange(-3, 3))
-            continue
-        data.set_index("會計項目", inplace=True)
-        data = data.reset_index()
-
-        for i in data.index:
-            if data.iloc[i][0] not in aDict:
-                aDict[str(data.iloc[i][0])] = [stockNum]
-            else:
-                tempList = aDict[str(data.iloc[i][0])]
-                tempList.append(stockNum)
-                aDict[str(data.iloc[i][0])] = tempList
-
-        time.sleep(4 + random.randrange(-3, 3))
-
-    # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
-    # print(data)
-    # data.set_index("會計項目", inplace=True)
-    # data = data.reset_index()
-    # for i in data.index:
-    #     print(i, data.iloc[i][0])
-    #     aSet.add(data.iloc[i][0])
-    print(aDict)
-    keys = sorted(aDict.keys())
-    aDict = {i: aDict[i] for i in keys}
-
-    fileName = "balance_sheet_title_with_no.csv"
-    with open(fileName, 'w', encoding='utf8') as fo:
-        for item in aDict:
-            stri = item + ':\t'
-            for num in aDict[item]:
-                stri = stri + num + ', '
-            stri += '\n'
-            fo.write(stri)
+    pass
 
 
 # TODO
@@ -309,6 +259,17 @@ def getCashFlow(
             fo.write(stri)
 
 
+def getExistSummaryStockNo(
+        westernYearIn=2019, seasonIn=2, reportType='balance_sheet'):
+    url = "http://127.0.0.1:5000/api/v0/stock_number"
+    payload = {}
+    payload['year'] = westernYearIn
+    payload['season'] = seasonIn
+    payload['reportType'] = reportType
+    res = requests.post(url, data=json.dumps(payload))
+    return res
+
+
 if __name__ == '__main__':
     '''
     usage: get basic information
@@ -321,16 +282,10 @@ if __name__ == '__main__':
     usage: get monthly revenue
     '''
     # getMonthlyRevenue(2013, 1)
-    startTime = datetime.now()
-    for month in range(8, 13, 1):
-        getMonthlyRevenue(2018, month)
-    for month in range(1, 11, 1):
-        getMonthlyRevenue(2019, month)
-    completeTime = datetime.now()
-    print("start time   : " + str(startTime))
-    print("complete time: " + str(completeTime))
-    print("total time   : " + str(completeTime - startTime))
-
+    '''
+    usage: update incomeSheet/BalanceSheet
+    '''
+    getExistSummaryStockNo(2019, 2, 'balance_sheet')
     # getIncomeSheet(2905, 2019, 3)
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
