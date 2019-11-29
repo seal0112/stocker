@@ -486,7 +486,9 @@ def crawlShareholderCount(companyID, datetime):
     return result
 
 
-def crawlAllIncomeSheetStockNo(type='sii', westernYearIn=2019, seasonIn=3):
+def crawlSummaryReportStockNo(
+    reportTypes='income_sheet', type='sii',
+    westernYearIn=2019, seasonIn=3):
     """this method is used to crawler entire income sheet stock number.
 
     According to the received parameter type, westernYearIn and seasonIn,
@@ -507,7 +509,11 @@ def crawlAllIncomeSheetStockNo(type='sii', westernYearIn=2019, seasonIn=3):
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
 
-    url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
+    if reportTypes is 'balance_sheet':
+        url = "https://mops.twse.com.tw/mops/web/ajax_t163sb05"
+    else:
+        url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
+
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "encodeURIComponent": "1",
