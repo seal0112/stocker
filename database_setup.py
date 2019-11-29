@@ -80,7 +80,7 @@ class Basic_information(Base):
 
 
 # done
-class BalanceSheet(Base):
+class Balance_Sheet(Base):
     __tablename__ = 'balance_sheet'
 
     id = Column(Integer, primary_key=True)
