@@ -487,13 +487,14 @@ def crawlShareholderCount(companyID, datetime):
 
 
 def crawlSummaryReportStockNo(
-    reportTypes='income_sheet', type='sii',
-    westernYearIn=2019, seasonIn=3):
+        reportTypes='income_sheet',
+        type='sii',
+        westernYearIn=2019,
+        seasonIn=3):
     """this method is used to crawler entire income sheet stock number.
-
     According to the received parameter type, westernYearIn and seasonIn,
-    Go to the specific website and 
-    crawler stock number that has released the income sheet.
+    Go to the specific website and crawler stock number
+    that has released the income sheet.
 
     Args:
         type: a string of stock(sii, otc)
@@ -526,26 +527,28 @@ def crawlSummaryReportStockNo(
         "season": season
     }
 
+    print(reportTypes + " " + str(year) + 'Q' + str(season), end='...')
     req = requests.post(url, headers)
     req.encoding = "utf-8"
 
     try:
         html_df = pd.read_html(StringIO(req.text))
+        print("done.")
     except Exception as ex:
         print(ex)
         return None
 
     stockNums = []
-    for idx in range(1,len(html_df)):
-        #print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
+    for idx in range(1, len(html_df)):
+        # print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
         stockNums += list(html_df[idx]['公司代號'])
 
     return stockNums
 
 
 if __name__ == "__main__":
-    #siiCompany = crawlBasicInformation('sii')
+    # siiCompany = crawlBasicInformation('sii')
     # otcCompany = crawlBasicInformation('otc')
-    #print(type(siiCompany))
+    # print(type(siiCompany))
     # print(otcCompany)
-    crawlAllIncomeSheet('sii', 2019, 3)
+    crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 3)
