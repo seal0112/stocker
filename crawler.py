@@ -220,7 +220,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
-        results = html_df[1]
+        results = html_df[len(html_df)-1]
     except Exception as ex:
         print(ex)
         return None
@@ -297,7 +297,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     # print(req.text)
     try:
         html_df = pd.read_html(StringIO(req.text))
-        results = html_df[1]
+        results = html_df[len(html_df)-1]
     except Exception as ex:
         print(ex)
         # TODO
