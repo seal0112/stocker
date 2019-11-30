@@ -5,6 +5,12 @@ import json
 from datetime import datetime
 from io import StringIO
 
+with open(
+        './data/reportHeaderExceptions.txt',
+        encoding='utf-8') as headerExceptions:
+    headerExceptionsStockNo = set(
+        int(line.strip()) for line in headerExceptions)
+
 
 def crawlCriticalInformation(parse_to_json=False):
     '''
@@ -186,7 +192,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
-    if (companyID >= 5820) and (companyID <= 5880):
+    if companyID in headerExceptionsStockNo:
         headers = {
             'step': '2',
             'year': year,
@@ -256,11 +262,11 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
-    season = str(seasonIn)
+    season = str(seasonIn).zfill(2)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb04"
 
-    if (companyID >= 5820) and (companyID <= 5880):
+    if companyID in headerExceptionsStockNo:
         headers = {
             'step': '2',
             'year': year,
@@ -284,6 +290,8 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
             "season": season
         }
 
+    print("crawling incomeSheet " + str(coID), end=" ")
+    print(str(westernYearIn) + "Q" + str(season), end="...")
     req = requests.post(url, headers)
     req.encoding = "utf-8"
     # print(req.text)
@@ -295,6 +303,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         # TODO
         # if ex is no table found, then put null datq into database.
         return None
+    print("done.")
 
     results.columns = results.columns.droplevel([0, 1])
     # drop invalid column
@@ -488,7 +497,7 @@ def crawlShareholderCount(companyID, datetime):
 
 def crawlSummaryReportStockNo(
         reportTypes='income_sheet',
-        type='sii',
+        companyType='sii',
         westernYearIn=2019,
         seasonIn=3):
     """this method is used to crawler entire income sheet stock number.
@@ -508,13 +517,12 @@ def crawlSummaryReportStockNo(
         Exception: no table in request result or others things.
     """
     year = str(westernYearIn - 1911)
-    season = str(seasonIn)
+    season = str(seasonIn).zfill(2)
 
     if reportTypes is 'balance_sheet':
         url = "https://mops.twse.com.tw/mops/web/ajax_t163sb05"
     else:
         url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
-
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "encodeURIComponent": "1",
@@ -522,12 +530,12 @@ def crawlSummaryReportStockNo(
         "firstin": "1",
         "off": "1",
         "isQuery": 'Y',
-        "TYPEK": type,
+        "TYPEK": companyType,
         "year": year,
-        "season": season
+        "season": season,
     }
-
-    print(reportTypes + " " + str(year) + 'Q' + str(season), end='...')
+    print(reportTypes + " " + str(westernYearIn) +
+          'Q' + str(season), end='...')
     req = requests.post(url, headers)
     req.encoding = "utf-8"
 
@@ -551,4 +559,5 @@ if __name__ == "__main__":
     # otcCompany = crawlBasicInformation('otc')
     # print(type(siiCompany))
     # print(otcCompany)
-    crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 3)
+    # crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 1)
+    crawlIncomeSheet(2801, 2013, 1)
