@@ -5,12 +5,6 @@ import json
 from datetime import datetime
 from io import StringIO
 
-with open(
-        './data/reportHeaderExceptions.txt',
-        encoding='utf-8') as headerExceptions:
-    headerExceptionsStockNo = set(
-        int(line.strip()) for line in headerExceptions)
-
 
 def crawlCriticalInformation(parse_to_json=False):
     '''
@@ -192,7 +186,9 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
-    if companyID in headerExceptionsStockNo:
+
+    if int(companyID) in range(2800, 2900) or\
+       int(companyID) in range(5800, 5900):
         headers = {
             'step': '2',
             'year': year,
@@ -266,15 +262,9 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb04"
 
-    if companyID in headerExceptionsStockNo:
-        headers = {
-            'step': '2',
-            'year': year,
-            'season': season,
-            'co_id': coID,
-            'firstin': '1'
-        }
-    else:
+    if companyID == '0009A0' or\
+       (int(companyID) not in range(2800, 2900) and
+        int(companyID) not in range(5800, 5900)):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "encodeURIComponent": "1",
@@ -288,6 +278,14 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
             "co_id": coID,
             "year": year,
             "season": season
+        }
+    else:
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1'
         }
 
     print("crawling incomeSheet " + str(coID), end=" ")
@@ -550,7 +548,6 @@ def crawlSummaryReportStockNo(
     for idx in range(1, len(html_df)):
         # print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
         stockNums += list(html_df[idx]['公司代號'])
-
     return stockNums
 
 
