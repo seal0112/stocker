@@ -151,7 +151,7 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
         time.sleep(0.05)
 
 
-# prototype
+# done
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     # protype version is done.
 
@@ -195,8 +195,33 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     incomeSheetApi = "http://127.0.0.1:5000/api/v0/income_sheet/%s" % str(
             companyID)
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
-    time.sleep(4 + random.randrange(-2, 2))
     print(res)
+
+
+# done
+def UpdateIncomeSheet(westernYearIn=2019, season=1):
+    # companyTypes = ['sii', 'otc', 'rotc', 'pub']
+    companyTypes = ['rotc', 'pub']
+    for companyType in companyTypes:
+        existStockNo = getSummaryStockNoServerExist(year, season, reportType)
+        targetStockNo = getSummaryStockNoTarget(reportType, companyType,
+                                                year, season)
+        crawlList = []
+        if len(existStockNo) != 0:
+            for no in targetStockNo:
+                if no not in existStockNo:
+                    crawlList.append(no)
+        else:
+            crawlList = targetStockNo
+
+        total = len(crawlList)
+        idx = 0
+        # idx = crawlList.index(5324)
+        for index in range(idx, total):
+            print("(" + str(idx) + "/" + str(total) + ")", end=' ')
+            getIncomeSheet(int(crawlList[index]), year, season)
+            time.sleep(6 + random.randrange(-2, 2))
+            idx = idx + 1
 
 
 # TODO
@@ -300,27 +325,40 @@ if __name__ == '__main__':
     '''
     usage: update incomeSheet/BalanceSheet
     '''
+    start = datetime.now()
     year = 2013
     reportType = 'income_sheet'
-    for season in [1, 2, 3, 4]:
-        existStockNo = \
-            getSummaryStockNoServerExist(year, season, reportType)
-        targetStockNo = \
-            getSummaryStockNoTarget(reportType, 'sii', year, season)
-        crawlList = []
-        if len(existStockNo) != 0:
-            for no in targetStockNo:
-                if no not in existStockNo:
-                    crawlList.append(no)
-        else:
-            crawlList = targetStockNo
+    seasons = [2, 3, 4]
 
-        total = len(crawlList)
-        idx = 0
-        for stock_id in crawlList:
-            print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-            getIncomeSheet(stock_id, year, season)
-            idx = idx + 1
+    for season in seasons:
+        UpdateIncomeSheet(year, season)
+    '''
+    for companyType in companyTypes:
+        for season in seasons:
+            existStockNo = \
+                getSummaryStockNoServerExist(year, season, reportType)
+            targetStockNo = \
+                getSummaryStockNoTarget(reportType, companyType, year, season)
+            crawlList = []
+            if len(existStockNo) != 0:
+                for no in targetStockNo:
+                    if no not in existStockNo:
+                        crawlList.append(no)
+            else:
+                crawlList = targetStockNo
+
+            total = len(crawlList)
+            # idx = crawlList.index(2833)
+            idx = 0
+            for index in range(idx, total):
+                print("(" + str(idx) + "/" + str(total) + ")", end=' ')
+                getIncomeSheet(int(crawlList[index]), year, season)
+                idx = idx + 1
+    '''
+    end = datetime.now()
+    print("start time: " + str(start))
+    print("end time: " + str(end))
+    print("time elapse: " + str(end-start))
 
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)
