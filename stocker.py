@@ -74,7 +74,7 @@ def getStockNumber():
                 stockNums = session.query(Income_sheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
-            res = [{'stock_id': i[0]} for i in stockNums]
+            res = [int(i[0]) for i in stockNums]
         except Exception as ex:
             if ex == KeyError:
                 logger.warning(
