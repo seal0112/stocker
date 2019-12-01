@@ -264,7 +264,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
 
     if companyID == '0009A0' or\
        (int(companyID) not in range(2800, 2900) and
-        int(companyID) not in range(5800, 5900)):
+            int(companyID) not in range(5800, 5900)):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "encodeURIComponent": "1",
@@ -532,7 +532,7 @@ def crawlSummaryReportStockNo(
         "year": year,
         "season": season,
     }
-    print(reportTypes + " " + str(westernYearIn) +
+    print(reportTypes + " " + companyType + " " + str(westernYearIn) +
           'Q' + str(season), end='...')
     req = requests.post(url, headers)
     req.encoding = "utf-8"
@@ -542,7 +542,7 @@ def crawlSummaryReportStockNo(
         print("done.")
     except Exception as ex:
         print(ex)
-        return None
+        return []
 
     stockNums = []
     for idx in range(1, len(html_df)):
