@@ -200,28 +200,32 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
 # done
 def UpdateIncomeSheet(westernYearIn=2019, season=1):
-    # companyTypes = ['sii', 'otc', 'rotc', 'pub']
-    companyTypes = ['rotc', 'pub']
+    companyTypes = ['sii', 'otc', 'rotc', 'pub']
+
+    existStockNo = getSummaryStockNoServerExist(year, season, 'income_sheet')
+    validStockNo = getStockNoBasicInfo()
+
+    crawlList = []
     for companyType in companyTypes:
-        existStockNo = getSummaryStockNoServerExist(year, season, reportType)
-        targetStockNo = getSummaryStockNoTarget(reportType, companyType,
+        targetStockNo = getSummaryStockNoTarget('income_sheet', companyType,
                                                 year, season)
-        crawlList = []
+        if len(targetStockNo) == 0:
+            continue
         if len(existStockNo) != 0:
             for no in targetStockNo:
-                if no not in existStockNo:
+                if str(no) not in existStockNo and\
+                   str(no) in validStockNo:
                     crawlList.append(no)
         else:
-            crawlList = targetStockNo
+            crawlList.extend(targetStockNo)
 
-        total = len(crawlList)
-        idx = 0
-        # idx = crawlList.index(5324)
-        for index in range(idx, total):
-            print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-            getIncomeSheet(int(crawlList[index]), year, season)
-            time.sleep(6 + random.randrange(-2, 2))
-            idx = idx + 1
+    total = len(crawlList)
+    idx = 0
+    for stock in crawlList:
+        print("(" + str(idx) + "/" + str(total) + ")", end=' ')
+        getIncomeSheet(stock, year, season)
+        time.sleep(3 + random.randrange(0, 4))
+        idx = idx + 1
 
 
 # TODO
@@ -310,6 +314,14 @@ def getSummaryStockNoTarget(
                                      westernYearIn, seasonIn)
 
 
+def getStockNoBasicInfo():
+    url = "http://127.0.0.1:5000/api/v0/stock_number"
+    print('basic info', end='...')
+    res = requests.get(url)
+    print("done.")
+    return json.loads(res.text)
+
+
 if __name__ == '__main__':
     '''
     usage: get basic information
@@ -328,33 +340,11 @@ if __name__ == '__main__':
     start = datetime.now()
     year = 2013
     reportType = 'income_sheet'
-    seasons = [2, 3, 4]
+    seasons = [1, 2, 3, 4]
 
     for season in seasons:
         UpdateIncomeSheet(year, season)
-    '''
-    for companyType in companyTypes:
-        for season in seasons:
-            existStockNo = \
-                getSummaryStockNoServerExist(year, season, reportType)
-            targetStockNo = \
-                getSummaryStockNoTarget(reportType, companyType, year, season)
-            crawlList = []
-            if len(existStockNo) != 0:
-                for no in targetStockNo:
-                    if no not in existStockNo:
-                        crawlList.append(no)
-            else:
-                crawlList = targetStockNo
 
-            total = len(crawlList)
-            # idx = crawlList.index(2833)
-            idx = 0
-            for index in range(idx, total):
-                print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-                getIncomeSheet(int(crawlList[index]), year, season)
-                idx = idx + 1
-    '''
     end = datetime.now()
     print("start time: " + str(start))
     print("end time: " + str(end))
