@@ -186,7 +186,9 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
-    if (companyID >= 5820) and (companyID <= 5880):
+
+    if int(companyID) in range(2800, 2900) or\
+       int(companyID) in range(5800, 5900):
         headers = {
             'step': '2',
             'year': year,
@@ -214,7 +216,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
-        results = html_df[1]
+        results = html_df[len(html_df)-1]
     except Exception as ex:
         print(ex)
         return None
@@ -256,19 +258,13 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
-    season = str(seasonIn)
+    season = str(seasonIn).zfill(2)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb04"
 
-    if (companyID >= 5820) and (companyID <= 5880):
-        headers = {
-            'step': '2',
-            'year': year,
-            'season': season,
-            'co_id': coID,
-            'firstin': '1'
-        }
-    else:
+    if companyID == '0009A0' or\
+       (int(companyID) not in range(2800, 2900) and
+            int(companyID) not in range(5800, 5900)):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "encodeURIComponent": "1",
@@ -283,18 +279,29 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
             "year": year,
             "season": season
         }
+    else:
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1'
+        }
 
+    print("crawling incomeSheet " + str(coID), end=" ")
+    print(str(westernYearIn) + "Q" + str(season), end="...")
     req = requests.post(url, headers)
     req.encoding = "utf-8"
     # print(req.text)
     try:
         html_df = pd.read_html(StringIO(req.text))
-        results = html_df[1]
+        results = html_df[len(html_df)-1]
     except Exception as ex:
         print(ex)
         # TODO
         # if ex is no table found, then put null datq into database.
         return None
+    print("done.")
 
     results.columns = results.columns.droplevel([0, 1])
     # drop invalid column
@@ -488,7 +495,7 @@ def crawlShareholderCount(companyID, datetime):
 
 def crawlSummaryReportStockNo(
         reportTypes='income_sheet',
-        type='sii',
+        companyType='sii',
         westernYearIn=2019,
         seasonIn=3):
     """this method is used to crawler entire income sheet stock number.
@@ -508,13 +515,12 @@ def crawlSummaryReportStockNo(
         Exception: no table in request result or others things.
     """
     year = str(westernYearIn - 1911)
-    season = str(seasonIn)
+    season = str(seasonIn).zfill(2)
 
     if reportTypes is 'balance_sheet':
         url = "https://mops.twse.com.tw/mops/web/ajax_t163sb05"
     else:
         url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
-
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "encodeURIComponent": "1",
@@ -522,12 +528,12 @@ def crawlSummaryReportStockNo(
         "firstin": "1",
         "off": "1",
         "isQuery": 'Y',
-        "TYPEK": type,
+        "TYPEK": companyType,
         "year": year,
-        "season": season
+        "season": season,
     }
-
-    print(reportTypes + " " + str(year) + 'Q' + str(season), end='...')
+    print(reportTypes + " " + companyType + " " + str(westernYearIn) +
+          'Q' + str(season), end='...')
     req = requests.post(url, headers)
     req.encoding = "utf-8"
 
@@ -536,13 +542,12 @@ def crawlSummaryReportStockNo(
         print("done.")
     except Exception as ex:
         print(ex)
-        return None
+        return []
 
     stockNums = []
     for idx in range(1, len(html_df)):
         # print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
         stockNums += list(html_df[idx]['公司代號'])
-
     return stockNums
 
 
@@ -551,4 +556,5 @@ if __name__ == "__main__":
     # otcCompany = crawlBasicInformation('otc')
     # print(type(siiCompany))
     # print(otcCompany)
-    crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 3)
+    # crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 1)
+    crawlIncomeSheet(2801, 2013, 1)

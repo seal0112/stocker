@@ -56,9 +56,10 @@ def getStockNumber():
         else:
             stockNum = session.query(
                 Basic_information.id).filter_by(type=type).all()
-        res = [{'id': i[0]} for i in stockNum]
+        res = [i[0] for i in stockNum]
 
         return jsonify(res)
+
     elif request.method == 'POST':
         payload = json.loads(request.data)
         reportTypeSet = set(["balance_sheet", "income_sheet"])
@@ -74,7 +75,7 @@ def getStockNumber():
                 stockNums = session.query(Income_sheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
-            res = [{'stock_id': i[0]} for i in stockNums]
+            res = [i[0] for i in stockNums]
         except Exception as ex:
             if ex == KeyError:
                 logger.warning(
