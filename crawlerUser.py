@@ -4,7 +4,7 @@ from crawler import crawlCashFlow
 from crawler import crawlIncomeSheet
 from crawler import crawlMonthlyRevenue
 from crawler import crawlSummaryReportStockNo
-from datetime import datetime
+import datetime
 import json
 import requests
 import time
@@ -328,27 +328,29 @@ if __name__ == '__main__':
     '''
     # getBasicInfo('sii')
     # getBasicInfo('otc')
-    # getBasicInfo('pub')
     # getBasicInfo('rotc')
+    # getBasicInfo('pub')
+
     '''
     usage: get monthly revenue
     '''
-    # getMonthlyRevenue(2013, 1)
+    getMonthlyRevenue(2019, 12)
+
     '''
     usage: update incomeSheet/BalanceSheet
     '''
-    start = datetime.now()
-    year = 2013
-    reportType = 'income_sheet'
-    seasons = [1, 2, 3, 4]
+    # start = datetime.now()
+    # year = 2013
+    # reportType = 'income_sheet'
+    # seasons = [1, 2, 3, 4]
 
-    for season in seasons:
-        UpdateIncomeSheet(year, season)
+    # for season in seasons:
+    #     UpdateIncomeSheet(year, season)
 
-    end = datetime.now()
-    print("start time: " + str(start))
-    print("end time: " + str(end))
-    print("time elapse: " + str(end-start))
+    # end = datetime.now()
+    # print("start time: " + str(start))
+    # print("end time: " + str(end))
+    # print("time elapse: " + str(end-start))
 
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)

@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import json
 from datetime import datetime
+import datetime
 from io import StringIO
 
 
@@ -141,31 +142,39 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     urlNames = ["OtcDomestic", "OtcForiegn", "SiiDomestic", "SiiForiegn"]
 
     results = pd.DataFrame()
-    index = 0
     print(str(westernYearIn) + "-" + str(monthIn))
-    for url in urls:
+
+    for index, url in enumerate(urls):
         print("crawling monthlyRevenue " + urlNames[index], end='...')
-        index = index + 1
         req = requests.get(url, timeout=10)
         req.encoding = "big5"
         print("done.")
-        html_df = pd.read_html(StringIO(req.text))
-        dfs = pd.DataFrame()
-        for df in html_df:
-            if df.shape[1] == 11:
-                dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
-        dfs.columns = dfs.columns.droplevel()
 
-        drop_index = []
-        for i in dfs.index:
-            try:
-                int(dfs.iloc[i]["公司代號"])
-            except Exception:
-                drop_index.append(i)
-        dfs = dfs.drop(dfs.index[drop_index])
-        dfs = dfs.drop(columns=['公司名稱'])
+        try:
+            html_df = pd.read_html(StringIO(req.text))
+        except ValueError as ve:
+            print('%s no %s month revenue data for %s/%s'
+                % (datetime.date.today().strftime("%Y-%m-%d"),
+                   urlNames[index-1],
+                   westernYearIn,
+                   monthIn))
+        else:
+            dfs = pd.DataFrame()
+            for df in html_df:
+                if df.shape[1] == 11:
+                    dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
+            dfs.columns = dfs.columns.droplevel()
 
-        results = results.append(dfs)
+            drop_index = []
+            for i in dfs.index:
+                try:
+                    int(dfs.iloc[i]["公司代號"])
+                except Exception:
+                    drop_index.append(i)
+            dfs = dfs.drop(dfs.index[drop_index])
+            dfs = dfs.drop(columns=['公司名稱'])
+
+            results = results.append(dfs)
 
     return results
 
