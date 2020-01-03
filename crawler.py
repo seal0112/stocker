@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import json
 from datetime import datetime
+import datetime
 from io import StringIO
 
 
@@ -128,44 +129,63 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     year = str(westernYearIn - 1911)
     month = str(monthIn)
 
-    urlOtcDomestic = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                     + year + "_" + month + "_0.html"
-    urlOtcForiegn = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                    + year + "_" + month + "_1.html"
-    urlSiiDomestic = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                     + year + "_" + month + "_0.html"
-    urlSiiForiegn = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                    + year + "_" + month + "_1.html"
+    urlSiiDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                                     + year + "_" + month + "_0.html",
+                        "type": "OtcDomestic"
+                     }
+    urlSiiForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                                    + year + "_" + month + "_1.html",
+                        "type":  "OtcForiegn"
+                    }
+    urlOtcDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                                    + year + "_" + month + "_0.html",
+                        "type": "OtcDomestic"
+                    }
+    urlOtcForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                                    + year + "_" + month + "_1.html",
+                        "type": "OtcForiegn"
+                    }
 
-    urls = [urlOtcDomestic, urlOtcForiegn, urlSiiDomestic, urlSiiForiegn]
-    urlNames = ["OtcDomestic", "OtcForiegn", "SiiDomestic", "SiiForiegn"]
+    urls = [urlSiiDomestic, urlSiiForiegn, urlOtcDomestic, urlOtcForiegn]
 
     results = pd.DataFrame()
-    index = 0
     print(str(westernYearIn) + "-" + str(monthIn))
+
     for url in urls:
-        print("crawling monthlyRevenue " + urlNames[index], end='...')
-        index = index + 1
-        req = requests.get(url, timeout=10)
+        print("crawling monthlyRevenue " + url["type"], end='...')
+        req = requests.get(url["url"], timeout=10)
         req.encoding = "big5"
         print("done.")
-        html_df = pd.read_html(StringIO(req.text))
-        dfs = pd.DataFrame()
-        for df in html_df:
-            if df.shape[1] == 11:
-                dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
-        dfs.columns = dfs.columns.droplevel()
 
-        drop_index = []
-        for i in dfs.index:
-            try:
-                int(dfs.iloc[i]["公司代號"])
-            except Exception:
-                drop_index.append(i)
-        dfs = dfs.drop(dfs.index[drop_index])
-        dfs = dfs.drop(columns=['公司名稱'])
+        try:
+            html_df = pd.read_html(StringIO(req.text))
+        except ValueError as ve:
+            print('%s no %s month revenue data for %s/%s'
+                % (datetime.date.today().strftime("%Y-%m-%d"),
+                   url["type"],
+                   westernYearIn,
+                   monthIn))
+        else:
+            dfs = pd.DataFrame()
+            for df in html_df:
+                if df.shape[1] == 11:
+                    dfs = pd.concat([dfs, df], axis=0, ignore_index=True)
+            dfs.columns = dfs.columns.droplevel()
 
-        results = results.append(dfs)
+            drop_index = []
+            for i in dfs.index:
+                try:
+                    int(dfs.iloc[i]["公司代號"])
+                except Exception:
+                    drop_index.append(i)
+            dfs = dfs.drop(dfs.index[drop_index])
+            dfs = dfs.drop(columns=['公司名稱'])
+
+            results = results.append(dfs)
 
     return results
 
