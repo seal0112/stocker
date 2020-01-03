@@ -1,9 +1,8 @@
-from crawler import crawlBasicInformation
-from crawler import crawlBalanceSheet
-from crawler import crawlCashFlow
-from crawler import crawlIncomeSheet
-from crawler import crawlMonthlyRevenue
-from crawler import crawlSummaryReportStockNo
+from crawler import (
+    crawlBasicInformation, crawlMonthlyRevenue,
+    crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
+    crawlSummaryReportStockNo
+)
 from datetime import datetime
 import json
 import requests
@@ -17,56 +16,6 @@ def getBasicInfo(dataType='sii'):
     # dataType: otc, sii, rotc, pub
     data = crawlBasicInformation(dataType)
     data = transformHeaderNoun(data, 'basic_information')
-
-    """# API(v0): basic_information test case
-    payload = {
-            "id": "1101",
-            "公司名稱": "台灣水泥股份有限公司",
-            "公司簡稱": "台泥",
-            "產業類別": "水泥工業",
-            "外國企業註冊地國": "－",
-            "住址": "台北市中山北路2段113號",
-            "營利事業統一編號": "11913502",
-            "董事長": "張安平",
-            "總經理": "李鐘培",
-            "發言人": "黃健強",
-            "發言人職稱": "資深副總經理",
-            "代理發言人": "蔡立文",
-            "總機電話": "(02)2531-7099",
-            "成立日期": "39/12/29",
-            "上市上櫃興櫃公開發行日期": "51/02/09",
-            "普通股每股面額": "新台幣 10.0000元",
-            "實收資本額": 56656192040,
-            "已發行普通股數或TDR原發行股數": 5465619204,
-            "私募普通股": 0,
-            "特別股": 200000000,
-            "編製財務報告類型": "合併",
-            "普通股盈餘分派或虧損撥補頻率": "每年",
-            "普通股年度現金股息及紅利決議層級": "股東會",
-            "股票過戶機構": "中國信託商業銀行代理部",
-            "過戶電話": "66365566",
-            "過戶地址": "台北市重慶南路一段83號5樓",
-            "簽證會計師事務所": "勤業眾信聯合會計師事務所",
-            "簽證會計師一": "翁雅玲",
-            "簽證會計師二": "邵志明",
-            "英文簡稱": "TCC",
-            "英文通訊地址": "No.113/ Sec.2/ Zhongshan N. Rd./\
-            Taipei City 104/Taiwan (R.O.C.)",
-            "傳真機號碼": "(02)2531-6529",
-            "電子郵件信箱": "finance@taiwancement.com",
-            "公司網址": "http://www.taiwancement.com",
-            "投資人關係聯絡人": "張佳琪",
-            "投資人關係聯絡人職稱": "主任",
-            "投資人關係聯絡電話": "02-25317099分機20358",
-            "投資人關係聯絡電子郵件": "ir@taiwancement.com",
-            "公司網站內利害關係人專區網址": "http://www.taiwancement.com/tw/csr/csr5-1.html",
-            "type": 'sii'
-        }
-
-    print(payload['id'])
-    url = 'http://localhost:5000/api/v0/basic_information/%s' % payload['id']
-    res = requests.post(url, data=json.dumps(payload))
-    """
 
     for i in range(len(data)):
         dataPayload = json.loads(
@@ -153,12 +102,6 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
 
 # done
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
-    # protype version is done.
-
-    # url = "http://localhost:5000/api/v0/sotck_number"
-    # payload = requests.get(url)
-    # stock_num = json.loads(payload.text)
-
     data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
     data = transformHeaderNoun(data, 'income_sheet')
 
@@ -237,58 +180,7 @@ def getBalanceSheet(
 # TODO
 def getCashFlow(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    # TODO
-    # data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
-
-    aDict = {}
-    url = "http://127.0.0.1:5000/api/v0/sotck_number"
-    payload = requests.get(url)
-    stock_num = json.loads(payload.text)
-
-    for i in stock_num:
-        print(i['id'])
-        stockNum = i['id']
-        try:
-            data = crawlCashFlow(i['id'], westernYearIn, seasonIn)
-        except Exception as ex:
-            print(ex)
-            data = None
-
-        if data is None:
-            time.sleep(5 + random.randrange(-3, 3))
-            continue
-        data.set_index("會計項目", inplace=True)
-        data = data.reset_index()
-
-        for i in data.index:
-            if data.iloc[i][0] not in aDict:
-                aDict[str(data.iloc[i][0])] = [stockNum]
-            else:
-                tempList = aDict[str(data.iloc[i][0])]
-                tempList.append(stockNum)
-                aDict[str(data.iloc[i][0])] = tempList
-
-        time.sleep(4 + random.randrange(-3, 3))
-
-    # data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
-    # print(data)
-    # data.set_index("會計項目", inplace=True)
-    # data = data.reset_index()
-    # for i in data.index:
-    #     print(i, data.iloc[i][0])
-    #     aSet.add(data.iloc[i][0])
-    print(aDict)
-    keys = sorted(aDict.keys())
-    aDict = {i: aDict[i] for i in keys}
-
-    fileName = "cashflow_title_with_no.csv"
-    with open(fileName, 'w', encoding='utf8') as fo:
-        for item in aDict:
-            stri = item + ':\t'
-            for num in aDict[item]:
-                stri = stri + num + ', '
-            stri += '\n'
-            fo.write(stri)
+    pass
 
 
 # done
