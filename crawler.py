@@ -129,24 +129,35 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     year = str(westernYearIn - 1911)
     month = str(monthIn)
 
-    urlOtcDomestic = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                     + year + "_" + month + "_0.html"
-    urlOtcForiegn = "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                    + year + "_" + month + "_1.html"
-    urlSiiDomestic = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                     + year + "_" + month + "_0.html"
-    urlSiiForiegn = "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                    + year + "_" + month + "_1.html"
+    urlSiiDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                                     + year + "_" + month + "_0.html",
+                        "type": "OtcDomestic"
+                     }
+    urlSiiForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
+                                    + year + "_" + month + "_1.html",
+                        "type":  "OtcForiegn"
+                    }
+    urlOtcDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                                    + year + "_" + month + "_0.html",
+                        "type": "OtcDomestic"
+                    }
+    urlOtcForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
+                                    + year + "_" + month + "_1.html",
+                        "type": "OtcForiegn"
+                    }
 
-    urls = [urlOtcDomestic, urlOtcForiegn, urlSiiDomestic, urlSiiForiegn]
-    urlNames = ["OtcDomestic", "OtcForiegn", "SiiDomestic", "SiiForiegn"]
+    urls = [urlSiiDomestic, urlSiiForiegn, urlOtcDomestic, urlOtcForiegn]
 
     results = pd.DataFrame()
     print(str(westernYearIn) + "-" + str(monthIn))
 
-    for index, url in enumerate(urls):
-        print("crawling monthlyRevenue " + urlNames[index], end='...')
-        req = requests.get(url, timeout=10)
+    for url in urls:
+        print("crawling monthlyRevenue " + url["type"], end='...')
+        req = requests.get(url["url"], timeout=10)
         req.encoding = "big5"
         print("done.")
 
@@ -155,7 +166,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
         except ValueError as ve:
             print('%s no %s month revenue data for %s/%s'
                 % (datetime.date.today().strftime("%Y-%m-%d"),
-                   urlNames[index-1],
+                   url["type"],
                    westernYearIn,
                    monthIn))
         else:
