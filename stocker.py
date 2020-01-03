@@ -8,19 +8,16 @@ from flask_jwt_extended import (
 )
 from flask import Blueprint
 from flask.views import MethodView
-from sqlalchemy import asc, create_engine
-from sqlalchemy.orm import sessionmaker
-from database_setup import Base
-from database_setup import (
-    Balance_Sheet, Basic_information, Month_revenue, Income_sheet
-)
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
 from datetime import datetime
-
-from stockerModel import (showMain, getStockNumber, handleBasicInfo,
-                          handleIncomeSheet, handleMonthRevenue)
+from stockerModel import (
+    showMain, getStockNumber,
+    handleBasicInfo, handleMonthRevenue,
+    handleIncomeSheet, handleBalanceSheet,
+    handleCashFlow
+)
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -29,6 +26,7 @@ app.config['JSON_AS_ASCII'] = False
 app.config['JWT_SECRET_KEY'] = 'tmp-secret'
 jwt = JWTManager(app)
 
+# Logger setup
 logger = logging.getLogger()
 BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 DATE_FORMAT = '%m-%d %H:%M'
@@ -56,7 +54,17 @@ app.add_url_rule('/api/v0/basic_information/<string:stock_id>',
 app.add_url_rule('/api/v0/income_sheet/<string:stock_id>',
                  'handleIncomeSheet',
                  view_func=handleIncomeSheet.as_view(
-                     'handlehandleIncomeSheet'),
+                     'handleIncomeSheet'),
+                 methods=['GET', 'POST'])
+app.add_url_rule('/api/v0/balance_sheet/<string:stock_id>',
+                 'handleBalanceSheet',
+                 view_func=handleBalanceSheet.as_view(
+                     'handleBalanceSheet'),
+                 methods=['GET', 'POST'])
+app.add_url_rule('/api/v0/cash_flow/<string:stock_id>',
+                 'handleCashFlow',
+                 view_func=handleCashFlow.as_view(
+                     'handleCashFlow'),
                  methods=['GET', 'POST'])
 app.add_url_rule('/api/v0/month_revenue/<string:stock_id>',
                  'handleMonthRevenue',
