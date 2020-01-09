@@ -75,16 +75,16 @@ class getStockNumber(MethodView):
         except Exception as ex:
             if ex == KeyError:
                 logger.warning(
-                    "406 report type %s not found." % (reportType))
+                    "400 report type %s not found." % (reportType))
                 res = make_response(
-                    json.dumps('Failed to fetch stock number'), 406)
+                    json.dumps('Failed to fetch stock number'), 400)
             else:
                 print(ex)
                 logger.warning(
-                    "406 stock id not found. Reason: %s" % (ex))
+                    "400 stock id not found. Reason: %s" % (ex))
                 res = make_response(
                     json.dumps(
-                        'Failed to update basic_information.'), 406)
+                        'Failed to update basic_information.'), 400)
             return res
 
         return jsonify(res)
@@ -156,11 +156,11 @@ class handleBasicInfo(MethodView):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update basic_information. Reason: %s"
+                "400 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update basic_information.'), 406)
+                    'Failed to update basic_information.'), 400)
             return res
 
         res = make_response(
@@ -223,11 +223,11 @@ class handleIncomeSheet(MethodView):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update income_sheet. Reason: %s"
+                "400 %s is failed to update income_sheet. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s balance sheet.' % (stock_id)), 406)
+                    'Failed to update %s balance sheet.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -301,11 +301,11 @@ class handleMonthRevenue(MethodView):
         except Exception as ex:
             print("%s: %s" % (stock_id, ex))
             logging.warning(
-                "406 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update month revenue. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 406)
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
             return res
 
         res = make_response(
