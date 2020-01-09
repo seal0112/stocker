@@ -5,8 +5,10 @@ from flask.views import MethodView
 from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base
-from database_setup import Basic_information, Month_revenue, Income_sheet
-from database_setup import Balance_Sheet
+from database_setup import (
+    Basic_Information, Month_Revenue, Income_Sheet,
+    Balance_Sheet, Cash_Flow
+)
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
@@ -38,7 +40,7 @@ logger.addHandler(console)
 
 
 def showMain():
-    b = session.query(Basic_information).filter_by(
+    b = session.query(Basic_Information).filter_by(
         id='1101').one_or_none()
     res = b.serialize
     return jsonify(res)
@@ -48,10 +50,10 @@ class getStockNumber(MethodView):
     def get(self):
         companyType = request.args.get('type')
         if companyType is None:
-            stockNum = session.query(Basic_information.id).all()
+            stockNum = session.query(Basic_Information.id).all()
         else:
             stockNum = session.query(
-                Basic_information.id).filter_by(type=companyType).all()
+                Basic_Information.id).filter_by(type=companyType).all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)
@@ -68,7 +70,7 @@ class getStockNumber(MethodView):
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'income_sheet':
-                stockNums = session.query(Income_sheet.stock_id).filter_by(
+                stockNums = session.query(Income_Sheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             res = [i[0] for i in stockNums]
@@ -112,7 +114,7 @@ class handleBasicInfo(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        basicInfo = session.query(Basic_information).filter_by(
+        basicInfo = session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         if basicInfo is None:
             return make_response(
@@ -121,7 +123,7 @@ class handleBasicInfo(MethodView):
             return jsonify(basicInfo.serialize)
 
     def post(self, stock_id):
-        basicInfo = session.query(Basic_information).filter_by(
+        basicInfo = session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)
@@ -147,7 +149,7 @@ class handleBasicInfo(MethodView):
                 basicInfo['update_date'] = datetime.datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                basicInfo = Basic_information()
+                basicInfo = Basic_Information()
                 for key in payload:
                     basicInfo[key] = payload[key]
 
@@ -194,7 +196,7 @@ class handleIncomeSheet(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        incomeSheet = session.query(Income_sheet).filter_by(
+        incomeSheet = session.query(Income_Sheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -213,7 +215,7 @@ class handleIncomeSheet(MethodView):
                 incomeSheet['update_date'] = datetime.datetime.now(
                     ).strftime("%Y-%m-%d")
             else:
-                incomeSheet = Income_sheet()
+                incomeSheet = Income_Sheet()
                 incomeSheet['stock_id'] = stock_id
                 for key in payload:
                     incomeSheet[key] = payload[key]
@@ -228,6 +230,140 @@ class handleIncomeSheet(MethodView):
             res = make_response(
                 json.dumps(
                     'Failed to update %s balance sheet.' % (stock_id)), 406)
+            return res
+
+        res = make_response(
+            json.dumps('Create'), 201)
+        return res
+
+
+class handleBalanceSheet(MethodView):
+    """
+    Description:
+        this api is used to handle balance sheet request.
+    Detail:
+        According to the received stock_id and request method,
+        if request method is GET, then return stock_id's balance sheet.
+        if request method is POST, then according to the data entered,
+        decide whether to update or add new balance sheet data into database.
+    Args:
+        stock_id: a string of stock number.
+    Return:
+        if request method is GET,
+            then return stock_id's balance sheet.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+    Raises:
+        Exception: An error occurred.
+    """
+    def get(self, stock_id):
+        return 'balance_sheet: %s' % stock_id
+
+    def post(self, stock_id):
+        payload = json.loads(request.data)
+        balanceSheet = session.query(Balance_Sheet).filter_by(
+            stock_id=stock_id).filter_by(
+                year=payload['year']).filter_by(
+                    season=payload['season']).one_or_none()
+        try:
+            if balanceSheet is not None:
+                changeFlag = False
+                for key in payload:
+                    if balanceSheet[key] != payload[key]:
+                        changeFlag = True
+                        balanceSheet[key] = payload[key]
+                # If there is no data to modify, then return 200
+                if changeFlag is not True:
+                    return make_response(json.dumps('OK'), 200)
+                # if there is any data to modify,
+                # then record currennt date for update_date
+                balanceSheet['update_date'] = datetime.datetime.now(
+                    ).strftime("%Y-%m-%d")
+            else:
+                balanceSheet = Balance_Sheet()
+                balanceSheet['stock_id'] = stock_id
+                for key in payload:
+                    balanceSheet[key] = payload[key]
+
+            session.add(balanceSheet)
+            session.commit()
+        except Exception as ex:
+            print(ex)
+            logger.warning(
+                "406 %s is failed to update balance_sheet. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s balance sheet.' % (stock_id)), 406)
+            return res
+
+        res = make_response(
+            json.dumps('Create'), 201)
+        return res
+
+
+class handleCashFlow(MethodView):
+    """
+    Description:
+        this api is used to handle cash flow request.
+    Detail:
+        According to the received stock_id and request method,
+        if request method is GET, then return stock_id's cash flow.
+        if request method is POST, then according to the data entered,
+        decide whether to update or add new cash flow data into database.
+    Args:
+        stock_id: a string of stock number.
+    Return:
+        if request method is GET,
+            then return stock_id's cash flow.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+    Raises:
+        Exception: An error occurred.
+    """
+    def get(self, stock_id):
+        return 'cash_flow: %s' % stock_id
+
+    def post(self, stock_id):
+        payload = json.loads(request.data)
+        cashFlow = session.query(Cash_Flow).filter_by(
+            stock_id=stock_id).filter_by(
+                year=payload['year']).filter_by(
+                    season=payload['season']).one_or_none()
+        try:
+            if cashFlow is not None:
+                changeFlag = False
+                for key in payload:
+                    if cashFlow[key] != payload[key]:
+                        changeFlag = True
+                        cashFlow[key] = payload[key]
+                # If there is no data to modify, then return 200
+                if changeFlag is not True:
+                    return make_response(json.dumps('OK'), 200)
+                # if there is any data to modify,
+                # then record currennt date for update_date
+                cashFlow['update_date'] = datetime.datetime.now(
+                    ).strftime("%Y-%m-%d")
+            else:
+                cashFlow = Cash_Flow()
+                cashFlow['stock_id'] = stock_id
+                for key in payload:
+                    cashFlow[key] = payload[key]
+
+            session.add(cashFlow)
+            session.commit()
+        except Exception as ex:
+            print(ex)
+            logger.warning(
+                "406 %s is failed to update cash_flow. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s cash flow.' % (stock_id)), 406)
             return res
 
         res = make_response(
@@ -257,8 +393,8 @@ class handleMonthRevenue(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        monthReve = session.query(Month_revenue).filter_by(
-            stock_id=stock_id).order_by(Month_revenue.year.desc()).all()
+        monthReve = session.query(Month_Revenue).filter_by(
+            stock_id=stock_id).order_by(Month_Revenue.year.desc()).all()
         print(monthReve)
         if monthReve is None:
             return make_response(404)
@@ -268,7 +404,7 @@ class handleMonthRevenue(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        monthReve = session.query(Month_revenue).filter_by(
+        monthReve = session.query(Month_Revenue).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
@@ -292,7 +428,7 @@ class handleMonthRevenue(MethodView):
                 monthReve['update_date'] = datetime.datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                monthReve = Month_revenue()
+                monthReve = Month_Revenue()
                 for key in payload:
                     monthReve[key] = payload[key]
 

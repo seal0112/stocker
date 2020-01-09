@@ -207,16 +207,9 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb03"
 
-    if int(companyID) in range(2800, 2900) or\
-       int(companyID) in range(5800, 5900):
-        headers = {
-            'step': '2',
-            'year': year,
-            'season': season,
-            'co_id': coID,
-            'firstin': '1'
-        }
-    else:
+    if companyID == '0009A0' or\
+       (int(companyID) not in range(2800, 2900) and
+            int(companyID) not in range(5800, 5900)):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "encodeURIComponent": "1",
@@ -229,7 +222,17 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
             "isnew": "false",
             "co_id": coID,
             "year": year,
-            "season": season
+            "season": season,
+            "Connection": "close"
+        }
+    else:
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1',
+            "Connection": "close"
         }
 
     req = requests.post(url, headers)
@@ -239,7 +242,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
         results = html_df[len(html_df)-1]
     except Exception as ex:
         print(ex)
-        return None
+        return []
 
     results.columns = results.columns.droplevel([0, 1])
 
@@ -297,7 +300,8 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
             "isnew": "false",
             "co_id": coID,
             "year": year,
-            "season": season
+            "season": season,
+            "Connection": "close"
         }
     else:
         headers = {
@@ -305,7 +309,8 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
             'year': year,
             'season': season,
             'co_id': coID,
-            'firstin': '1'
+            'firstin': '1',
+            "Connection": "close"
         }
 
     print("crawling incomeSheet " + str(coID), end=" ")
@@ -320,7 +325,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         print(ex)
         # TODO
         # if ex is no table found, then put null datq into database.
-        return None
+        return []
     print("done.")
 
     results.columns = results.columns.droplevel([0, 1])
@@ -364,15 +369,10 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     season = str(seasonIn)
 
     url = "https://mops.twse.com.tw/mops/web/ajax_t164sb05"
-    if (companyID >= 5820) and (companyID <= 5880):
-        headers = {
-            'step': '2',
-            'year': year,
-            'season': season,
-            'co_id': coID,
-            'firstin': '1'
-        }
-    else:
+
+    if companyID == '0009A0' or\
+       (int(companyID) not in range(2800, 2900) and
+            int(companyID) not in range(5800, 5900)):
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "encodeURIComponent": "1",
@@ -385,7 +385,17 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
             "isnew": "false",
             "co_id": coID,
             "year": year,
-            "season": season
+            "season": season,
+            "Connection": "close"
+        }
+    else:
+        headers = {
+            'step': '2',
+            'year': year,
+            'season': season,
+            'co_id': coID,
+            'firstin': '1',
+            "Connection": "close"
         }
 
     req = requests.post(url, headers)

@@ -15,7 +15,7 @@ with open('./critical_flie/databaseAccount.json') as accountReader:
 
 
 # done
-class Basic_information(Base):
+class Basic_Information(Base):
     __tablename__ = 'basic_information'
 
     id = Column(String(6), primary_key=True, autoincrement=False)
@@ -143,7 +143,7 @@ class Balance_Sheet(Base):
 
 
 # prototype done
-class Cashflow(Base):
+class Cash_Flow(Base):
     __tablename__ = 'cashflow'
 
     id = Column(Integer, primary_key=True)
@@ -196,7 +196,7 @@ class Cashflow(Base):
 
 
 # prototype done
-class Income_sheet(Base):
+class Income_Sheet(Base):
     __tablename__ = 'income_sheet'
 
     id = Column(Integer, primary_key=True)
@@ -250,7 +250,7 @@ class Income_sheet(Base):
 
 
 # done
-class Month_revenue(Base):
+class Month_Revenue(Base):
     __tablename__ = 'month_revenue'
 
     id = Column(Integer, primary_key=True)
@@ -272,7 +272,7 @@ class Month_revenue(Base):
     去年累計營收 = Column(BIGINT)
     前期比較增減 = Column(Float)
     備註 = Column(TEXT)
-    basic_information = relationship(Basic_information)
+    basic_information = relationship(Basic_Information)
 
     # Add add a decorator property to serialize data from the database
     @property
