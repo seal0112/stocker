@@ -19,8 +19,12 @@ from logging.handlers import TimedRotatingFileHandler
 import json
 from datetime import datetime
 
-from stockerModel import (showMain, getStockNumber, handleBasicInfo,
-                          handleIncomeSheet, handleMonthRevenue)
+from stockerModel import (
+    showMain, getStockNumber, handleBasicInfo,
+    handleIncomeSheet, handleMonthRevenue
+)
+import time
+from flask_cors import cross_origin
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -64,6 +68,30 @@ app.add_url_rule('/api/v0/month_revenue/<string:stock_id>',
                      'handleMonthRevenue'),
                  methods=['GET', 'POST'])
 
+
+def after_request(response):
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3001'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    return response
+
+@app.route('/testsetcookie')
+def test():
+    res = make_response(json.dumps("for set cookie"), 200)
+    res.headers["Set-Cookie"] = "coo=haha; Expires=%s" % str(time.time()+5)
+    res.set_cookie(key='coo2', value='haha', expires=time.time()+5)
+
+    print(res.headers)
+    return res
+
+@app.route('/testsetcookie2')
+def test2():
+    res = make_response(json.dumps("for set cookie2"), 200)
+    res.set_cookie(key='me', value='chipupu', expires=time.time()+5)
+
+    print(res.headers)
+    return res
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
@@ -117,6 +145,7 @@ def internalServerError(error):
 
 if __name__ == '__main__':
     app.debug = True
+    app.after_request(after_request)
 
     fileHandler = TimedRotatingFileHandler(
         'log/app.log', when='D', interval=1,
