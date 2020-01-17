@@ -60,7 +60,7 @@ class getStockNumber(MethodView):
 
     def post(self):
         payload = json.loads(request.data)
-        reportTypeSet = set(["balance_sheet", "income_sheet"])
+        reportTypeSet = set(["balance_sheet", "income_sheet", "cashflow"])
         try:
             if payload['reportType'] not in reportTypeSet:
                 raise KeyError
@@ -71,6 +71,10 @@ class getStockNumber(MethodView):
                         season=payload['season']).all()
             elif reportType == 'income_sheet':
                 stockNums = session.query(Income_Sheet.stock_id).filter_by(
+                    year=payload['year']).filter_by(
+                        season=payload['season']).all()
+            elif reportType == 'cashflow':
+                stockNums = session.query(Cash_Flow.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             res = [i[0] for i in stockNums]
