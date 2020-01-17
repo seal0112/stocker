@@ -291,6 +291,36 @@ class Month_Revenue(Base):
         setattr(self, key, value)
 
 
+class Daily_Information(Base):
+    __tablename__ = 'daily_information'
+
+    stock_id = Column(
+        String(6), ForeignKey('basic_information.id'),
+        primary_key=True, nullable=False)
+    update_date = Column(
+        Date, nullable=False,
+        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+    股價 = Column(Float)
+    近四季每股盈餘 = Column(Float)
+    本益比 = Column(Float)
+
+    # Add add a decorator property to serialize data from the database
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
 engine = create_engine(
     """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
         dbAccount["username"], dbAccount["password"], dbAccount["ip"]))

@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from database_setup import Base
 from database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
-    Balance_Sheet, Cash_Flow
+    Balance_Sheet, Cash_Flow, Daily_Information
 )
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -40,9 +40,9 @@ logger.addHandler(console)
 
 
 def showMain():
-    b = session.query(Basic_Information).filter_by(
-        id='1101').one_or_none()
-    res = b.serialize
+    b = session.query(Daily_Information).filter_by(
+        id='1101').all()
+    res = [i.serialize for i in b]
     return jsonify(res)
 
 
@@ -81,16 +81,16 @@ class getStockNumber(MethodView):
         except Exception as ex:
             if ex == KeyError:
                 logger.warning(
-                    "406 report type %s not found." % (reportType))
+                    "400 report type %s not found." % (reportType))
                 res = make_response(
-                    json.dumps('Failed to fetch stock number'), 406)
+                    json.dumps('Failed to fetch stock number'), 400)
             else:
                 print(ex)
                 logger.warning(
-                    "406 stock id not found. Reason: %s" % (ex))
+                    "400 stock id not found. Reason: %s" % (ex))
                 res = make_response(
                     json.dumps(
-                        'Failed to update basic_information.'), 406)
+                        'Failed to update basic_information.'), 400)
             return res
 
         return jsonify(res)
@@ -162,15 +162,55 @@ class handleBasicInfo(MethodView):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update basic_information. Reason: %s"
+                "400 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update basic_information.'), 406)
+                    'Failed to update basic_information.'), 400)
             return res
 
         res = make_response(
             json.dumps('Create'), 201)
+        return res
+
+
+class handleDailyInfo(MethodView):
+    def get(self, stock_id):
+        dailyInfo = session.query(Daily_Information).filter_by(
+            stock_id=stock_id).one_or_none()
+        return 'Daily Information: %s' % stock_id\
+           if dailyInfo is None else dailyInfo.serialize
+
+    def post(self, stock_id):
+        payload = json.loads(request.data)
+        dailyInfo = session.query(Daily_Information).filter_by(
+            stock_id=stock_id).one_or_none()
+        try:
+            if dailyInfo is not None:
+                for key in payload:
+                    dailyInfo[key] = payload[key]
+                    dailyInfo['update_date'] = datetime.datetime.now(
+                    ).strftime("%Y-%m-%d")
+            else:
+                dailyInfo = Daily_Information()
+                dailyInfo['stock_id'] = stock_id
+                for key in payload:
+                    dailyInfo[key] = payload[key]
+
+            session.add(dailyInfo)
+            session.commit()
+        except Exception as ex:
+            print(ex)
+            logger.warning(
+                "400 %s is failed to update Daily Information. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s Daily Information.' % (stock_id)), 400)
+            return res
+
+        res = make_response(
+            json.dumps('OK'), 200)
         return res
 
 
@@ -229,11 +269,11 @@ class handleIncomeSheet(MethodView):
         except Exception as ex:
             print(ex)
             logger.warning(
-                "406 %s is failed to update income_sheet. Reason: %s"
+                "400 %s is failed to update income_sheet. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s balance sheet.' % (stock_id)), 406)
+                    'Failed to update %s Income sheet.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -441,11 +481,11 @@ class handleMonthRevenue(MethodView):
         except Exception as ex:
             print("%s: %s" % (stock_id, ex))
             logging.warning(
-                "406 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update month revenue. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 406)
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
             return res
 
         res = make_response(

@@ -5,7 +5,6 @@ import json
 import time
 import random
 from datetime import datetime
-import datetime
 from io import StringIO
 
 
@@ -596,10 +595,41 @@ def crawlSummaryReportStockNo(
     return stockNums
 
 
+def crawlerDailyPrice(stockNums, type='sii'):
+    """
+    stock num: tse_1101.tw/otc_3455.tw
+    type: sii / otc
+    """
+    typeTransform = {
+        'sii': 'tse',
+        'otc': 'otc'
+    }
+    print(type, stockNums)
+    url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?"\
+          + "delay=0&_=1552123547443&ex_ch="
+
+    stockNums = ["%s_%s.tw" % (
+        typeTransform[type], stockNum) for stockNum in stockNums]
+    stockNumStr = "|".join(stockNums)
+
+    data = requests.get(url+stockNumStr)
+    data = json.loads(data.text)
+
+    idAndPrice = []
+    for i in data['msgArray']:
+        try:
+            idAndPrice.append({'stock_id': i['c'], "股價": i['z']})
+        except Exception as ex:
+            print("%s %s"% (i['c'], ex))
+
+    return idAndPrice
+
+
 if __name__ == "__main__":
     # siiCompany = crawlBasicInformation('sii')
     # otcCompany = crawlBasicInformation('otc')
     # print(type(siiCompany))
     # print(otcCompany)
     # crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 1)
-    crawlIncomeSheet(2801, 2013, 1)
+    # crawlIncomeSheet(2801, 2013, 1)
+    crawlerDailyPrice('otc')
