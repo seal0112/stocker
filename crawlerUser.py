@@ -176,6 +176,7 @@ def UpdateIncomeSheet(westernYearIn=2019, season=1):
         time.sleep(3 + random.randrange(0, 4))
         idx = idx + 1
 
+
 # need to update feature
 def updateDailyPrice(type='sii'):
     stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
@@ -185,7 +186,7 @@ def updateDailyPrice(type='sii'):
     serverDailyInfoApi = "http://%s:%s/api/v0/daily_information/" % (
         serverConf['ip'], serverConf['port'])
 
-    for i in range(0,len(stockNums),10):
+    for i in range(0, len(stockNums), 10):
         data = crawlerDailyPrice(stockNums[i:i+10], type)
         for d in data:
             res = requests.post(
@@ -370,7 +371,7 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     years = [2019]
-    seasons = [3,2,1]
+    seasons = [3, 2, 1]
 
     for year in years:
         for season in seasons:
@@ -395,4 +396,3 @@ if __name__ == '__main__':
     # getCashFlow()
 
     # updateDailyPrice('sii')
-
