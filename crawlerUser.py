@@ -54,7 +54,9 @@ def transformHeaderNoun(data, fileName):
     direction = {
         "basic_information": "columns",
         "month_revenue": "columns",
-        "income_sheet": "index"
+        "income_sheet": "index",
+        "balance_sheet": "index",
+        "cashflow": "index"
     }
 
     with open(
@@ -148,13 +150,14 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 def UpdateIncomeSheet(westernYearIn=2019, season=1):
     companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
-    existStockNo = getSummaryStockNoServerExist(year, season, 'income_sheet')
+    existStockNo = getSummaryStockNoServerExist(
+        westernYearIn, season, 'income_sheet')
     validStockNo = getStockNoBasicInfo()
 
     crawlList = []
     for companyType in companyTypes:
         targetStockNo = getSummaryStockNoTarget('income_sheet', companyType,
-                                                year, season)
+                                                westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
         if len(existStockNo) != 0:
@@ -169,11 +172,11 @@ def UpdateIncomeSheet(westernYearIn=2019, season=1):
     idx = 0
     for stock in crawlList:
         print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-        getIncomeSheet(stock, year, season)
+        getIncomeSheet(stock, westernYearIn, season)
         time.sleep(3 + random.randrange(0, 4))
         idx = idx + 1
 
-
+# need to update feature
 def updateDailyPrice(type='sii'):
     stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
         serverConf['ip'], serverConf['port'], type)
@@ -191,16 +194,131 @@ def updateDailyPrice(type='sii'):
         time.sleep(1.5)
 
 
-# TODO
+# done
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    pass
+    data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
+    data = transformHeaderNoun(data, "balance_sheet")
+
+    dataPayload = {}
+    with open(
+            './data_key_select/balance_sheet_key_select.txt',
+            encoding='utf-8') as balance_sheet_key_select:
+        balanceSheetKeySel = set(
+            line.strip() for line in balance_sheet_key_select)
+
+    for key in balanceSheetKeySel:
+        try:
+            if key in data.index:
+                dataPayload[key] = data.loc[key][0]
+            else:
+                dataPayload[key] = None
+        except Exception as ex:
+            print(ex)
+
+    dataPayload['year'] = westernYearIn
+    dataPayload['season'] = str(seasonIn)
+
+    balanceSheetApi = "http://127.0.0.1:5000/api/v0/balance_sheet/%s" % str(
+        companyID)
+    res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
+    print(res)
 
 
-# TODO
+def UpdateBalanceSheet(westernYearIn=2019, season=1):
+    companyTypes = ['sii', 'otc', 'rotc', 'pub']
+
+    existStockNo = getSummaryStockNoServerExist(
+        westernYearIn, season, 'balance_sheet')
+    validStockNo = getStockNoBasicInfo()
+
+    crawlList = []
+    for companyType in companyTypes:
+        targetStockNo = getSummaryStockNoTarget('balance_sheet', companyType,
+                                                westernYearIn, season)
+        if len(targetStockNo) == 0:
+            continue
+        if len(existStockNo) != 0:
+            for no in targetStockNo:
+                if str(no) not in existStockNo and\
+                   str(no) in validStockNo:
+                    crawlList.append(no)
+        else:
+            crawlList.extend(targetStockNo)
+
+    total = len(crawlList)
+    idx = 0
+    for stock in crawlList:
+        print("(" + str(idx) + "/" + str(total) + ")", end=' ')
+        getBalanceSheet(stock, westernYearIn, season)
+        time.sleep(3 + random.randrange(0, 4))
+        idx = idx + 1
+
+
+# done
 def getCashFlow(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    pass
+    data = crawlCashFlow(companyID, westernYearIn, seasonIn)
+    data = transformHeaderNoun(data, "cashflow")
+
+    print(data)
+    dataPayload = {}
+    with open(
+            './data_key_select/cashflow_key_select.txt',
+            encoding='utf-8') as cashflow_key_select:
+        cashflowKeySel = set(
+            line.strip() for line in cashflow_key_select)
+
+    for key in cashflowKeySel:
+        try:
+            if key in data.index:
+                dataPayload[key] = int(data.loc[key][0])
+            else:
+                dataPayload[key] = None
+        except Exception as ex:
+            print(ex)
+
+    dataPayload['year'] = westernYearIn
+    dataPayload['season'] = str(seasonIn)
+
+    cashflowApi = "http://127.0.0.1:5000/api/v0/cash_flow/%s" % str(
+        companyID)
+    # print(dataPayload)
+    res = requests.post(cashflowApi, data=json.dumps(dataPayload))
+    print(res)
+
+
+def UpdateCashFlow(westernYearIn=2019, season=1):
+    companyTypes = ['sii', 'otc', 'rotc', 'pub']
+
+    existStockNo = getSummaryStockNoServerExist(
+        westernYearIn, season, 'cashflow')
+    validStockNo = getStockNoBasicInfo()
+    print("\t" + str(len(existStockNo)) + " existing stocks")
+
+    crawlList = []
+    for companyType in companyTypes:
+        targetStockNo = getSummaryStockNoTarget('balance_sheet', companyType,
+                                                westernYearIn, season)
+        if len(targetStockNo) == 0:
+            continue
+        if len(existStockNo) != 0:
+            for no in targetStockNo:
+                if str(no) not in existStockNo and\
+                   str(no) in validStockNo:
+                    crawlList.append(no)
+        else:
+            crawlList.extend(targetStockNo)
+
+    total = len(crawlList)
+    # print(crawlList)
+    print("\t" + str(total) + " stocks to update")
+    idx = 0
+    for stock in crawlList:
+        print("(" + str(idx) + "/" + str(total) + ")" + str(stock), end=' ')
+        getCashFlow(stock, westernYearIn, season)
+        time.sleep(3 + random.randrange(0, 4))
+        idx = idx + 1
 
 
 # done
@@ -212,7 +330,7 @@ def getSummaryStockNoServerExist(
     payload['season'] = seasonIn
     payload['reportType'] = reportType
     print("exist " + reportType + " " +
-          str(year) + "Q" + str(seasonIn), end='...')
+          str(westernYearIn) + "Q" + str(seasonIn), end='...')
     res = requests.post(url, data=json.dumps(payload))
     print("done.")
     return json.loads(res.text)
@@ -228,7 +346,7 @@ def getSummaryStockNoTarget(
 
 def getStockNoBasicInfo():
     url = "http://127.0.0.1:5000/api/v0/stock_number"
-    print('basic info', end='...')
+    print('Basic Infomation', end='...')
     res = requests.get(url)
     print("done.")
     return json.loads(res.text)
@@ -251,6 +369,14 @@ if __name__ == '__main__':
     '''
     usage: update incomeSheet/BalanceSheet
     '''
+    years = [2019]
+    seasons = [3,2,1]
+
+    for year in years:
+        for season in seasons:
+            # UpdateIncomeSheet(year, season)
+            # UpdateBalanceSheet(year, season)
+            UpdateCashFlow(year, season)
     # start = datetime.now()
     # year = 2013
     # reportType = 'income_sheet'
@@ -268,4 +394,5 @@ if __name__ == '__main__':
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
 
-    updateDailyPrice('sii')
+    # updateDailyPrice('sii')
+

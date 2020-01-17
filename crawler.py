@@ -2,6 +2,8 @@
 import requests
 import pandas as pd
 import json
+import time
+import random
 from datetime import datetime
 from io import StringIO
 
@@ -162,7 +164,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
         try:
             html_df = pd.read_html(StringIO(req.text))
-        except ValueError as ve:
+        except ValueError:
             print('%s no %s month revenue data for %s/%s'
                 % (datetime.date.today().strftime("%Y-%m-%d"),
                    url["type"],
@@ -362,7 +364,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         westernYearIn => int (西元年)
         monthIn => int (1,2...11,12)
         recursiveBreak => boolean
-    """
+    """ 
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -397,15 +399,21 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
             "Connection": "close"
         }
 
-    req = requests.post(url, headers)
-    req.encoding = "utf-8"
-    # print(req.text)
-    try:
-        html_df = pd.read_html(StringIO(req.text))
-        results = html_df[1]
-    except Exception as ex:
-        print(ex)
-        return None
+    while(True):
+        try:
+            # print(headers)
+            req = requests.post(url, headers, timeout=(2,15))
+            req.encoding = "utf-8"
+            html_df = pd.read_html(StringIO(req.text))
+            print(html_df[1].loc[0])
+            results = html_df[1]
+            break
+        except Exception as ex:
+            delay = 3 + random.randrange(0, 4)
+            print("\n  ", end="")
+            print(type(ex).__name__, end=" ")
+            print("catched. Retry in %s sec." % (delay))
+            time.sleep(delay)
 
     # drop invalid column
     results = results.iloc[:, 0:2]
@@ -543,13 +551,16 @@ def crawlSummaryReportStockNo(
     Raises:
         Exception: no table in request result or others things.
     """
-    year = str(westernYearIn - 1911)
     season = str(seasonIn).zfill(2)
+    print(reportTypes + " " + companyType + " summary "
+        + str(westernYearIn) + 'Q' + str(season), end='...')
+    year = str(westernYearIn - 1911)
 
     if reportTypes is 'balance_sheet':
         url = "https://mops.twse.com.tw/mops/web/ajax_t163sb05"
     else:
         url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
+
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
         "encodeURIComponent": "1",
@@ -561,22 +572,26 @@ def crawlSummaryReportStockNo(
         "year": year,
         "season": season,
     }
-    print(reportTypes + " " + companyType + " " + str(westernYearIn) +
-          'Q' + str(season), end='...')
-    req = requests.post(url, headers)
-    req.encoding = "utf-8"
 
-    try:
-        html_df = pd.read_html(StringIO(req.text))
-        print("done.")
-    except Exception as ex:
-        print(ex)
-        return []
+    while(True):
+        try:
+            req = requests.post(url, headers, timeout=(2,25))
+            req.encoding = "utf-8"
+            html_df = pd.read_html(StringIO(req.text))
+            print("done.")
+            break
+        except Exception as ex:
+            delay = 3 + random.randrange(0, 4)
+            print("  ", end="")
+            print(type(ex).__name__, end=" ")
+            print("catched. Retry in %s sec." % (delay))
+            time.sleep(delay)
 
     stockNums = []
     for idx in range(1, len(html_df)):
         # print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
         stockNums += list(html_df[idx]['公司代號'])
+    time.sleep(3 + random.randrange(0, 4))
     return stockNums
 
 
