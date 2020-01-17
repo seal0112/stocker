@@ -17,17 +17,26 @@ from stockerModel import (
     showMain, getStockNumber,
     handleBasicInfo, handleMonthRevenue,
     handleIncomeSheet, handleBalanceSheet,
-    handleCashFlow
+    handleCashFlow, handleDailyInfo
 )
 import time
-from flask_cors import cross_origin
+from flask_login import (
+    LoginManager, UserMixin, login_user,
+    current_user, login_required, logout_user
+)
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+app.secret_key = 'my-secret-key'
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'tmp-secret'
 jwt = JWTManager(app)
+
+login_manager = LoginManager(app)
+login_manager.init_app(app)
+#  假裝是我們的使用者
+users = {'test': {'password': 'test'}}
 
 # Logger setup
 logger = logging.getLogger()
@@ -74,6 +83,11 @@ app.add_url_rule('/api/v0/month_revenue/<string:stock_id>',
                  view_func=handleMonthRevenue.as_view(
                      'handleMonthRevenue'),
                  methods=['GET', 'POST'])
+app.add_url_rule('/api/v0/daily_information/<string:stock_id>',
+                 'handleDailyInfo',
+                 view_func=handleDailyInfo.as_view(
+                     'handleDailyInfo'),
+                 methods=['GET', 'POST'])
 
 
 def after_request(response):
@@ -86,19 +100,58 @@ def after_request(response):
 @app.route('/testsetcookie')
 def test():
     res = make_response(json.dumps("for set cookie"), 200)
-    res.headers["Set-Cookie"] = "coo=haha; Expires=%s" % str(time.time()+5)
     res.set_cookie(key='coo2', value='haha', expires=time.time()+5)
 
     print(res.headers)
     return res
 
-@app.route('/testsetcookie2')
-def test2():
-    res = make_response(json.dumps("for set cookie2"), 200)
-    res.set_cookie(key='me', value='chipupu', expires=time.time()+5)
+class User(UserMixin):
+    username = ""
+    def __repr__(self):
+        return self.username
+    def is_authenticated(self):
+        return True
+    def is_active(self):
+        return True
+    def is_anonymous(self):
+        return False
+    def get_id(self):
+        return self.username
 
-    print(res.headers)
-    return res
+@login_manager.user_loader
+def user_loader(username):
+    if username not in users:
+        return
+    user = User()
+    user.id = username
+    return user
+
+@app.route('/testforlogin')
+@login_required
+def testlogin():
+    print(current_user.username)
+    return json.dumps("test for login")
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = json.loads(request.data)
+    username = data['username']
+    if data['password'] == users[username]['password']:
+        print('password: %s' % users[username]['password'])
+        user = User()
+        user.username = username
+        print(user)
+        print(user.is_authenticated())
+        login_user(user, remember=True)
+
+    return json.dumps('login_test')
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    return json.dumps('Logged out')
+
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
@@ -108,8 +161,8 @@ def add_claims_to_access_token(identity):
     }
 
 
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/login_jwt', methods=['POST'])
+def login_jwt():
     print(request.is_json)
     print(request.data)
     if not request.is_json:
