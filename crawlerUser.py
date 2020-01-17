@@ -1,7 +1,7 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryReportStockNo
+    crawlSummaryReportStockNo, crawlerDailyPrice
 )
 from datetime import datetime
 import json
@@ -9,6 +9,9 @@ import requests
 import time
 import random
 import math
+
+with open('./critical_flie/serverConfig.json') as configReader:
+    serverConf = json.loads(configReader.read())
 
 
 # done
@@ -22,8 +25,8 @@ def getBasicInfo(dataType='sii'):
             data.iloc[i].to_json(force_ascii=False))
         dataPayload['type'] = dataType
         url = \
-            "http://127.0.0.1:5000/api/v0/basic_information/%s"\
-            % dataPayload['id']
+            "http://%s:%s/api/v0/basic_information/%s"\
+            % (serverConf['ip'], serverConf['port'], dataPayload['id'])
         res = requests.post(url, data=json.dumps(dataPayload))
         print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
         print(dataPayload['id'], end=' ')
@@ -171,6 +174,23 @@ def UpdateIncomeSheet(westernYearIn=2019, season=1):
         idx = idx + 1
 
 
+def updateDailyPrice(type='sii'):
+    stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
+        serverConf['ip'], serverConf['port'], type)
+    stockNums = json.loads(requests.get(stockNumsApi).text)
+
+    serverDailyInfoApi = "http://%s:%s/api/v0/daily_information/" % (
+        serverConf['ip'], serverConf['port'])
+
+    for i in range(0,len(stockNums),10):
+        data = crawlerDailyPrice(stockNums[i:i+10], type)
+        for d in data:
+            res = requests.post(
+                "%s%s" % (serverDailyInfoApi, d['stock_id']),
+                data=json.dumps(d))
+        time.sleep(1.5)
+
+
 # TODO
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
@@ -226,7 +246,7 @@ if __name__ == '__main__':
     '''
     usage: get monthly revenue
     '''
-    getMonthlyRevenue(2019, 12)
+    # getMonthlyRevenue(2019, 12)
 
     '''
     usage: update incomeSheet/BalanceSheet
@@ -247,3 +267,5 @@ if __name__ == '__main__':
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
+
+    updateDailyPrice('sii')
