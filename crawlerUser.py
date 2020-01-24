@@ -51,6 +51,9 @@ def transformHeaderNoun(data, fileName):
     Raises:
         Exception: An error occurred.
     """
+    if data is None:
+        return {}
+
     direction = {
         "basic_information": "columns",
         "month_revenue": "columns",
@@ -262,7 +265,7 @@ def getCashFlow(
     data = crawlCashFlow(companyID, westernYearIn, seasonIn)
     data = transformHeaderNoun(data, "cashflow")
 
-    print(data)
+    # print(data)
     dataPayload = {}
     with open(
             './data_key_select/cashflow_key_select.txt',
@@ -278,6 +281,7 @@ def getCashFlow(
                 dataPayload[key] = None
         except Exception as ex:
             print(ex)
+            # TODO: write into log file
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -318,7 +322,7 @@ def UpdateCashFlow(westernYearIn=2019, season=1):
     for stock in crawlList:
         print("(" + str(idx) + "/" + str(total) + ")" + str(stock), end=' ')
         getCashFlow(stock, westernYearIn, season)
-        time.sleep(3 + random.randrange(0, 4))
+        time.sleep(4 + random.randrange(0, 4))
         idx = idx + 1
 
 
@@ -371,12 +375,18 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     years = [2019]
-    seasons = [3, 2, 1]
+    seasons = [2, 1]
 
     for year in years:
         for season in seasons:
             # UpdateIncomeSheet(year, season)
             # UpdateBalanceSheet(year, season)
+            UpdateCashFlow(year, season)
+
+    years = [2018, 2017]
+    seasons = [1, 2, 3, 4]
+    for year in years:
+        for season in seasons:
             UpdateCashFlow(year, season)
     # start = datetime.now()
     # year = 2013

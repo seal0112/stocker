@@ -404,24 +404,29 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
             # print(headers)
             req = requests.post(url, headers, timeout=(2, 15))
             req.encoding = "utf-8"
+            # print(len(req.text))
             html_df = pd.read_html(StringIO(req.text))
-            print(html_df[1].loc[0])
-            results = html_df[1]
+            # print(len(html_df))
+            results = html_df[len(html_df)-1]
+            # print(len(results))
+
+            # drop invalid column
+            results = results.iloc[:, 0:2]
+
+            # rename columns
+            amount = results.columns[1][0] + "-" + results.columns[1][1]
+            results.columns = results.columns.droplevel(1)
+            results.columns = [results.columns[0], amount]
             break
+        except ValueError as ve:
+            if ve.args[0] == "No tables found":
+                return None
         except Exception as ex:
-            delay = 3 + random.randrange(0, 4)
+            delay = 5 + random.randrange(0, 4)
             print("\n  ", end="")
-            print(type(ex).__name__, end=" ")
+            print(ex, end=" ")
             print("catched. Retry in %s sec." % (delay))
             time.sleep(delay)
-
-    # drop invalid column
-    results = results.iloc[:, 0:2]
-
-    # rename columns
-    amount = results.columns[1][0] + "-" + results.columns[1][1]
-    results.columns = results.columns.droplevel(1)
-    results.columns = [results.columns[0], amount]
 
     # drop nan rows
     dropRowIndex = []
@@ -438,7 +443,10 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
 
     # transfer accumulative cashflow into single season
     if seasonIn != 1:
+        time.sleep(4 + random.randrange(0, 4))
         prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
+        if prev is None:
+            return None
         for index in results.index:
             try:
                 results.loc[index] = results.loc[index][0] - prev.loc[index][0]
