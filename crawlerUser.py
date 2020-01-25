@@ -9,6 +9,8 @@ import requests
 import time
 import random
 import math
+import sys
+import traceback
 
 with open('./critical_flie/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
@@ -276,11 +278,18 @@ def getCashFlow(
     for key in cashflowKeySel:
         try:
             if key in data.index:
+                print(key)
+                print(data.loc[key])
+                print("")
                 dataPayload[key] = int(data.loc[key][0])
             else:
                 dataPayload[key] = None
+        except KeyError as ke:
+            if ke.args[0] == 0:
+                dataPayload[key] = int(data.loc[key].iloc[0])
         except Exception as ex:
-            print(ex)
+            print(ex.__class__.__name__)
+            print(sys.exc_info())
             # TODO: write into log file
 
     dataPayload['year'] = westernYearIn
