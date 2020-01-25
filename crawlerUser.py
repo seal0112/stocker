@@ -161,7 +161,7 @@ def UpdateIncomeSheet(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoTarget('income_sheet', companyType,
+        targetStockNo = getSummaryStockNoFromTWSE('income_sheet', companyType,
                                                 westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -240,7 +240,7 @@ def UpdateBalanceSheet(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoTarget('balance_sheet', companyType,
+        targetStockNo = getSummaryStockNoFromTWSE('balance_sheet', companyType,
                                                 westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -312,7 +312,7 @@ def UpdateCashFlow(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoTarget('balance_sheet', companyType,
+        targetStockNo = getSummaryStockNoFromTWSE('balance_sheet', companyType,
                                                 westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -351,7 +351,7 @@ def getSummaryStockNoServerExist(
 
 
 # done
-def getSummaryStockNoTarget(
+def getSummaryStockNoFromTWSE(
         reportTypes='income_sheet', companyType='sii',
         westernYearIn=2019, seasonIn=3):
     return crawlSummaryReportStockNo(reportTypes, companyType,
@@ -397,6 +397,7 @@ if __name__ == '__main__':
     for year in years:
         for season in seasons:
             UpdateCashFlow(year, season)
+
     # start = datetime.now()
     # year = 2013
     # reportType = 'income_sheet'
@@ -413,5 +414,6 @@ if __name__ == '__main__':
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)
     # getCashFlow()
+    
+    updateDailyPrice('sii')
 
-    # updateDailyPrice('sii')
