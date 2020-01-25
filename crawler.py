@@ -442,11 +442,20 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         return results
 
     # transfer accumulative cashflow into single season
+    # sii/otc/rotc issue cashflow report seasonally
+    # pub issue report semiannually/seasonally
     if seasonIn != 1:
         time.sleep(4 + random.randrange(0, 4))
         prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
         if prev is None:
-            return None
+            # pub semiannually report
+            if seasonIn == 2:
+                return results
+            elif seasonIn == 4:
+                time.sleep(4 + random.randrange(0, 4))
+                prev = crawlCashFlow(companyID, westernYearIn, 2, True)
+            else:
+                return None
         for index in results.index:
             try:
                 results.loc[index] = results.loc[index][0] - prev.loc[index][0]
