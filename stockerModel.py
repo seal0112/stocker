@@ -179,7 +179,7 @@ class handleDailyInfo(MethodView):
         dailyInfo = session.query(Daily_Information).filter_by(
             stock_id=stock_id).one_or_none()
         return 'Daily Information: %s' % stock_id\
-           if dailyInfo is None else dailyInfo.serialize
+            if dailyInfo is None else dailyInfo.serialize
 
     def post(self, stock_id):
         payload = json.loads(request.data)
@@ -206,7 +206,8 @@ class handleDailyInfo(MethodView):
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s Daily Information.' % (stock_id)), 400)
+                    'Failed to update %s Daily Information.'
+                    % (stock_id)), 400)
             return res
 
         res = make_response(

@@ -94,8 +94,10 @@ def after_request(response):
     response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3001'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Headers'] =\
+        'Content-Type, Authorization'
     return response
+
 
 @app.route('/testsetcookie')
 def test():
@@ -105,18 +107,25 @@ def test():
     print(res.headers)
     return res
 
+
 class User(UserMixin):
     username = ""
+
     def __repr__(self):
         return self.username
+
     def is_authenticated(self):
         return True
+
     def is_active(self):
         return True
+
     def is_anonymous(self):
         return False
+
     def get_id(self):
         return self.username
+
 
 @login_manager.user_loader
 def user_loader(username):
@@ -126,11 +135,13 @@ def user_loader(username):
     user.id = username
     return user
 
+
 @app.route('/testforlogin')
 @login_required
 def testlogin():
     print(current_user.username)
     return json.dumps("test for login")
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -145,6 +156,7 @@ def login():
         login_user(user, remember=True)
 
     return json.dumps('login_test')
+
 
 @app.route('/logout', methods=['GET'])
 @login_required

@@ -131,23 +131,23 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     month = str(monthIn)
 
     urlSiiDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                                     + year + "_" + month + "_0.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
+                               + year + "_" + month + "_0.html",
                         "type": "OtcDomestic"
                      }
     urlSiiForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                                    + year + "_" + month + "_1.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
+                               + year + "_" + month + "_1.html",
                         "type":  "OtcForiegn"
                     }
     urlOtcDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                                    + year + "_" + month + "_0.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"
+                               + year + "_" + month + "_0.html",
                         "type": "OtcDomestic"
                     }
     urlOtcForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
-                                    + year + "_" + month + "_1.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"
+                               + year + "_" + month + "_1.html",
                         "type": "OtcForiegn"
                     }
 
@@ -166,10 +166,10 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             html_df = pd.read_html(StringIO(req.text))
         except ValueError:
             print('%s no %s month revenue data for %s/%s'
-                % (datetime.date.today().strftime("%Y-%m-%d"),
-                   url["type"],
-                   westernYearIn,
-                   monthIn))
+                  % (datetime.date.today().strftime("%Y-%m-%d"),
+                     url["type"],
+                     westernYearIn,
+                     monthIn))
         else:
             dfs = pd.DataFrame()
             for df in html_df:
@@ -364,7 +364,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         westernYearIn => int (西元年)
         monthIn => int (1,2...11,12)
         recursiveBreak => boolean
-    """ 
+    """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -402,26 +402,31 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     while(True):
         try:
             # print(headers)
-            req = requests.post(url, headers, timeout=(2,15))
+            req = requests.post(url, headers, timeout=(2, 15))
             req.encoding = "utf-8"
+            # print(len(req.text))
             html_df = pd.read_html(StringIO(req.text))
-            print(html_df[1].loc[0])
-            results = html_df[1]
+            # print(len(html_df))
+            results = html_df[len(html_df)-1]
+            # print(len(results))
+
+            # drop invalid column
+            results = results.iloc[:, 0:2]
+
+            # rename columns
+            amount = results.columns[1][0] + "-" + results.columns[1][1]
+            results.columns = results.columns.droplevel(1)
+            results.columns = [results.columns[0], amount]
             break
+        except ValueError as ve:
+            if ve.args[0] == "No tables found":
+                return None
         except Exception as ex:
-            delay = 3 + random.randrange(0, 4)
+            delay = 5 + random.randrange(0, 4)
             print("\n  ", end="")
-            print(type(ex).__name__, end=" ")
+            print(ex, end=" ")
             print("catched. Retry in %s sec." % (delay))
             time.sleep(delay)
-
-    # drop invalid column
-    results = results.iloc[:, 0:2]
-
-    # rename columns
-    amount = results.columns[1][0] + "-" + results.columns[1][1]
-    results.columns = results.columns.droplevel(1)
-    results.columns = [results.columns[0], amount]
 
     # drop nan rows
     dropRowIndex = []
@@ -437,8 +442,20 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         return results
 
     # transfer accumulative cashflow into single season
+    # sii/otc/rotc issue cashflow report seasonally
+    # pub issue report semiannually/seasonally
     if seasonIn != 1:
+        time.sleep(4 + random.randrange(0, 4))
         prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
+        if prev is None:
+            # pub semiannually report
+            if seasonIn == 2:
+                return results
+            elif seasonIn == 4:
+                time.sleep(4 + random.randrange(0, 4))
+                prev = crawlCashFlow(companyID, westernYearIn, 2, True)
+            else:
+                return None
         for index in results.index:
             try:
                 results.loc[index] = results.loc[index][0] - prev.loc[index][0]
@@ -553,7 +570,7 @@ def crawlSummaryReportStockNo(
     """
     season = str(seasonIn).zfill(2)
     print(reportTypes + " " + companyType + " summary "
-        + str(westernYearIn) + 'Q' + str(season), end='...')
+          + str(westernYearIn) + 'Q' + str(season), end='...')
     year = str(westernYearIn - 1911)
 
     if reportTypes is 'balance_sheet':
@@ -575,7 +592,7 @@ def crawlSummaryReportStockNo(
 
     while(True):
         try:
-            req = requests.post(url, headers, timeout=(2,25))
+            req = requests.post(url, headers, timeout=(2, 25))
             req.encoding = "utf-8"
             html_df = pd.read_html(StringIO(req.text))
             print("done.")
@@ -620,7 +637,7 @@ def crawlerDailyPrice(stockNums, type='sii'):
         try:
             idAndPrice.append({'stock_id': i['c'], "股價": i['z']})
         except Exception as ex:
-            print("%s %s"% (i['c'], ex))
+            print("%s %s" % (i['c'], ex))
 
     return idAndPrice
 
