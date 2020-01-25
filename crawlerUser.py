@@ -278,9 +278,9 @@ def getCashFlow(
     for key in cashflowKeySel:
         try:
             if key in data.index:
-                print(key)
-                print(data.loc[key])
-                print("")
+                # print(key)
+                # print(data.loc[key])
+                # print("")
                 dataPayload[key] = int(data.loc[key][0])
             else:
                 dataPayload[key] = None
