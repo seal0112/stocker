@@ -9,6 +9,8 @@ import requests
 import time
 import random
 import math
+import sys
+import traceback
 
 with open('./critical_flie/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
@@ -51,6 +53,9 @@ def transformHeaderNoun(data, fileName):
     Raises:
         Exception: An error occurred.
     """
+    if data is None:
+        return {}
+
     direction = {
         "basic_information": "columns",
         "month_revenue": "columns",
@@ -210,6 +215,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
         time.sleep(3.5 + random.randrange(0, 2))
 
 
+
 # need to update feature
 def updateDailyPrice(type='sii'):
     stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
@@ -219,7 +225,7 @@ def updateDailyPrice(type='sii'):
     serverDailyInfoApi = "http://%s:%s/api/v0/daily_information/" % (
         serverConf['ip'], serverConf['port'])
 
-    for i in range(0,len(stockNums),10):
+    for i in range(0, len(stockNums), 10):
         data = crawlerDailyPrice(stockNums[i:i+10], type)
         for d in data:
             res = requests.post(
@@ -295,7 +301,7 @@ def getCashFlow(
     data = crawlCashFlow(companyID, westernYearIn, seasonIn)
     data = transformHeaderNoun(data, "cashflow")
 
-    print(data)
+    # print(data)
     dataPayload = {}
     with open(
             './data_key_select/cashflow_key_select.txt',
@@ -306,11 +312,19 @@ def getCashFlow(
     for key in cashflowKeySel:
         try:
             if key in data.index:
+                # print(key)
+                # print(data.loc[key])
+                # print("")
                 dataPayload[key] = int(data.loc[key][0])
             else:
                 dataPayload[key] = None
+        except KeyError as ke:
+            if ke.args[0] == 0:
+                dataPayload[key] = int(data.loc[key].iloc[0])
         except Exception as ex:
-            print(ex)
+            print(ex.__class__.__name__)
+            print(sys.exc_info())
+            # TODO: write into log file
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -351,7 +365,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
     for stock in crawlList:
         print("(" + str(idx) + "/" + str(total) + ")" + str(stock), end=' ')
         getCashFlow(stock, westernYearIn, season)
-        time.sleep(3 + random.randrange(0, 4))
+        time.sleep(4 + random.randrange(0, 4))
         idx = idx + 1
 
 
@@ -404,14 +418,21 @@ if __name__ == '__main__':
     '''
     usage: update incomeSheet/BalanceSheet
     '''
-    # years = [2019]
-    # seasons = [3,2,1]
+    years = [2019]
+    seasons = [2, 1]
 
-    # for year in years:
-    #     for season in seasons:
-    #         # UpdateIncomeSheet(year, season)
-    #         # UpdateBalanceSheet(year, season)
-    #         UpdateCashFlow(year, season)
+    for year in years:
+        for season in seasons:
+            # UpdateIncomeSheet(year, season)
+            # UpdateBalanceSheet(year, season)
+            UpdateCashFlow(year, season)
+
+    years = [2018, 2017]
+    seasons = [1, 2, 3, 4]
+    for year in years:
+        for season in seasons:
+            UpdateCashFlow(year, season)
+
     # start = datetime.now()
     # year = 2013
     # reportType = 'income_sheet'
@@ -427,7 +448,8 @@ if __name__ == '__main__':
 
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)
-    # getCashFlow(4439,2019,3)
 
-    # updateDailyPrice('sii')
+    # getCashFlow()
+
+    updateDailyPrice('sii')
 
