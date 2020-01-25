@@ -133,12 +133,12 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     urlSiiDomestic = {
                         "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
                                      + year + "_" + month + "_0.html",
-                        "type": "OtcDomestic"
+                        "type": "SiiDomestic"
                      }
     urlSiiForiegn = {
                         "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
                                     + year + "_" + month + "_1.html",
-                        "type":  "OtcForiegn"
+                        "type":  "SiiForiegn"
                     }
     urlOtcDomestic = {
                         "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"\
@@ -364,7 +364,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         westernYearIn => int (西元年)
         monthIn => int (1,2...11,12)
         recursiveBreak => boolean
-    """ 
+    """
     coID = str(companyID)
     year = str(westernYearIn - 1911)
     season = str(seasonIn)
@@ -402,14 +402,16 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     while(True):
         try:
             # print(headers)
-            req = requests.post(url, headers, timeout=(2,15))
+            req = requests.post(url, data=headers, timeout=(2,15))
             req.encoding = "utf-8"
+            print(req)
             html_df = pd.read_html(StringIO(req.text))
             print(html_df[1].loc[0])
             results = html_df[1]
             break
         except Exception as ex:
             delay = 3 + random.randrange(0, 4)
+            print(type(ex), ex.args[0])
             print("\n  ", end="")
             print(type(ex).__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))

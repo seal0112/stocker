@@ -107,7 +107,15 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
 
 # done
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
-    data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
+    try:
+        data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
+    except ConnectionError as ce:
+        return {"stock_id": companyID, "status": ce.args[0]}
+    except IndexError as ie:
+        return {"stock_id": companyID, "status": 'IndexError'}
+    except Exception as e:
+        return {"stock_id": companyID, "status": e.args[0]}
+
     data = transformHeaderNoun(data, 'income_sheet')
 
     dataPayload = {}
@@ -145,9 +153,11 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
     print(res)
 
+    return {"stock_id": companyID, "status": "ok"}
+
 
 # done
-def UpdateIncomeSheet(westernYearIn=2019, season=1):
+def updateIncomeSheet(westernYearIn=2019, season=1):
     companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
     existStockNo = getSummaryStockNoServerExist(
@@ -170,11 +180,35 @@ def UpdateIncomeSheet(westernYearIn=2019, season=1):
 
     total = len(crawlList)
     idx = 0
-    for stock in crawlList:
+    exceptList = []
+
+    for idx, stock in enumerate(crawlList):
         print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-        getIncomeSheet(stock, westernYearIn, season)
-        time.sleep(3 + random.randrange(0, 4))
-        idx = idx + 1
+        crawlerResult = getIncomeSheet(stock, westernYearIn, season)
+        print(crawlerResult['stock_id'], crawlerResult['status'])
+        if crawlerResult["status"] == 'IndexError':
+            time.sleep(60)
+        if crawlerResult["status"] != 'ok':
+            exceptList.append({
+                "stock_id": crawlerResult["stock_id"],
+                "retry_times": 0
+            })
+        time.sleep(3.5 + random.randrange(0, 2))
+
+    while(len(exceptList)):
+        reCrawler = getIncomeSheet(
+            exceptList[0]["stock_id"], westernYearIn, season)
+        if reCrawler["status"] == 'ok':
+            del exceptList[0]
+        elif exceptList[0]["retry_times"] == 2:
+            print("cancel stock_id: %s, retry over 3 times." % reCrawler["stock_id"])
+            del exceptList[0]
+        else:
+            tmpStock = exceptList.pop(0)
+            tmpStock["retry_times"] = tmpStock["retry_times"]+1
+            exceptList.append(tmpStock)
+        time.sleep(3.5 + random.randrange(0, 2))
+
 
 # need to update feature
 def updateDailyPrice(type='sii'):
@@ -225,7 +259,7 @@ def getBalanceSheet(
     print(res)
 
 
-def UpdateBalanceSheet(westernYearIn=2019, season=1):
+def updateBalanceSheet(westernYearIn=2019, season=1):
     companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
     existStockNo = getSummaryStockNoServerExist(
@@ -288,7 +322,7 @@ def getCashFlow(
     print(res)
 
 
-def UpdateCashFlow(westernYearIn=2019, season=1):
+def updateCashFlow(westernYearIn=2019, season=1):
     companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
     existStockNo = getSummaryStockNoServerExist(
@@ -364,7 +398,8 @@ if __name__ == '__main__':
     '''
     usage: get monthly revenue
     '''
-    # getMonthlyRevenue(2019, 12)
+    for i in range(12,0,-1):
+        getMonthlyRevenue(2018, i)
 
     '''
     usage: update incomeSheet/BalanceSheet
@@ -383,7 +418,7 @@ if __name__ == '__main__':
     # seasons = [1, 2, 3, 4]
 
     # for season in seasons:
-    #     UpdateIncomeSheet(year, season)
+    # updateIncomeSheet(2018, 4)
 
     # end = datetime.now()
     # print("start time: " + str(start))
@@ -392,7 +427,7 @@ if __name__ == '__main__':
 
     # getIncomeSheet(1101, 2013, 2)
     # getBalanceSheet(2337, 2019, 2)
-    # getCashFlow()
+    # getCashFlow(4439,2019,3)
 
-    updateDailyPrice('sii')
+    # updateDailyPrice('sii')
 
