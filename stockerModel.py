@@ -4,6 +4,7 @@ from flask import Blueprint
 from flask.views import MethodView
 from sqlalchemy import asc, create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 from database_setup import Base
 from database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
@@ -159,6 +160,16 @@ class handleBasicInfo(MethodView):
 
             session.add(basicInfo)
             session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
         except Exception as ex:
             print(ex)
             logger.warning(
@@ -199,6 +210,16 @@ class handleDailyInfo(MethodView):
 
             session.add(dailyInfo)
             session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
         except Exception as ex:
             print(ex)
             logger.warning(
@@ -267,6 +288,16 @@ class handleIncomeSheet(MethodView):
 
             session.add(incomeSheet)
             session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
         except Exception as ex:
             print(ex)
             logger.warning(
@@ -334,14 +365,24 @@ class handleBalanceSheet(MethodView):
 
             session.add(balanceSheet)
             session.commit()
-        except Exception as ex:
-            print(ex)
-            logger.warning(
-                "406 %s is failed to update balance_sheet. Reason: %s"
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s balance sheet.' % (stock_id)), 406)
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
+        except Exception as ex:
+            print(ex)
+            logger.warning(
+                "400 %s is failed to update balance_sheet. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s balance sheet.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -401,14 +442,24 @@ class handleCashFlow(MethodView):
 
             session.add(cashFlow)
             session.commit()
-        except Exception as ex:
-            print(ex)
-            logger.warning(
-                "406 %s is failed to update cash_flow. Reason: %s"
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s cash flow.' % (stock_id)), 406)
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
+        except Exception as ex:
+            print(ex)
+            logger.warning(
+                "400 %s is failed to update cash_flow. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s cash flow.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -479,6 +530,16 @@ class handleMonthRevenue(MethodView):
 
             session.add(monthReve)
             session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update month revenue. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s month revenue.' % (stock_id)), 400)
+            return res
         except Exception as ex:
             print("%s: %s" % (stock_id, ex))
             logging.warning(
