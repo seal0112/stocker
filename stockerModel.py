@@ -172,7 +172,6 @@ class handleBasicInfo(MethodView):
             return res
         except Exception as ex:
             print(ex)
-            session.rollback()
             logger.warning(
                 "400 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))
@@ -223,7 +222,6 @@ class handleDailyInfo(MethodView):
             return res
         except Exception as ex:
             print(ex)
-            session.rollback()
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
                 % (stock_id, ex))
@@ -302,7 +300,6 @@ class handleIncomeSheet(MethodView):
             return res
         except Exception as ex:
             print(ex)
-            session.rollback()
             logger.warning(
                 "400 %s is failed to update income_sheet. Reason: %s"
                 % (stock_id, ex))
@@ -380,7 +377,6 @@ class handleBalanceSheet(MethodView):
             return res
         except Exception as ex:
             print(ex)
-            session.rollback()
             logger.warning(
                 "400 %s is failed to update balance_sheet. Reason: %s"
                 % (stock_id, ex))
@@ -458,7 +454,6 @@ class handleCashFlow(MethodView):
             return res
         except Exception as ex:
             print(ex)
-            session.rollback()
             logger.warning(
                 "400 %s is failed to update cash_flow. Reason: %s"
                 % (stock_id, ex))
@@ -547,7 +542,6 @@ class handleMonthRevenue(MethodView):
             return res
         except Exception as ex:
             print("%s: %s" % (stock_id, ex))
-            session.rollback()
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
                 % (stock_id, ex))
