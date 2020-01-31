@@ -195,7 +195,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             html_df = pd.read_html(StringIO(req.text))
         except ValueError:
             print('%s no %s month revenue data for %s/%s'
-                  % (datetime.date.today().strftime("%Y-%m-%d"),
+                  % (datetime.today().strftime("%Y-%m-%d"),
                      url["type"],
                      westernYearIn,
                      monthIn))
@@ -574,7 +574,7 @@ def crawlShareholderCount(companyID, datetime):
     return result
 
 
-def crawlSummaryReportStockNo(
+def crawlSummaryStockNoFromTWSE(
         reportTypes='income_sheet',
         companyType='sii',
         westernYearIn=2019,

@@ -1,7 +1,7 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryReportStockNo, crawlerDailyPrice
+    crawlSummaryStockNoFromTWSE, crawlerDailyPrice
 )
 from datetime import datetime
 import json
@@ -15,6 +15,7 @@ import traceback
 with open('./critical_flie/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
 
+companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 # done
 def getBasicInfo(dataType='sii'):
@@ -168,15 +169,13 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
 # done
 def updateIncomeSheet(westernYearIn=2019, season=1):
-    companyTypes = ['sii', 'otc', 'rotc', 'pub']
-
     existStockNo = getSummaryStockNoServerExist(
         westernYearIn, season, 'income_sheet')
     validStockNo = getStockNoBasicInfo()
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE(
+        targetStockNo = crawlSummaryStockNoFromTWSE(
             'income_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -189,7 +188,6 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
             crawlList.extend(targetStockNo)
 
     total = len(crawlList)
-    idx = 0
     exceptList = []
 
     for idx, stock in enumerate(crawlList):
@@ -273,15 +271,13 @@ def getBalanceSheet(
 
 
 def updateBalanceSheet(westernYearIn=2019, season=1):
-    companyTypes = ['sii', 'otc', 'rotc', 'pub']
-
     existStockNo = getSummaryStockNoServerExist(
         westernYearIn, season, 'balance_sheet')
     validStockNo = getStockNoBasicInfo()
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE(
+        targetStockNo = crawlSummaryStockNoFromTWSE(
             'balance_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -363,8 +359,6 @@ def getCashFlow(
 
 
 def updateCashFlow(westernYearIn=2019, season=1):
-    companyTypes = ['sii', 'otc', 'rotc', 'pub']
-
     existStockNo = getSummaryStockNoServerExist(
         westernYearIn, season, 'cashflow')
     validStockNo = getStockNoBasicInfo()
@@ -372,7 +366,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE(
+        targetStockNo = crawlSummaryStockNoFromTWSE(
             'balance_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
@@ -435,14 +429,6 @@ def getSummaryStockNoServerExist(
     res = requests.post(url, data=json.dumps(payload))
     print("done.")
     return json.loads(res.text)
-
-
-# done
-def getSummaryStockNoFromTWSE(
-        reportTypes='income_sheet', companyType='sii',
-        westernYearIn=2019, seasonIn=3):
-    return crawlSummaryReportStockNo(reportTypes, companyType,
-                                     westernYearIn, seasonIn)
 
 
 def getStockNoBasicInfo():
