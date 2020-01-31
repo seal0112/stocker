@@ -26,9 +26,10 @@ def getBasicInfo(dataType='sii'):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
         dataPayload['type'] = dataType
-        url = \
-            "http://%s:%s/api/v0/basic_information/%s"\
-            % (serverConf['ip'], serverConf['port'], dataPayload['id'])
+        url = "http://%s:%s/api/v0/basic_information/%s" % (
+            serverConf['ip'],
+            serverConf['port'],
+            dataPayload['id'])
         res = requests.post(url, data=json.dumps(dataPayload))
         print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
         print(dataPayload['id'], end=' ')
@@ -100,8 +101,10 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
         dataPayload['year'] = westernYearIn
         dataPayload['month'] = str(monthIn)
-        url = "http://127.0.0.1:5000/api/v0/month_revenue/%s" % str(
-            dataPayload['stock_id'])
+        url = "http://%s:%s/api/v0/month_revenue/%s" % (
+            serverConf['ip'],
+            serverConf['port'],
+            str(dataPayload['stock_id']))
         res = requests.post(url, data=json.dumps(dataPayload))
         print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
         print(dataPayload['stock_id'], end=' ')
@@ -153,8 +156,10 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    incomeSheetApi = "http://127.0.0.1:5000/api/v0/income_sheet/%s" % str(
-            companyID)
+    incomeSheetApi = "http://%s:%s/api/v0/income_sheet/%s" % (
+            serverConf['ip'],
+            serverConf['port'],
+            str(companyID))
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
     print(res)
 
@@ -258,8 +263,10 @@ def getBalanceSheet(
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    balanceSheetApi = "http://127.0.0.1:5000/api/v0/balance_sheet/%s" % str(
-        companyID)
+    balanceSheetApi = "http://%s:%s/api/v0/balance_sheet/%s" % (
+        serverConf['ip'],
+        serverConf['port'],
+        str(companyID))
     res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
     print(res)
 
@@ -330,9 +337,11 @@ def getCashFlow(
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    cashflowApi = "http://127.0.0.1:5000/api/v0/cash_flow/%s" % str(
-        companyID)
-    # print(dataPayload)
+    cashflowApi = "http://%s:%s/api/v0/cash_flow/%s" % (
+        serverConf['ip'],
+        serverConf['port'],
+        str(companyID))
+
     idx = 0
     while(True):
         try:
@@ -412,7 +421,9 @@ def updateCashFlow(westernYearIn=2019, season=1):
 # done
 def getSummaryStockNoServerExist(
         westernYearIn=2019, seasonIn=2, reportType='balance_sheet'):
-    url = "http://127.0.0.1:5000/api/v0/stock_number"
+    url = "http://%s:%s/api/v0/stock_number" % (
+        serverConf['ip'],
+        serverConf['port'])
     payload = {}
     payload['year'] = westernYearIn
     payload['season'] = seasonIn
@@ -433,7 +444,8 @@ def getSummaryStockNoFromTWSE(
 
 
 def getStockNoBasicInfo():
-    url = "http://127.0.0.1:5000/api/v0/stock_number"
+    url = "http://%s:%s/api/v0/stock_number" % (
+        serverConf['ip'], serverConf['port'])
     print('Basic Infomation', end='...')
     res = requests.get(url)
     print("done.")
