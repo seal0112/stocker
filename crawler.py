@@ -131,13 +131,13 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     month = str(monthIn)
 
     urlSiiDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                                     + year + "_" + month + "_0.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
+                               + year + "_" + month + "_0.html",
                         "type": "SiiDomestic"
                      }
     urlSiiForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"\
-                                    + year + "_" + month + "_1.html",
+                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
+                               + year + "_" + month + "_1.html",
                         "type":  "SiiForiegn"
                     }
     urlOtcDomestic = {

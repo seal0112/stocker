@@ -42,7 +42,7 @@ logger.addHandler(console)
 
 def showMain():
     b = session.query(Daily_Information).filter_by(
-        id='1101').all()
+        stock_id='1101').all()
     res = [i.serialize for i in b]
     return jsonify(res)
 

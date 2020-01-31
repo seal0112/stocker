@@ -176,8 +176,8 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE('income_sheet', companyType,
-                                                westernYearIn, season)
+        targetStockNo = getSummaryStockNoFromTWSE(
+            'income_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
         if len(existStockNo) != 0:
@@ -211,7 +211,8 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
         if reCrawler["status"] == 'ok':
             del exceptList[0]
         elif exceptList[0]["retry_times"] == 2:
-            print("cancel stock_id: %s, retry over 3 times." % reCrawler["stock_id"])
+            print("cancel stock_id: %s, retry over 3 times."
+                  % reCrawler["stock_id"])
             del exceptList[0]
         else:
             tmpStock = exceptList.pop(0)
@@ -280,8 +281,8 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE('balance_sheet', companyType,
-                                                westernYearIn, season)
+        targetStockNo = getSummaryStockNoFromTWSE(
+            'balance_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
         if len(existStockNo) != 0:
@@ -371,8 +372,8 @@ def updateCashFlow(westernYearIn=2019, season=1):
 
     crawlList = []
     for companyType in companyTypes:
-        targetStockNo = getSummaryStockNoFromTWSE('balance_sheet', companyType,
-                                                westernYearIn, season)
+        targetStockNo = getSummaryStockNoFromTWSE(
+            'balance_sheet', companyType, westernYearIn, season)
         if len(targetStockNo) == 0:
             continue
         if len(existStockNo) != 0:
@@ -408,7 +409,8 @@ def updateCashFlow(westernYearIn=2019, season=1):
             print("ok")
             del exceptList[0]
         elif exceptList[0]["retry_times"] == 2:
-            print("cancel stock_id: %s, retry over 3 times." % reCrawler["stock_id"])
+            print("cancel stock_id: %s, retry over 3 times."
+                  % reCrawler["stock_id"])
             del exceptList[0]
         else:
             print("retry")
@@ -502,6 +504,4 @@ if __name__ == '__main__':
     # getBalanceSheet(2337, 2019, 2)
 
     # getCashFlow()
-
     updateDailyPrice('sii')
-
