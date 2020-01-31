@@ -150,8 +150,37 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                                + year + "_" + month + "_1.html",
                         "type": "OtcForiegn"
                     }
+    urlRotcDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/rotc/t21sc03_"
+                               + year + "_" + month + "_0.html",
+                        "type": "RotcDomestic"
+                    }
+    urlRotcForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/rotc/t21sc03_"
+                               + year + "_" + month + "_1.html",
+                        "type": "RotcForiegn"
+                    }
+    urlPubDomestic = {
+                        "url": "https://mops.twse.com.tw/nas/t21/pub/t21sc03_"
+                               + year + "_" + month + "_0.html",
+                        "type": "PubDomestic"
+                    }
+    urlPubForiegn = {
+                        "url": "https://mops.twse.com.tw/nas/t21/pub/t21sc03_"
+                               + year + "_" + month + "_1.html",
+                        "type": "PubForiegn"
+                    }
 
-    urls = [urlSiiDomestic, urlSiiForiegn, urlOtcDomestic, urlOtcForiegn]
+    urls = [
+        urlSiiDomestic,
+        urlSiiForiegn,
+        urlOtcDomestic,
+        urlOtcForiegn,
+        urlRotcDomestic,
+        urlRotcForiegn,
+        urlPubDomestic,
+        urlPubForiegn
+    ]
 
     results = pd.DataFrame()
     print(str(westernYearIn) + "-" + str(monthIn))
