@@ -618,6 +618,8 @@ def crawlSummaryStockNoFromTWSE(
     }
 
     retry = 0
+    stockNums = []
+
     while(True):
         try:
             req = requests.post(url, headers, timeout=(2, 25))
@@ -625,6 +627,13 @@ def crawlSummaryStockNoFromTWSE(
             html_df = pd.read_html(StringIO(req.text))
             print("done.")
             break
+        except ValueError:
+            print('%s no %s data for %sQ0%s'
+                  % (datetime.today().strftime("%Y-%m-%d"),
+                     reportTypes,
+                     westernYearIn,
+                     seasonIn))
+            break;
         except Exception as ex:
             if retry == 2:
                 return []
@@ -634,12 +643,11 @@ def crawlSummaryStockNoFromTWSE(
             print(type(ex).__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))
             time.sleep(delay)
+        else:
+            for idx in range(1, len(html_df)):
+                stockNums += list(html_df[idx]['公司代號'])
+            time.sleep(3 + random.randrange(0, 4))
 
-    stockNums = []
-    for idx in range(1, len(html_df)):
-        # print(html_df[idx].as_matrix(columns=html_df[idx].columns['公司名稱':]))
-        stockNums += list(html_df[idx]['公司代號'])
-    time.sleep(3 + random.randrange(0, 4))
     return stockNums
 
 
