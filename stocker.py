@@ -40,14 +40,14 @@ users = {'test': {'password': 'test'}}
 
 # Logger setup
 logger = logging.getLogger()
-BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-DATE_FORMAT = '%m-%d %H:%M'
+BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
+DATE_FORMAT = '%Y-%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console.setFormatter(formatter)
-logger.addHandler(console)
+# console = logging.StreamHandler()
+# console.setLevel(logging.INFO)
+# console.setFormatter(formatter)
+# logger.addHandler(console)
 
 
 app.add_url_rule('/',
@@ -97,6 +97,11 @@ def after_request(response):
     response.headers['Access-Control-Allow-Headers'] =\
         'Content-Type, Authorization'
     return response
+
+
+@app.route('/testerror')
+def testerror():
+    logging.warning("this is a test")
 
 
 @app.route('/testsetcookie')
@@ -219,10 +224,12 @@ if __name__ == '__main__':
     app.debug = True
     app.after_request(after_request)
 
+    log_filename = datetime.now().strftime("log/app %Y-%m-%d.log")
     fileHandler = TimedRotatingFileHandler(
-        'log/app.log', when='D', interval=1,
-        backupCount=30, encoding='UTF-8', delay=False, utc=True)
+        log_filename, when='D', interval=1,
+        backupCount=30, encoding='UTF-8', delay=False, utc=False)
     fileHandler.setFormatter(formatter)
+
     if app.debug is True:
         fileHandler.setLevel(logging.WARNING)
     else:
