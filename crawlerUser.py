@@ -116,7 +116,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
     except ConnectionError as ce:
         return {"stock_id": companyID, "status": ce.args[0]}
-    except IndexError as ie:
+    except IndexError:
         return {"stock_id": companyID, "status": 'IndexError'}
     except Exception as e:
         return {"stock_id": companyID, "status": e.args[0]}
@@ -215,7 +215,6 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
         time.sleep(3.5 + random.randrange(0, 2))
 
 
-
 # need to update feature
 def updateDailyPrice(type='sii'):
     stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
@@ -298,7 +297,11 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
 # done
 def getCashFlow(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    data = crawlCashFlow(companyID, westernYearIn, seasonIn)
+    try:
+        data = crawlCashFlow(companyID, westernYearIn, seasonIn)
+    except Exception as e:
+        return {"stock_id": companyID, "status": e.args[0]}
+
     data = transformHeaderNoun(data, "cashflow")
 
     # print(data)
@@ -312,9 +315,6 @@ def getCashFlow(
     for key in cashflowKeySel:
         try:
             if key in data.index:
-                # print(key)
-                # print(data.loc[key])
-                # print("")
                 dataPayload[key] = int(data.loc[key][0])
             else:
                 dataPayload[key] = None
@@ -324,6 +324,7 @@ def getCashFlow(
         except Exception as ex:
             print(ex.__class__.__name__)
             print(sys.exc_info())
+            return {"stock_id": companyID, "status": ex.__class__.__name__}
             # TODO: write into log file
 
     dataPayload['year'] = westernYearIn
@@ -332,8 +333,23 @@ def getCashFlow(
     cashflowApi = "http://127.0.0.1:5000/api/v0/cash_flow/%s" % str(
         companyID)
     # print(dataPayload)
-    res = requests.post(cashflowApi, data=json.dumps(dataPayload))
-    print(res)
+    idx = 0
+    while(True):
+        try:
+            res = requests.post(cashflowApi, data=json.dumps(dataPayload))
+            break
+        except Exception as ex:
+            if idx == 5:
+                print("Retry fail exceed %d times, abort." % (idx+1))
+                res = ""
+                break
+            else:
+                print(ex.__class__.__name__)
+                time.sleep(10)
+
+    print(res, end=" ")
+
+    return {"stock_id": companyID, "status": "ok"}
 
 
 def updateCashFlow(westernYearIn=2019, season=1):
@@ -359,14 +375,38 @@ def updateCashFlow(westernYearIn=2019, season=1):
             crawlList.extend(targetStockNo)
 
     total = len(crawlList)
-    # print(crawlList)
     print("\t" + str(total) + " stocks to update")
-    idx = 0
-    for stock in crawlList:
+    exceptList = []
+
+    for idx, stock in enumerate(crawlList):
         print("(" + str(idx) + "/" + str(total) + ")" + str(stock), end=' ')
-        getCashFlow(stock, westernYearIn, season)
+        crawlerResult = getCashFlow(stock, westernYearIn, season)
+        print(crawlerResult['status'])
+        if crawlerResult["status"] == "IndexError":
+            time.sleep(60)
+        if crawlerResult["status"] != "ok":
+            exceptList.append({
+                "stock_id": crawlerResult["stock_id"],
+                "retry_times": 0
+            })
         time.sleep(4 + random.randrange(0, 4))
-        idx = idx + 1
+
+    while(len(exceptList)):
+        print("(len=" + str(len(exceptList)) + ")", end=" ")
+        reCrawler = getCashFlow(
+            exceptList[0]["stock_id"], westernYearIn, season)
+        if reCrawler["status"] == "ok":
+            print("ok")
+            del exceptList[0]
+        elif exceptList[0]["retry_times"] == 2:
+            print("cancel stock_id: %s, retry over 3 times." % reCrawler["stock_id"])
+            del exceptList[0]
+        else:
+            print("retry")
+            tmpStock = exceptList.pop(0)
+            tmpStock["retry_times"] = tmpStock["retry_times"]+1
+            exceptList.append(tmpStock)
+        time.sleep(4 + random.randrange(0, 4))
 
 
 # done
@@ -412,26 +452,26 @@ if __name__ == '__main__':
     '''
     usage: get monthly revenue
     '''
-    for i in range(12,0,-1):
-        getMonthlyRevenue(2018, i)
+    # for i in range(12,0,-1):
+    #     getMonthlyRevenue(2018, i)
 
     '''
     usage: update incomeSheet/BalanceSheet
     '''
-    years = [2019]
-    seasons = [2, 1]
+    # years = [2019]
+    # seasons = [2, 1]
 
-    for year in years:
-        for season in seasons:
-            # UpdateIncomeSheet(year, season)
-            # UpdateBalanceSheet(year, season)
-            UpdateCashFlow(year, season)
+    # for year in years:
+    #     for season in seasons:
+    #         # UpdateIncomeSheet(year, season)
+    #         # UpdateBalanceSheet(year, season)
+    #         UpdateCashFlow(year, season)
 
-    years = [2018, 2017]
+    years = [2015, 2014, 2013, 2012]
     seasons = [1, 2, 3, 4]
     for year in years:
         for season in seasons:
-            UpdateCashFlow(year, season)
+            updateCashFlow(year, season)
 
     # start = datetime.now()
     # year = 2013

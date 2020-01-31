@@ -326,7 +326,8 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
         print(ex)
         # TODO
         # if ex is no table found, then put null datq into database.
-        return []
+        # return []
+        raise ex
     print("done.")
 
     results.columns = results.columns.droplevel([0, 1])
@@ -404,11 +405,8 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
             # print(headers)
             req = requests.post(url, headers, timeout=(2, 15))
             req.encoding = "utf-8"
-            # print(len(req.text))
             html_df = pd.read_html(StringIO(req.text))
-            # print(len(html_df))
             results = html_df[len(html_df)-1]
-            # print(len(results))
 
             # drop invalid column
             results = results.iloc[:, 0:2]
@@ -424,7 +422,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
         except Exception as ex:
             delay = 5 + random.randrange(0, 4)
             print("\n  ", end="")
-            print(ex, end=" ")
+            print(ex.__class__.__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))
             time.sleep(delay)
 
@@ -590,6 +588,7 @@ def crawlSummaryReportStockNo(
         "season": season,
     }
 
+    retry = 0
     while(True):
         try:
             req = requests.post(url, headers, timeout=(2, 25))
@@ -598,6 +597,9 @@ def crawlSummaryReportStockNo(
             print("done.")
             break
         except Exception as ex:
+            if retry == 2:
+                return []
+            retry = retry + 1
             delay = 3 + random.randrange(0, 4)
             print("  ", end="")
             print(type(ex).__name__, end=" ")
