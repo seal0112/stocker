@@ -11,11 +11,28 @@ import random
 import math
 import sys
 import traceback
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 with open('./critical_flie/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
 
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
+
+
+# logging setting
+log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
+fileHandler = TimedRotatingFileHandler(
+    log_filename, when='D', interval=1,
+    backupCount=30, encoding='UTF-8', delay=False, utc=False)
+logger = logging.getLogger()
+BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
+DATE_FORMAT = '%Y-%m-%d %H:%M'
+formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
+fileHandler.setFormatter(formatter)
+logger.addHandler(fileHandler)
+logger.addHandler(fileHandler)
+
 
 # done
 def getBasicInfo(dataType='sii'):
