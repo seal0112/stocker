@@ -624,16 +624,15 @@ def crawlSummaryStockNoFromTWSE(
         try:
             req = requests.post(url, headers, timeout=(2, 25))
             req.encoding = "utf-8"
-            html_df = pd.read_html(StringIO(req.text))
+            html_df = pd.read_html(req.text, converters = {'公司代號':str})
             print("done.")
-            break
         except ValueError:
             print('%s no %s data for %sQ0%s'
                   % (datetime.today().strftime("%Y-%m-%d"),
                      reportTypes,
                      westernYearIn,
                      seasonIn))
-            break;
+            break
         except Exception as ex:
             if retry == 2:
                 return []
@@ -646,7 +645,7 @@ def crawlSummaryStockNoFromTWSE(
         else:
             for idx in range(1, len(html_df)):
                 stockNums += list(html_df[idx]['公司代號'])
-            time.sleep(3 + random.randrange(0, 4))
+            break
 
     return stockNums
 
