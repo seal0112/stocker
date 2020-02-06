@@ -165,7 +165,7 @@ class handleBasicInfo(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
@@ -215,7 +215,7 @@ class handleDailyInfo(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
@@ -293,7 +293,7 @@ class handleIncomeSheet(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
@@ -370,7 +370,7 @@ class handleBalanceSheet(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
@@ -447,7 +447,7 @@ class handleCashFlow(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
@@ -535,7 +535,7 @@ class handleMonthRevenue(MethodView):
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update month revenue. Reason: %s"
-                % (stock_id, ex))
+                % (stock_id, ie))
             res = make_response(
                 json.dumps(
                     'Failed to update %s month revenue.' % (stock_id)), 400)
