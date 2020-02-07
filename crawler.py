@@ -270,6 +270,9 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
     try:
         html_df = pd.read_html(StringIO(req.text))
         results = html_df[len(html_df)-1]
+    except ValueError as ve:
+        if ve.args[0] == "No tables found":
+            return None
     except Exception as ex:
         print(ex)
         return []
@@ -347,15 +350,14 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     print(str(westernYearIn) + "Q" + str(season), end="...")
     req = requests.post(url, headers)
     req.encoding = "utf-8"
-    # print(req.text)
     try:
         html_df = pd.read_html(StringIO(req.text))
         results = html_df[len(html_df)-1]
+    except ValueError as ve:
+        if ve.args[0] == "No tables found":
+            return None
     except Exception as ex:
         print(ex)
-        # TODO
-        # if ex is no table found, then put null datq into database.
-        # return []
         raise ex
     print("done.")
 
@@ -678,13 +680,3 @@ def crawlerDailyPrice(stockNums, type='sii'):
             print("%s %s" % (i['c'], ex))
 
     return idAndPrice
-
-
-if __name__ == "__main__":
-    # siiCompany = crawlBasicInformation('sii')
-    # otcCompany = crawlBasicInformation('otc')
-    # print(type(siiCompany))
-    # print(otcCompany)
-    # crawlSummaryReportStockNo('income_sheet', 'sii', 2019, 1)
-    # crawlIncomeSheet(2801, 2013, 1)
-    crawlerDailyPrice('otc')
