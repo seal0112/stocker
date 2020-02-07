@@ -170,6 +170,35 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         except Exception as ex:
             print(ex)
 
+    if seasonIn == 4:
+        preSeasonsData = []
+        for season in range(1, 4):
+            time.sleep(4 + random.randrange(0, 2))
+            preDataPayload = {}
+            preData = crawlIncomeSheet(companyID, westernYearIn, season)
+            preData = transformHeaderNoun(preData, 'income_sheet')
+            for key in incomeSheetKeySel:
+                try:
+                    if key in preData.index:
+                        preDataPayload[key] = preData.loc[key][0]
+                    else:
+                        preDataPayload[key] = None
+                except Exception as ex:
+                    print(ex)
+            preSeasonsData.append(preDataPayload)
+
+
+        for preSeasonData in preSeasonsData:
+            for key in preSeasonData.keys():
+                if preSeasonData[key] is not None:
+                    dataPayload[key]-=preSeasonData[key]
+
+        for key in dataPayload.keys():
+            if '率' in key:
+                dataPayload[key] = round((dataPayload[
+                    key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
+        print(dataPayload)
+
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
@@ -178,7 +207,6 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
             serverConf['port'],
             str(companyID))
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
-    print(res)
 
     return {"stock_id": companyID, "status": "ok"}
 
@@ -461,6 +489,24 @@ def getStockNoBasicInfo():
     return json.loads(res.text)
 
 
+def dailyRoutineWork():
+    差財報三表, shareholder可以禮拜六抓
+    for type in companyTypes:
+        getBasicInfo(type)
+
+    updateDailyPrice('sii')
+    updateDailyPrice('otc')
+
+    now = datetime.now()
+    print(now.year, now.month-1)
+    if now.month-1 == 0:
+        getMonthlyRevenue(now.year-1, 12)
+    else:
+        getMonthlyRevenue(now.year, now.month-1)
+
+    updateIncomeSheet(2019, 4)
+
+
 if __name__ == '__main__':
     '''
     usage: get basic information
@@ -473,8 +519,9 @@ if __name__ == '__main__':
     '''
     usage: get monthly revenue
     '''
-    # for i in range(12,0,-1):
-    #     getMonthlyRevenue(2018, i)
+    # for year in range(2018,2012,-1):
+    #     for i in range(12,0,-1):
+    #         getMonthlyRevenue(year, i)
 
     '''
     usage: update incomeSheet/BalanceSheet
@@ -484,15 +531,15 @@ if __name__ == '__main__':
 
     # for year in years:
     #     for season in seasons:
-    #         # UpdateIncomeSheet(year, season)
-    #         # UpdateBalanceSheet(year, season)
+    #         # updateIncomeSheet(year, season)
+    #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    years = [2019, 2018, 2017, 2016, 2015, 2014, 2013]
-    seasons = [1, 2, 3, 4]
-    for year in years:
-        for season in seasons:
-            updateIncomeSheet(year, season)
+    # years = [2015, 2014, 2013, 2012]
+    # seasons = [1, 2, 3, 4]
+    # for year in years:
+    #     for season in seasons:
+    #         updateCashFlow(year, season)
 
     # start = datetime.now()
     # year = 2013
@@ -507,8 +554,10 @@ if __name__ == '__main__':
     # print("end time: " + str(end))
     # print("time elapse: " + str(end-start))
 
-    # getIncomeSheet(1101, 2013, 2)
+    # getIncomeSheet(3443, 2019, 4)
     # getBalanceSheet(2337, 2019, 2)
 
     # getCashFlow()
-    updateDailyPrice('sii')
+    # updateDailyPrice('sii')
+
+    dailyRoutineWork()
