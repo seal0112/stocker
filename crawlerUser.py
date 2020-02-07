@@ -31,7 +31,6 @@ DATE_FORMAT = '%Y-%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
-logger.addHandler(fileHandler)
 
 
 # done
@@ -343,8 +342,9 @@ def getCashFlow(
             if ke.args[0] == 0:
                 dataPayload[key] = int(data.loc[key].iloc[0])
         except Exception as ex:
-            print(ex.__class__.__name__)
-            print(sys.exc_info())
+            # print(ex.__class__.__name__)
+            # print(sys.exc_info())
+            # raise ex
             return {"stock_id": companyID, "status": ex.__class__.__name__}
             # TODO: write into log file
 
@@ -413,7 +413,9 @@ def updateCashFlow(westernYearIn=2019, season=1):
         time.sleep(4 + random.randrange(0, 4))
 
     while(len(exceptList)):
-        print("(len=" + str(len(exceptList)) + ")", end=" ")
+        # print("(len=" + str(len(exceptList)) + ")", end=" ")
+        print("Retry " + str(exceptList[0]["stock_id"]) 
+              + " " + str(exceptList[0]["retry_times"]), end=" ")
         reCrawler = getCashFlow(
             exceptList[0]["stock_id"], westernYearIn, season)
         if reCrawler["status"] == "ok":
@@ -422,6 +424,8 @@ def updateCashFlow(westernYearIn=2019, season=1):
         elif exceptList[0]["retry_times"] == 2:
             print("cancel stock_id: %s, retry over 3 times."
                   % reCrawler["stock_id"])
+            logger.error("cancel stock_id: %s in %s-%s, retry exceeded."
+                  % (reCrawler["stock_id"], westernYearIn, season))
             del exceptList[0]
         else:
             print("retry")
@@ -484,11 +488,11 @@ if __name__ == '__main__':
     #         # UpdateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    years = [2015, 2014, 2013, 2012]
+    years = [2019, 2018, 2017, 2016, 2015, 2014, 2013]
     seasons = [1, 2, 3, 4]
     for year in years:
         for season in seasons:
-            updateCashFlow(year, season)
+            updateIncomeSheet(year, season)
 
     # start = datetime.now()
     # year = 2013
