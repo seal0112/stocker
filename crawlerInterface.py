@@ -187,11 +187,10 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
                     print(ex)
             preSeasonsData.append(preDataPayload)
 
-
         for preSeasonData in preSeasonsData:
             for key in preSeasonData.keys():
                 if preSeasonData[key] is not None:
-                    dataPayload[key]-=preSeasonData[key]
+                    dataPayload[key] -= preSeasonData[key]
 
         for key in dataPayload.keys():
             if '率' in key:
@@ -442,7 +441,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
 
     while(len(exceptList)):
         # print("(len=" + str(len(exceptList)) + ")", end=" ")
-        print("Retry " + str(exceptList[0]["stock_id"]) 
+        print("Retry " + str(exceptList[0]["stock_id"])
               + " " + str(exceptList[0]["retry_times"]), end=" ")
         reCrawler = getCashFlow(
             exceptList[0]["stock_id"], westernYearIn, season)
@@ -453,7 +452,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
             print("cancel stock_id: %s, retry over 3 times."
                   % reCrawler["stock_id"])
             logger.error("cancel stock_id: %s in %s-%s, retry exceeded."
-                  % (reCrawler["stock_id"], westernYearIn, season))
+                         % (reCrawler["stock_id"], westernYearIn, season))
             del exceptList[0]
         else:
             print("retry")
@@ -490,7 +489,7 @@ def getStockNoBasicInfo():
 
 
 def dailyRoutineWork():
-    差財報三表, shareholder可以禮拜六抓
+    # 差財報三表, shareholder可以禮拜六抓
     for type in companyTypes:
         getBasicInfo(type)
 
