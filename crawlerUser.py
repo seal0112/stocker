@@ -467,6 +467,25 @@ def getStockNoBasicInfo():
     print("done.")
     return json.loads(res.text)
 
+
+def dailyRoutineWork():
+    差財報三表, shareholder可以禮拜六抓
+    for type in companyTypes:
+        getBasicInfo(type)
+
+    updateDailyPrice('sii')
+    updateDailyPrice('otc')
+
+    now = datetime.now()
+    print(now.year, now.month-1)
+    if now.month-1 == 0:
+        getMonthlyRevenue(now.year-1, 12)
+    else:
+        getMonthlyRevenue(now.year, now.month-1)
+
+    updateIncomeSheet(2019, 4)
+
+
 if __name__ == '__main__':
     '''
     usage: get basic information
@@ -519,3 +538,5 @@ if __name__ == '__main__':
 
     # getCashFlow()
     # updateDailyPrice('sii')
+
+    dailyRoutineWork()
