@@ -32,10 +32,10 @@ def getBasicInfo(dataType='sii'):
             serverConf['port'],
             dataPayload['id'])
         res = requests.post(url, data=json.dumps(dataPayload))
-        print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
-        print(dataPayload['id'], end=' ')
-        print(res)
-        time.sleep(0.05)
+        # print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
+        # print(dataPayload['id'], end=' ')
+        # print(res)
+        # time.sleep(0.05)
 
 
 # done
@@ -107,11 +107,11 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
             serverConf['port'],
             str(dataPayload['stock_id']))
         res = requests.post(url, data=json.dumps(dataPayload))
-        print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
-        print(dataPayload['stock_id'], end=' ')
-        print(str(westernYearIn) + "-" + str(monthIn), end=' ')
-        print(res)
-        time.sleep(0.05)
+        # print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
+        # print(dataPayload['stock_id'], end=' ')
+        # print(str(westernYearIn) + "-" + str(monthIn), end=' ')
+        # print(res)
+        # time.sleep(0.05)
 
 
 # done
@@ -256,13 +256,22 @@ def updateDailyPrice(type='sii'):
     serverDailyInfoApi = "http://%s:%s/api/v0/daily_information/" % (
         serverConf['ip'], serverConf['port'])
 
-    for i in range(0, len(stockNums), 10):
-        data = crawlerDailyPrice(stockNums[i:i+10], type)
-        for d in data:
-            res = requests.post(
-                "%s%s" % (serverDailyInfoApi, d['stock_id']),
-                data=json.dumps(d))
-        time.sleep(1.5)
+    idx = 0
+    length = 20
+    while idx < len(stockNums):
+        try:
+            data = crawlerDailyPrice(stockNums[idx:idx+length], type)
+            for d in data:
+                res = requests.post(
+                    "%s%s" % (serverDailyInfoApi, d['stock_id']),
+                    data=json.dumps(d))
+        except Exception as ex:
+            print(ex)
+        else:
+            idx+=length
+        finally:
+            time.sleep(1.5)
+
 
 
 # done
@@ -469,19 +478,18 @@ def getStockNoBasicInfo():
 
 
 def dailyRoutineWork():
-    差財報三表, shareholder可以禮拜六抓
-    for type in companyTypes:
-        getBasicInfo(type)
+    # 差財報三表, shareholder可以禮拜六抓
+    # for type in companyTypes:
+    #     getBasicInfo(type)
 
-    updateDailyPrice('sii')
-    updateDailyPrice('otc')
+    # updateDailyPrice('sii')
+    # updateDailyPrice('otc')
 
-    now = datetime.now()
-    print(now.year, now.month-1)
-    if now.month-1 == 0:
-        getMonthlyRevenue(now.year-1, 12)
-    else:
-        getMonthlyRevenue(now.year, now.month-1)
+    # now = datetime.now()
+    # if now.month-1 == 0:
+    #     getMonthlyRevenue(now.year-1, 12)
+    # else:
+    #     getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
