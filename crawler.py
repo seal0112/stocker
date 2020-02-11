@@ -626,7 +626,7 @@ def crawlSummaryStockNoFromTWSE(
         try:
             req = requests.post(url, headers, timeout=(2, 25))
             req.encoding = "utf-8"
-            html_df = pd.read_html(req.text, converters = {'公司代號':str})
+            html_df = pd.read_html(req.text, converters={'公司代號': str})
             print("done.")
         except ValueError:
             print('%s no %s data for %sQ0%s'
