@@ -154,34 +154,26 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         except Exception as ex:
             print(ex)
 
+    # The fourth quarter financial statements are annual reports
+    # So we must use the data from the first three quarters to subtract them
+    # to get the fourth quarter single-quarter financial report.
     if seasonIn == 4:
         preSeasonsData = []
         for season in range(1, 4):
-            time.sleep(4 + random.randrange(0, 2))
-            preDataPayload = {}
-            preData = crawlIncomeSheet(companyID, westernYearIn, season)
-            preData = transformHeaderNoun(preData, 'income_sheet')
-            for key in incomeSheetKeySel:
-                try:
-                    if key in preData.index:
-                        preDataPayload[key] = preData.loc[key][0]
-                    else:
-                        preDataPayload[key] = None
-                except Exception as ex:
-                    print(ex)
-            preSeasonsData.append(preDataPayload)
-
+            preData = getFinStatFromServer(
+                companyID, westernYearIn, season, 'income_sheet')
+            preSeasonsData.append(preData[0])
 
         for preSeasonData in preSeasonsData:
-            for key in preSeasonData.keys():
+            for key in incomeSheetKeySel:
                 if preSeasonData[key] is not None:
                     dataPayload[key]-=preSeasonData[key]
 
+        # Recalculate percentage of specific value
         for key in dataPayload.keys():
             if '率' in key:
                 dataPayload[key] = round((dataPayload[
                     key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
-        print(dataPayload)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -270,7 +262,7 @@ def updateDailyPrice(type='sii'):
         else:
             idx+=length
         finally:
-            time.sleep(1.5)
+            time.sleep(1.7)
 
 
 
@@ -477,19 +469,33 @@ def getStockNoBasicInfo():
     return json.loads(res.text)
 
 
+def getFinStatFromServer(
+        stock_id,
+        westernYear,
+        season,
+        reportTypes='income_sheet',):
+    finStatApi = "http://%s:%s/api/v0/%s/%s?type=single&year=%s&season=%s" % (
+        serverConf['ip'], serverConf['port'], reportTypes,
+        stock_id, westernYear, season)
+
+    data = requests.get(finStatApi)
+
+    return data.json()
+
+
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
-    # for type in companyTypes:
-    #     getBasicInfo(type)
+    for type in companyTypes:
+        getBasicInfo(type)
 
-    # updateDailyPrice('sii')
-    # updateDailyPrice('otc')
+    updateDailyPrice('sii')
+    updateDailyPrice('otc')
 
-    # now = datetime.now()
-    # if now.month-1 == 0:
-    #     getMonthlyRevenue(now.year-1, 12)
-    # else:
-    #     getMonthlyRevenue(now.year, now.month-1)
+    now = datetime.now()
+    if now.month-1 == 0:
+        getMonthlyRevenue(now.year-1, 12)
+    else:
+        getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
