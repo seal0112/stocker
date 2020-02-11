@@ -214,11 +214,11 @@ class handleDailyInfo(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Daily Price. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Daily Price.' % (stock_id)), 400)
             return res
         except Exception as ex:
             print(ex)
@@ -258,7 +258,42 @@ class handleIncomeSheet(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        return 'income_sheet: %s' % stock_id
+        type = request.args.get('type')
+        if type == None:
+            incomeSheet = session.query(Income_Sheet).filter_by(
+                stock_id=stock_id).order_by(
+                    Income_Sheet.year.desc()).order_by(
+                        Income_Sheet.season.desc()).first()
+        elif type == 'single':
+            year =  request.args.get('year')
+            season = request.args.get('season')
+            incomeSheet = session.query(Income_Sheet).filter_by(
+                stock_id=stock_id).filter_by(
+                    year=year).filter_by(
+                        season=season).one()
+        elif type == 'multiple':
+            year =  request.args.get('year')
+            season = 4 if year == None else int(year) * 4
+            incomeSheet = session.query(Income_Sheet).filter_by(
+                stock_id=stock_id).order_by(
+                    Income_Sheet.year.desc()).order_by(
+                        Income_Sheet.season.desc()).limit(season).all()
+        else:
+            incomeSheet = session.query(Income_Sheet).filter_by(
+                stock_id=stock_id).order_by(
+                    Income_Sheet.year.desc()).order_by(
+                        Income_Sheet.season.desc()).first()
+
+        if incomeSheet is None:
+            res = make_response(json.dumps(
+                    'Failed to get %s Income Sheet.' % (stock_id)), 404)
+            return res
+        elif type == 'single':
+            res = [incomeSheet.serialize]
+            return jsonify(res)
+        else:
+            res = [i.serialize for i in incomeSheet]
+            return jsonify(res)
 
     def post(self, stock_id):
         payload = json.loads(request.data)
@@ -292,16 +327,17 @@ class handleIncomeSheet(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Income Sheet.' % (stock_id)), 400)
             return res
         except Exception as ex:
+            session.rollback()
             print(ex)
             logger.warning(
-                "400 %s is failed to update income_sheet. Reason: %s"
+                "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
@@ -369,20 +405,21 @@ class handleBalanceSheet(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Balance Sheet. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Balance Sheet.' % (stock_id)), 400)
             return res
         except Exception as ex:
+            session.rollback()
             print(ex)
             logger.warning(
-                "400 %s is failed to update balance_sheet. Reason: %s"
+                "400 %s is failed to update Balance Sheett. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s balance sheet.' % (stock_id)), 400)
+                    'Failed to update %s Balance Sheet.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -446,20 +483,21 @@ class handleCashFlow(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Cash Flowe. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Cash Flow.' % (stock_id)), 400)
             return res
         except Exception as ex:
+            session.rollback()
             print(ex)
             logger.warning(
-                "400 %s is failed to update cash_flow. Reason: %s"
+                "400 %s is failed to update Cash Flow. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s cash flow.' % (stock_id)), 400)
+                    'Failed to update %s Cash Flow.' % (stock_id)), 400)
             return res
 
         res = make_response(
@@ -534,20 +572,21 @@ class handleMonthRevenue(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Month Revenue. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Month Revenue.' % (stock_id)), 400)
             return res
         except Exception as ex:
+            session.rollback()
             print("%s: %s" % (stock_id, ex))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Month Revenue. Reason: %s"
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Month Revenue.' % (stock_id)), 400)
             return res
 
         res = make_response(
