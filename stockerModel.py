@@ -270,7 +270,7 @@ class handleIncomeSheet(MethodView):
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
-                        season=season).one()
+                        season=season).one_or_none()
         elif type == 'multiple':
             year =  request.args.get('year')
             season = 4 if year == None else int(year) * 4
@@ -279,10 +279,7 @@ class handleIncomeSheet(MethodView):
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).limit(season).all()
         else:
-            incomeSheet = session.query(Income_Sheet).filter_by(
-                stock_id=stock_id).order_by(
-                    Income_Sheet.year.desc()).order_by(
-                        Income_Sheet.season.desc()).first()
+            incomeSheet = None
 
         if incomeSheet is None:
             res = make_response(json.dumps(

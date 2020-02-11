@@ -178,7 +178,8 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         for season in range(1, 4):
             preData = getFinStatFromServer(
                 companyID, westernYearIn, season, 'income_sheet')
-            preSeasonsData.append(preData[0])
+            if preData is not None:
+                preSeasonsData.append(preData[0])
 
         for preSeasonData in preSeasonsData:
             for key in incomeSheetKeySel:
@@ -500,8 +501,10 @@ def getFinStatFromServer(
         stock_id, westernYear, season)
 
     data = requests.get(finStatApi)
-
-    return data.json()
+    if data.status_code == 404:
+        return None
+    else:
+        return data.json()
 
 
 def dailyRoutineWork():
@@ -532,8 +535,8 @@ if __name__ == '__main__':
 
     '''
     usage: get monthly revenue
-    '''
-    # for year in range(2018,2012,-1):
+    # '''
+    # for year in range(2019,2012,-1):
     #     for i in range(12,0,-1):
     #         getMonthlyRevenue(year, i)
 
@@ -541,11 +544,11 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    # seasons = [2, 1]
+    seasons = [1, 2, 3, 4]
 
-    # for year in years:
-    #     for season in seasons:
-    #         # updateIncomeSheet(year, season)
+    for year in range(2018,2012,-1):
+        for season in seasons:
+            updateIncomeSheet(year, season)
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
@@ -574,4 +577,5 @@ if __name__ == '__main__':
     # getCashFlow()
     # updateDailyPrice('sii')
 
-    dailyRoutineWork()
+    # dailyRoutineWork()
+    # getFinStatFromServer(2330, 2019, 0)
