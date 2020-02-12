@@ -183,7 +183,9 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
         for preSeasonData in preSeasonsData:
             for key in incomeSheetKeySel:
-                if preSeasonData[key] is not None:
+                if dataPayload[key] is None:
+                    continue
+                elif preSeasonData[key] is not None:
                     dataPayload[key] -= preSeasonData[key]
 
         # Recalculate percentage of specific value
@@ -201,7 +203,10 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
             str(companyID))
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
 
-    return {"stock_id": companyID, "status": "ok"}
+    if res.status_code == 201:
+        return {"stock_id": companyID, "status": "ok"}
+    else:
+        return {"stock_id": companyID, "status": res.status_code}
 
 
 # done
@@ -544,11 +549,12 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    seasons = [1, 2, 3, 4]
+    # seasons = [1, 2, 3, 4]
 
-    for year in range(2018,2012,-1):
-        for season in seasons:
-            updateIncomeSheet(year, season)
+    # for year in range(2018,2012,-1):
+    #     for season in seasons:
+    #         updateIncomeSheet(year, season)
+    updateIncomeSheet(2018, 4)
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
