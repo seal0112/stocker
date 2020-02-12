@@ -191,8 +191,13 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         # Recalculate percentage of specific value
         for key in dataPayload.keys():
             if '率' in key:
-                dataPayload[key] = round((dataPayload[
-                    key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
+                if dataPayload['營業收入合計'] == 0:
+                    dataPayload[key] = 0
+                elif dataPayload['營業收入合計'] is None:
+                    dataPayload[key] = None
+                else:
+                    dataPayload[key] = round((dataPayload[
+                        key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -551,10 +556,10 @@ if __name__ == '__main__':
     # years = [2019]
     # seasons = [1, 2, 3, 4]
 
-    # for year in range(2018,2012,-1):
+    # for year in range(2017,2012,-1):
     #     for season in seasons:
     #         updateIncomeSheet(year, season)
-    updateIncomeSheet(2018, 4)
+
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
