@@ -310,7 +310,7 @@ def updateDailyPrice(type='sii'):
         except Exception as ex:
             print(ex)
         else:
-            idx+=length
+            idx += length
         finally:
             time.sleep(1.7)
 
@@ -318,7 +318,15 @@ def updateDailyPrice(type='sii'):
 # done
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
-    data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
+    try:
+        data = crawlBalanceSheet(companyID, westernYearIn, seasonIn)
+    except ConnectionError as ce:
+        return {"stock_id": companyID, "status": ce.args[0]}
+    except IndexError:
+        return {"stock_id": companyID, "status": 'IndexError'}
+    except Exception as e:
+        return {"stock_id": companyID, "status": e.args[0]}    
+
     data = transformHeaderNoun(data, "balance_sheet")
 
     dataPayload = {}
@@ -345,7 +353,11 @@ def getBalanceSheet(
         serverConf['port'],
         str(companyID))
     res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
-    print(res)
+
+    if res.status_code == 201:
+        return {"stock_id": companyID, "status": "ok"}
+    else:
+        return {"stock_id": companyID, "status": res.status_code}
 
 
 def updateBalanceSheet(westernYearIn=2019, season=1):
@@ -368,12 +380,35 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
             crawlList.extend(targetStockNo)
 
     total = len(crawlList)
-    idx = 0
-    for stock in crawlList:
+    exceptList = []
+
+    for idx, stock in enumerate(crawlList):
         print("(" + str(idx) + "/" + str(total) + ")", end=' ')
-        getBalanceSheet(stock, westernYearIn, season)
-        time.sleep(3 + random.randrange(0, 4))
-        idx = idx + 1
+        crawlerResult = getBalanceSheet(stock, westernYearIn, season)
+        print(crawlerResult['stock_id'], crawlerResult['status'])
+        if crawlerResult["status"] == 'IndexError':
+            time.sleep(60)
+        if crawlerResult["status"] != 'ok':
+            exceptList.append({
+                "stock_id": crawlerResult["stock_id"],
+                "retry_times": 0
+            })
+        time.sleep(3.5 + random.randrange(0, 2))
+
+    while(len(exceptList)):
+        reCrawler = getBalanceSheet(
+            exceptList[0]["stock_id"], westernYearIn, season)
+        if reCrawler["status"] == 'ok':
+            del exceptList[0]
+        elif exceptList[0]["retry_times"] == 2:
+            print("cancel stock_id: %s, retry over 3 times."
+                  % reCrawler["stock_id"])
+            del exceptList[0]
+        else:
+            tmpStock = exceptList.pop(0)
+            tmpStock["retry_times"] = tmpStock["retry_times"]+1
+            exceptList.append(tmpStock)
+        time.sleep(3.5 + random.randrange(0, 2))    
 
 
 # done
@@ -568,8 +603,8 @@ if __name__ == '__main__':
     '''
     usage: get monthly revenue
     # '''
-    # for year in range(2019,2012,-1):
-    #     for i in range(12,0,-1):
+    # for year in range(2019, 2012, -1):
+    #     for i in range(12, 0, -1):
     #         getMonthlyRevenue(year, i)
 
     '''
@@ -578,7 +613,7 @@ if __name__ == '__main__':
     # years = [2019]
     seasons = [1, 2, 3, 4]
 
-    for year in range(2019,2012,-1):
+    for year in range(2019, 2012, -1):
         for season in seasons:
             updateIncomeSheet(year, season)
 
