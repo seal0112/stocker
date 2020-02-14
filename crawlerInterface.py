@@ -13,6 +13,7 @@ import sys
 import traceback
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import pandas as pd
 
 with open('./critical_flie/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
@@ -161,15 +162,29 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     for key in incomeSheetKeySel:
         try:
             if key in data.index:
-                dataPayload[key] = data.loc[key][0]
-                if not math.isnan(data.loc[key][1])\
-                        and key not in ratioIgnore:
-                    dataPayload[key+'率'] = round(data.loc[key][1], 2)
+                if key == "母公司業主淨利":
+                    if isinstance(data.loc[key], pd.DataFrame):
+                        dataPayload[key] = data.loc[key].iloc[0][0]
+                    else:
+                        dataPayload[key] = data.loc[key][0]
+                else:
+                    dataPayload[key] = data.loc[key][0]
+                    if not math.isnan(data.loc[key][1])\
+                            and key not in ratioIgnore:
+                        dataPayload[key+'率'] = round(data.loc[key][1], 2)
             else:
                 dataPayload[key] = None
         except Exception as ex:
+            print(key)
             print(ex)
 
+    if "母公司業主淨利" not in dataPayload or dataPayload["母公司業主淨利"] is None:
+        if "母公司業主淨利" not in data:
+            dataPayload["母公司業主淨利"] = dataPayload["本期淨利"]
+        elif len(data.loc["母公司業主淨利"]) >= 2:
+            dataPayload["母公司業主淨利"] = data.loc["母公司業主淨利"].iloc[0][0]
+
+    # print(dataPayload)
     # The fourth quarter financial statements are annual reports
     # So we must use the data from the first three quarters to subtract them
     # to get the fourth quarter single-quarter financial report.
@@ -198,6 +213,14 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
                 else:
                     dataPayload[key] = round((dataPayload[
                         key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
+
+        basicInfoUrl = "http://%s:%s/api/v0/basic_information/%s" % (
+            serverConf['ip'], serverConf['port'],companyID)
+
+        basicInfo = json.loads(requests.get(basicInfoUrl).text)
+
+        dataPayload["基本每股盈餘"] = round(
+            dataPayload["母公司業主淨利"]*1000/basicInfo["已發行普通股數或TDR原發行股數"], 2)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -290,7 +313,6 @@ def updateDailyPrice(type='sii'):
             idx+=length
         finally:
             time.sleep(1.7)
-
 
 
 # done
@@ -519,17 +541,17 @@ def getFinStatFromServer(
 
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
-    for type in companyTypes:
-        getBasicInfo(type)
+    # for type in companyTypes:
+    #     getBasicInfo(type)
 
-    updateDailyPrice('sii')
-    updateDailyPrice('otc')
+    # updateDailyPrice('sii')
+    # updateDailyPrice('otc')
 
-    now = datetime.now()
-    if now.month-1 == 0:
-        getMonthlyRevenue(now.year-1, 12)
-    else:
-        getMonthlyRevenue(now.year, now.month-1)
+    # now = datetime.now()
+    # if now.month-1 == 0:
+    #     getMonthlyRevenue(now.year-1, 12)
+    # else:
+    #     getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
@@ -554,11 +576,11 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    # seasons = [1, 2, 3, 4]
+    seasons = [1, 2, 3, 4]
 
-    # for year in range(2017,2012,-1):
-    #     for season in seasons:
-    #         updateIncomeSheet(year, season)
+    for year in range(2019,2012,-1):
+        for season in seasons:
+            updateIncomeSheet(year, season)
 
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
@@ -589,4 +611,3 @@ if __name__ == '__main__':
     # updateDailyPrice('sii')
 
     # dailyRoutineWork()
-    # getFinStatFromServer(2330, 2019, 0)
