@@ -165,11 +165,11 @@ class handleBasicInfo(MethodView):
             session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
-                "400 %s is failed to update month revenue. Reason: %s"
+                "400 %s is failed to update Basic Info. Reason: %s"
                 % (stock_id, ie))
             res = make_response(
                 json.dumps(
-                    'Failed to update %s month revenue.' % (stock_id)), 400)
+                    'Failed to update %s Basic Info.' % (stock_id)), 400)
             return res
         except Exception as ex:
             print(ex)
@@ -262,20 +262,20 @@ class handleIncomeSheet(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        type = request.args.get('type')
-        if type == None:
+        mode = request.args.get('mode')
+        if mode == None:
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).first()
-        elif type == 'single':
+        elif mode == 'single':
             year =  request.args.get('year')
             season = request.args.get('season')
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
                         season=season).one_or_none()
-        elif type == 'multiple':
+        elif mode == 'multiple':
             year =  request.args.get('year')
             season = 4 if year == None else int(year) * 4
             incomeSheet = session.query(Income_Sheet).filter_by(
@@ -530,7 +530,7 @@ class handleMonthRevenue(MethodView):
     """
     def get(self, stock_id):
         monthReve = session.query(Month_Revenue).filter_by(
-            stock_id=stock_id).order_by(Month_Revenue.year.desc()).all()
+            stock_id=stock_id).order_by(Month_Revenue.year.desc()).limit(60).all()
         print(monthReve)
         if monthReve is None:
             return make_response(404)

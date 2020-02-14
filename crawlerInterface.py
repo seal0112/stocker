@@ -325,7 +325,7 @@ def getBalanceSheet(
     except IndexError:
         return {"stock_id": companyID, "status": 'IndexError'}
     except Exception as e:
-        return {"stock_id": companyID, "status": e.args[0]}    
+        return {"stock_id": companyID, "status": e.args[0]}
 
     data = transformHeaderNoun(data, "balance_sheet")
 
@@ -408,7 +408,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(3.5 + random.randrange(0, 2))    
+        time.sleep(3.5 + random.randrange(0, 2))
 
 
 # done
@@ -563,7 +563,7 @@ def getFinStatFromServer(
         westernYear,
         season,
         reportTypes='income_sheet',):
-    finStatApi = "http://%s:%s/api/v0/%s/%s?type=single&year=%s&season=%s" % (
+    finStatApi = "http://%s:%s/api/v0/%s/%s?mode=single&year=%s&season=%s" % (
         serverConf['ip'], serverConf['port'], reportTypes,
         stock_id, westernYear, season)
 
