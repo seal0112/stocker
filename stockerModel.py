@@ -2,7 +2,7 @@ from flask import Flask, request, redirect, url_for
 from flask import jsonify, make_response, render_template
 from flask import Blueprint
 from flask.views import MethodView
-from sqlalchemy import asc, create_engine
+from sqlalchemy import asc, create_engine, func
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from database_setup import Base
@@ -41,8 +41,9 @@ logger.addHandler(console)
 
 
 def showMain():
+    checkFourSeasonEPS(2330)
     b = session.query(Daily_Information).filter_by(
-        stock_id='1101').all()
+        stock_id='1785').all()
     res = [i.serialize for i in b]
     return jsonify(res)
 
@@ -208,6 +209,8 @@ class handleDailyInfo(MethodView):
                 for key in payload:
                     dailyInfo[key] = payload[key]
 
+            dailyInfo.updatePE()
+
             session.add(dailyInfo)
             session.commit()
         except IntegrityError as ie:
@@ -221,6 +224,7 @@ class handleDailyInfo(MethodView):
                     'Failed to update %s Daily Price.' % (stock_id)), 400)
             return res
         except Exception as ex:
+            session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
@@ -341,6 +345,7 @@ class handleIncomeSheet(MethodView):
                     'Failed to update %s Income sheet.' % (stock_id)), 400)
             return res
 
+        checkFourSeasonEPS(stock_id)
         res = make_response(
             json.dumps('Create'), 201)
         return res
@@ -589,3 +594,39 @@ class handleMonthRevenue(MethodView):
         res = make_response(
             json.dumps('Create'), 201)
         return res
+
+
+def checkFourSeasonEPS(stock_id):
+    quantityOfIncomeSheet = session.query(
+        func.count(Income_Sheet.id)).filter_by(
+            stock_id=stock_id).scalar()
+
+    stockType = session.query(
+        Basic_Information.type).filter_by(
+            id=stock_id).scalar()
+
+    if stockType in ('sii', 'otc') and quantityOfIncomeSheet >= 4:
+        stockEps = session.query(
+            (Income_Sheet.基本每股盈餘).label('eps')).filter_by(
+                stock_id=stock_id).order_by(
+                    Income_Sheet.year.desc()).order_by(
+                        Income_Sheet.season.desc()).limit(4).subquery()
+        fourSeasonEps = session.query(func.sum(stockEps.c.eps)).scalar()
+
+        dailyInfo = session.query(
+            Daily_Information).filter_by(
+                stock_id=stock_id).one_or_none()
+        try:
+            if dailyInfo is not None:
+                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps,2)
+            else:
+                dailyInfo = Daily_Information()
+                dailyInfo['stock_id'] = stock_id
+                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps,2)
+
+            dailyInfo.updatePE()
+
+            session.add(dailyInfo)
+            session.commit()
+        except:
+            session.rollback()

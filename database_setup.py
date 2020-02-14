@@ -229,6 +229,7 @@ class Income_Sheet(Base):
     所得稅費用率 = Column(Float)
     本期淨利 = Column(BIGINT)
     本期淨利率 = Column(Float)
+    母公司業主淨利 = Column(BIGINT)
     基本每股盈餘 = Column(Float)
     稀釋每股盈餘 = Column(Float)
 
@@ -241,6 +242,9 @@ class Income_Sheet(Base):
                 continue
             res[attr] = val
         return res
+
+    def __repr__(self):
+        return "%s: %s: %s: %s" % (self.id, self.stock_id, self.year, self.season)
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -313,6 +317,10 @@ class Daily_Information(Base):
                 continue
             res[attr] = val
         return res
+
+    def updatePE(self):
+        if self['股價'] is not None and self['近四季每股盈餘'] is not None:
+            self['本益比'] = round(self['股價']/self['近四季每股盈餘'], 2)
 
     def __getitem__(self, key):
         return getattr(self, key)
