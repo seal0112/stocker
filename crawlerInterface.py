@@ -217,10 +217,12 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         basicInfoUrl = "http://%s:%s/api/v0/basic_information/%s" % (
             serverConf['ip'], serverConf['port'],companyID)
 
-        basicInfo = json.loads(requests.get(basicInfoUrl).text)
+        basicInfo = requests.get(basicInfoUrl)
 
-        dataPayload["基本每股盈餘"] = round(
-            dataPayload["母公司業主淨利"]*1000/basicInfo["已發行普通股數或TDR原發行股數"], 2)
+        if basicInfo.status_code != 404:
+            basicInfoData = json.loads(requests.get(basicInfoUrl).text)
+            dataPayload["基本每股盈餘"] = round(
+                dataPayload["母公司業主淨利"]*1000/basicInfoData["已發行普通股數或TDR原發行股數"], 2)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -611,7 +613,7 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    seasons = [1, 2, 3, 4]
+    # seasons = [1, 2, 3, 4]
 
     for year in range(2019, 2012, -1):
         for season in seasons:
