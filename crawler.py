@@ -265,7 +265,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
             "Connection": "close"
         }
 
-    req = requests.post(url, headers)
+    req = requests.post(url, headers, timeout=(2, 15))
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
