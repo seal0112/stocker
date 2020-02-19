@@ -320,7 +320,10 @@ class Daily_Information(Base):
 
     def updatePE(self):
         if self['股價'] is not None and self['近四季每股盈餘'] is not None:
-            self['本益比'] = round(self['股價']/self['近四季每股盈餘'], 2)
+            if self['近四季每股盈餘'] <= 0:
+                self['本益比'] = None
+            else:
+                self['本益比'] = round(self['股價']/self['近四季每股盈餘'], 2)
 
     def __getitem__(self, key):
         return getattr(self, key)

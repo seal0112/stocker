@@ -221,8 +221,9 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
 
         if basicInfo.status_code != 404:
             basicInfoData = json.loads(requests.get(basicInfoUrl).text)
-            dataPayload["基本每股盈餘"] = round(
-                dataPayload["母公司業主淨利"]*1000/basicInfoData["已發行普通股數或TDR原發行股數"], 2)
+            if basicInfoData["已發行普通股數或TDR原發行股數"] != 0:
+                dataPayload["基本每股盈餘"] = round(
+                    dataPayload["母公司業主淨利"]*1000/basicInfoData["已發行普通股數或TDR原發行股數"], 2)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -578,17 +579,17 @@ def getFinStatFromServer(
 
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
-    # for type in companyTypes:
-    #     getBasicInfo(type)
+    for type in companyTypes:
+        getBasicInfo(type)
 
-    # updateDailyPrice('sii')
-    # updateDailyPrice('otc')
+    updateDailyPrice('sii')
+    updateDailyPrice('otc')
 
-    # now = datetime.now()
-    # if now.month-1 == 0:
-    #     getMonthlyRevenue(now.year-1, 12)
-    # else:
-    #     getMonthlyRevenue(now.year, now.month-1)
+    now = datetime.now()
+    if now.month-1 == 0:
+        getMonthlyRevenue(now.year-1, 12)
+    else:
+        getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
@@ -613,9 +614,9 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    # seasons = [1, 2, 3, 4]
+    seasons = [1, 2, 3, 4]
 
-    for year in range(2019, 2012, -1):
+    for year in range(2018, 2012, -1):
         for season in seasons:
             updateIncomeSheet(year, season)
 
