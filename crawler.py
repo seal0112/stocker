@@ -669,13 +669,20 @@ def crawlerDailyPrice(stockNums, type='sii'):
         typeTransform[type], stockNum) for stockNum in stockNums]
     stockNumStr = "|".join(stockNums)
 
-    data = requests.get(url+stockNumStr)
-    data = json.loads(data.text)
+    data = None
+    while data is None:
+        try:
+            data = requests.get(url+stockNumStr, timeout=10)
+            data = json.loads(data.text)
+        except requests.exceptions.RequestException as e:
+            print(e)
+            data = None
+
 
     idAndPrice = []
     for i in data['msgArray']:
         try:
-            idAndPrice.append({'stock_id': i['c'], "股價": i['z']})
+            idAndPrice.append({'stock_id': i['c'], "股價": float(i['z'])})
         except Exception as ex:
             print("%s %s" % (i['c'], ex))
 
