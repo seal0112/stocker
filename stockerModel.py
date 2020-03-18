@@ -289,7 +289,7 @@ class handleIncomeSheet(MethodView):
             res = make_response(json.dumps(
                     'Failed to get %s Income Sheet.' % (stock_id)), 404)
             return res
-        elif mode == 'single':
+        elif mode == 'single' or mode == None:
             res = [incomeSheet.serialize]
             return jsonify(res)
         else:
