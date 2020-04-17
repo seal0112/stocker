@@ -338,9 +338,9 @@ class Stock_Commodity(Base):
     stock_id = Column(
         String(6), ForeignKey('basic_information.id'),
         primary_key=True, nullable=False)
-    stock_futures = Column(Boolean, default=False)
-    stock_option = Column(Boolean, default=False)
-    small_stock_futures = Column(Boolean, default=False)
+    stock_future = Column(Boolean, nullable=False, default=False)
+    stock_option = Column(Boolean, nullable=False,  default=False)
+    small_stock_future = Column(Boolean, nullable=False,  default=False)
 
     @property
     def serialize(self):
