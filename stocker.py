@@ -17,7 +17,8 @@ from stockerModel import (
     showMain, getStockNumber,
     handleBasicInfo, handleMonthRevenue,
     handleIncomeSheet, handleBalanceSheet,
-    handleCashFlow, handleDailyInfo
+    handleCashFlow, handleDailyInfo,
+    handleStockCommodity
 )
 import time
 from flask_login import (
@@ -87,6 +88,11 @@ app.add_url_rule('/api/v0/daily_information/<string:stock_id>',
                  'handleDailyInfo',
                  view_func=handleDailyInfo.as_view(
                      'handleDailyInfo'),
+                 methods=['GET', 'POST'])
+app.add_url_rule('/api/v0/stock_commodity/<string:stock_id>',
+                 'handleStockCommodity',
+                 view_func=handleStockCommodity.as_view(
+                     'handleStockCommodity'),
                  methods=['GET', 'POST'])
 
 

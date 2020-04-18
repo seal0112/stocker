@@ -1,7 +1,8 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryStockNoFromTWSE, crawlerDailyPrice
+    crawlSummaryStockNoFromTWSE, crawlerDailyPrice,
+    crawlDailyPrice, crawlStockCommodity
 )
 from datetime import datetime
 import json
@@ -220,7 +221,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         basicInfo = requests.get(basicInfoUrl)
 
         if basicInfo.status_code != 404:
-            basicInfoData = json.loads(requests.get(basicInfoUrl).text)
+            basicInfoData = json.loads(basicInfo.text)
             if basicInfoData["已發行普通股數或TDR原發行股數"] != 0:
                 dataPayload["基本每股盈餘"] = round(
                     dataPayload["母公司業主淨利"]*1000/basicInfoData["已發行普通股數或TDR原發行股數"], 2)
@@ -315,7 +316,7 @@ def updateDailyPrice(type='sii'):
         else:
             idx += length
         finally:
-            time.sleep(1.7)
+            time.sleep(2.5)
 
 
 # done
@@ -535,6 +536,28 @@ def updateCashFlow(westernYearIn=2019, season=1):
         time.sleep(4 + random.randrange(0, 4))
 
 
+def updateStockCommodity():
+    data = crawlStockCommodity()
+    serverStockCommodityApi = "http://%s:%s/api/v0/stock_commodity/" % (
+        serverConf['ip'], serverConf['port'])
+    for index, row in data.iterrows():
+        dataPayload = {}
+        if row["標準型證券股數"] in [2000, 100]:
+            if row["標準型證券股數"] == 2000:
+                dataPayload["stock_future"] = row["是否為股票期貨標的"]==u"\u25CF"
+                dataPayload["stock_option"] = row["是否為股票選擇權標的"]==u"\u25CF"
+            elif row["標準型證券股數"] == 100:
+                dataPayload["small_stock_future"] = row["是否為股票期貨標的"]==u"\u25CF"
+
+            dataPayload["stock_id"] = row["證券代號"]
+            print(dataPayload)
+            print("%s%s" % (serverStockCommodityApi, dataPayload['stock_id']))
+            res = requests.post(
+                    "%s%s" % (serverStockCommodityApi, dataPayload['stock_id']),
+                    data=json.dumps(dataPayload))
+            print(res.status_code)
+
+
 # done
 def getSummaryStockNoServerExist(
         westernYearIn=2019, seasonIn=2, reportType='balance_sheet'):
@@ -579,17 +602,20 @@ def getFinStatFromServer(
 
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
-    for type in companyTypes:
-        getBasicInfo(type)
+    # for type in companyTypes:
+    #     getBasicInfo(type)
+    updateStockCommodity()
 
-    updateDailyPrice('sii')
-    updateDailyPrice('otc')
+    # updateDailyPrice('sii')
+    # updateDailyPrice('otc')
+    # data = crawlDailyPrice(datetime.now())
+    # print(data)
 
-    now = datetime.now()
-    if now.month-1 == 0:
-        getMonthlyRevenue(now.year-1, 12)
-    else:
-        getMonthlyRevenue(now.year, now.month-1)
+    # now = datetime.now()
+    # if now.month-1 == 0:
+    #     getMonthlyRevenue(now.year-1, 12)
+    # else:
+    #     getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
@@ -614,11 +640,11 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    seasons = [1, 2, 3, 4]
+    # seasons = [1, 2, 3, 4]
 
-    for year in range(2018, 2012, -1):
-        for season in seasons:
-            updateIncomeSheet(year, season)
+    # for year in range(2017, 2012, -1):
+    #     for season in seasons:
+    #         updateIncomeSheet(year, season)
 
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
@@ -648,4 +674,4 @@ if __name__ == '__main__':
     # getCashFlow()
     # updateDailyPrice('sii')
 
-    # dailyRoutineWork()
+    dailyRoutineWork()

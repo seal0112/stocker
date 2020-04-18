@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from database_setup import Base
 from database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
-    Balance_Sheet, Cash_Flow, Daily_Information
+    Balance_Sheet, Cash_Flow, Daily_Information,
+    Stock_Commodity
 )
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -593,6 +594,76 @@ class handleMonthRevenue(MethodView):
 
         res = make_response(
             json.dumps('Create'), 201)
+        return res
+
+
+class handleStockCommodity(MethodView):
+    """
+    Description:
+        this api is used to handle Stock Commodity request.
+    Detail:
+        According to the received stock_id and request method(GET/POST),
+        if request method is GET, then return stock_id's Commodity.
+        if request method is POST, then according to the data entered,
+        decide whether to update or add new commodity into database.
+    Args:
+        stock_id: a string of stock number.
+    Return:
+        if request method is GET,
+            then return stock_id's commodity.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+    Raises:
+        Exception: An error occurred then return 400.
+    """
+    def get(self, stock_id):
+        stockCommodity = session.query(Stock_Commodity).filter_by(
+            stock_id=stock_id).one_or_none()
+        return 'Stock Commodity: %s' % stock_id\
+            if stockCommodity is None else stockCommodity.serialize
+
+    def post(self, stock_id):
+        payload = json.loads(request.data)
+        stockCommodity = session.query(Stock_Commodity).filter_by(
+            stock_id=stock_id).one_or_none()
+        try:
+            if stockCommodity is not None:
+                for key in payload:
+                    stockCommodity[key] = payload[key]
+            else:
+                stockCommodity = Stock_Commodity()
+                stockCommodity['stock_id'] = stock_id
+                for key in payload:
+                    stockCommodity[key] = payload[key]
+
+            session.add(stockCommodity)
+            session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            print("%s: %s" % (stock_id, ie))
+            logging.warning(
+                "400 %s is failed to update Stock Commodity. Reason: %s"
+                % (stock_id, ie))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s Stock Commodity.' % (stock_id)), 400)
+            return res
+        except Exception as ex:
+            session.rollback()
+            print(ex)
+            logger.warning(
+                "400 %s is failed to update Stock Commodity. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s Stock Commodity.'
+                    % (stock_id)), 400)
+            return res
+
+        res = make_response(
+            json.dumps('OK'), 200)
         return res
 
 
