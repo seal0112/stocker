@@ -264,21 +264,21 @@ class handleIncomeSheet(MethodView):
     """
     def get(self, stock_id):
         mode = request.args.get('mode')
-        if mode == None:
+        if mode is None:
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).first()
         elif mode == 'single':
-            year =  request.args.get('year')
+            year = request.args.get('year')
             season = request.args.get('season')
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
                         season=season).one_or_none()
         elif mode == 'multiple':
-            year =  request.args.get('year')
-            season = 4 if year == None else int(year) * 4
+            year = request.args.get('year')
+            season = 4 if year is None else int(year) * 4
             incomeSheet = session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
@@ -531,7 +531,8 @@ class handleMonthRevenue(MethodView):
     """
     def get(self, stock_id):
         monthReve = session.query(Month_Revenue).filter_by(
-            stock_id=stock_id).order_by(Month_Revenue.year.desc()).limit(60).all()
+            stock_id=stock_id
+            ).order_by(Month_Revenue.year.desc()).limit(60).all()
         print(monthReve)
         if monthReve is None:
             return make_response(404)
@@ -689,15 +690,16 @@ def checkFourSeasonEPS(stock_id):
                 stock_id=stock_id).one_or_none()
         try:
             if dailyInfo is not None:
-                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps,2)
+                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps, 2)
             else:
                 dailyInfo = Daily_Information()
                 dailyInfo['stock_id'] = stock_id
-                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps,2)
+                dailyInfo['近四季每股盈餘'] = round(fourSeasonEps, 2)
 
             dailyInfo.updatePE()
 
             session.add(dailyInfo)
             session.commit()
-        except:
+        except Exception as ex:
             session.rollback()
+            print(ex)

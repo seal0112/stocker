@@ -5,18 +5,20 @@ from logging.handlers import TimedRotatingFileHandler
 
 
 class filelog(object):
-    def __init__(self):
+    def __init__(self, filename=datetime.now().strftime("log/%Y-%m-%d.log")):
         user = getpass.getuser()
         self.logger = logging.getLogger(user)
         self.logger.setLevel(logging.DEBUG)
 
         # file log
-        log_filename = datetime.now().strftime("log/%Y-%m-%d.log")
+        # log_filename = datetime.now().strftime("log/%Y-%m-%d.log")
         fileHandler = TimedRotatingFileHandler(
-            log_filename, when='D', interval=1,
+            filename, when='D', interval=1,
             backupCount=30, encoding='UTF-8', delay=False, utc=False)
         logger = logging.getLogger()
-        BASIC_FORMAT_F = "%(asctime)s - %(levelname)s filename:%(filename)s module:%(module)s func:%(funcName)-8s line%(lineno)s : %(message)s"
+        BASIC_FORMAT_F = "%(asctime)s - %(levelname)s " + \
+                         "filename:%(filename)s module:%(module)s " + \
+                         "func:%(funcName)-8s line%(lineno)s : %(message)s"
         DATE_FORMAT_F = '%Y-%m-%d %H:%M'
         formatter = logging.Formatter(BASIC_FORMAT_F, DATE_FORMAT_F)
         fileHandler.setFormatter(formatter)
@@ -51,7 +53,8 @@ class cmdlog(object):
         self.logger.setLevel(logging.DEBUG)
 
         # cmd log
-        BASIC_FORMAT_C = '%(asctime)8s %(levelname)- 8s in %(module)8s: %(message)s'
+        BASIC_FORMAT_C = "%(asctime)8s %(levelname)- 8s" + \
+                         " in %(module)8s: %(message)s"
         DATE_FORMAT_C = '%Y-%m-%d %H:%M'
         formatter = logging.Formatter(BASIC_FORMAT_C, DATE_FORMAT_C)
         streamhandler = logging.StreamHandler()
