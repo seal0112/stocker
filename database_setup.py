@@ -1,6 +1,6 @@
 from sqlalchemy import Column, ForeignKey
 from sqlalchemy import Date, Enum, Integer, String, TEXT
-from sqlalchemy import BIGINT, Float, SmallInteger
+from sqlalchemy import BIGINT, Float, SmallInteger, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -325,6 +325,32 @@ class Daily_Information(Base):
                 self['本益比'] = None
             else:
                 self['本益比'] = round(self['本日收盤價']/self['近四季每股盈餘'], 2)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
+class Stock_Commodity(Base):
+    __tablename__ = 'stock_commodity'
+
+    stock_id = Column(
+        String(6), ForeignKey('basic_information.id'),
+        primary_key=True, nullable=False)
+    stock_future = Column(Boolean, nullable=False, default=False)
+    stock_option = Column(Boolean, nullable=False,  default=False)
+    small_stock_future = Column(Boolean, nullable=False,  default=False)
+
+    @property
+    def serialize(self):
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            res[attr] = val
+        return res
 
     def __getitem__(self, key):
         return getattr(self, key)

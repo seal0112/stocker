@@ -662,21 +662,37 @@ def crawlerDailyPrice(stockNums, type='sii'):
         'otc': 'otc'
     }
     print(type, stockNums)
+    nowtime = round(time.time()*1000)
     url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?"\
-          + "delay=0&_=1552123547443&ex_ch="
+          + "delay=0&_=" + str(nowtime) +"&ex_ch="
 
     stockNums = ["%s_%s.tw" % (
         typeTransform[type], stockNum) for stockNum in stockNums]
     stockNumStr = "|".join(stockNums)
 
-    data = requests.get(url+stockNumStr)
-    data = json.loads(data.text)
+    data = None
+    while data is None:
+        try:
+            data = requests.get(url+stockNumStr, timeout=10)
+            data = json.loads(data.text)
+        except requests.exceptions.RequestException as e:
+            print(e)
+            data = None
 
     idAndPrice = []
     for i in data['msgArray']:
         try:
-            idAndPrice.append({'stock_id': i['c'], "股價": i['z']})
+            idAndPrice.append({'stock_id': i['c'], "股價": float(i['z'])})
         except Exception as ex:
             print("%s %s" % (i['c'], ex))
 
     return idAndPrice
+
+
+def crawlStockCommodity():
+    print("StockCommodity")
+    data = requests.get("https://www.taifex.com.tw/cht/2/stockLists")
+    dfs = pd.read_html(data.text, converters={'證券代號': str})
+    return dfs[0][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
+
+
