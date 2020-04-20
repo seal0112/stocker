@@ -1,9 +1,10 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryStockNoFromTWSE, crawlerDailyPrice
+    crawlSummaryStockNoFromTWSE, crawlerDailyPrice,
+    crawlDailyPrice
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import requests
 import time
@@ -37,7 +38,15 @@ logger.addHandler(fileHandler)
 # done
 def getBasicInfo(dataType='sii'):
     # dataType: otc, sii, rotc, pub
-    data = crawlBasicInformation(dataType)
+    while(True):
+        try:
+            data = crawlBasicInformation(dataType)
+            break
+        except Exception as ex:
+            print(ex.__class__.__name__, end=" ")
+            print("catched. Retrying.")
+            continue
+
     data = transformHeaderNoun(data, 'basic_information')
 
     for i in range(len(data)):
@@ -215,7 +224,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
                         key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
 
         basicInfoUrl = "http://%s:%s/api/v0/basic_information/%s" % (
-            serverConf['ip'], serverConf['port'],companyID)
+            serverConf['ip'], serverConf['port'], companyID)
 
         basicInfo = requests.get(basicInfoUrl)
 
@@ -223,7 +232,8 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
             basicInfoData = json.loads(requests.get(basicInfoUrl).text)
             if basicInfoData["已發行普通股數或TDR原發行股數"] != 0:
                 dataPayload["基本每股盈餘"] = round(
-                    dataPayload["母公司業主淨利"]*1000/basicInfoData["已發行普通股數或TDR原發行股數"], 2)
+                    dataPayload["母公司業主淨利"]*1000/
+                    basicInfoData["已發行普通股數或TDR原發行股數"], 2)
 
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
@@ -293,29 +303,55 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
 
 
 # need to update feature
-def updateDailyPrice(type='sii'):
-    stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
-        serverConf['ip'], serverConf['port'], type)
-    stockNums = json.loads(requests.get(stockNumsApi).text)
+def updateDailyPrice(datetimeIn=datetime.now()):
+    # now = datetime.now() - timedelta(days=1)
+    # now = datetime(2020,4,15)
+    data = crawlDailyPrice(datetimeIn)
 
-    serverDailyInfoApi = "http://%s:%s/api/v0/daily_information/" % (
-        serverConf['ip'], serverConf['port'])
+    stockTypes = ['sii', 'otc']
+    for stockType in stockTypes:
+        stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
+            serverConf['ip'], serverConf['port'], stockType)
+        stockIDs = json.loads(requests.get(stockNumsApi).text)
 
-    idx = 0
-    length = 20
-    while idx < len(stockNums):
-        try:
-            data = crawlerDailyPrice(stockNums[idx:idx+length], type)
-            for d in data:
-                res = requests.post(
-                    "%s%s" % (serverDailyInfoApi, d['stock_id']),
-                    data=json.dumps(d))
-        except Exception as ex:
-            print(ex)
-        else:
-            idx += length
-        finally:
-            time.sleep(1.7)
+        for id in stockIDs:
+            if stockType == 'sii':
+                colCol = '證券代號'
+                priceCol = '收盤價'
+                priceDiffCol = '漲跌價差'
+                priceDiffSignCol = '漲跌(+/-)'
+            elif stockType == 'otc':
+                colCol = '代號'
+                priceCol = '收盤'
+                priceDiffCol = '漲跌'
+                priceDiffSignCol = ""
+
+            try:
+                dataStock = data[stockType].loc[
+                    data[stockType][colCol] == id]
+            except:
+                break
+            # print(type(dataStock))
+            # print(dataStock.columns)
+
+            dailyInfoApi = 'http://%s:%s/api/v0/daily_information/%s' % (
+                serverConf['ip'], serverConf['port'], id)
+            dataPayload = {}
+            dataPayload['本日收盤價'] = dataStock[priceCol].iloc[0]
+            try:
+                if dataStock[priceDiffSignCol].iloc[0] == '-':
+                    dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0] * -1)
+                else:
+                    dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0])
+            except KeyError:
+                # otc have no priceDiffSignCol column
+                dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0])
+
+            print(id)
+            print(dataPayload)
+            requests.post(dailyInfoApi, data=json.dumps(dataPayload))
+            # break
+            time.sleep(0.05)
 
 
 # done
@@ -582,8 +618,9 @@ def dailyRoutineWork():
     for type in companyTypes:
         getBasicInfo(type)
 
-    updateDailyPrice('sii')
-    updateDailyPrice('otc')
+    updateDailyPrice()
+    # updateDailyPrice('sii')
+    # updateDailyPrice('otc')
 
     now = datetime.now()
     if now.month-1 == 0:
@@ -614,11 +651,11 @@ if __name__ == '__main__':
     usage: update incomeSheet/BalanceSheet
     '''
     # years = [2019]
-    seasons = [1, 2, 3, 4]
+    # seasons = [1, 2, 3, 4]
 
-    for year in range(2018, 2012, -1):
-        for season in seasons:
-            updateIncomeSheet(year, season)
+    # for year in range(2019, 2012, -1):
+    #     for season in seasons:
+    #         updateIncomeSheet(year, season)
 
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
@@ -646,6 +683,6 @@ if __name__ == '__main__':
     # getBalanceSheet(2337, 2019, 2)
 
     # getCashFlow()
-    # updateDailyPrice('sii')
+    updateDailyPrice()
 
     # dailyRoutineWork()
