@@ -1,8 +1,7 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryStockNoFromTWSE, crawlerDailyPrice,
-    crawlDailyPrice, crawlStockCommodity
+    crawlSummaryStockNoFromTWSE, crawlDailyPrice, crawlStockCommodity
 )
 from datetime import datetime, timedelta
 import json
@@ -324,34 +323,41 @@ def updateDailyPrice(datetimeIn=datetime.now()):
                 colCol = '代號'
                 priceCol = '收盤'
                 priceDiffCol = '漲跌'
-                priceDiffSignCol = ""
 
             try:
                 dataStock = data[stockType].loc[
                     data[stockType][colCol] == id]
             except:
                 break
-            # print(type(dataStock))
-            # print(dataStock.columns)
 
             dailyInfoApi = 'http://%s:%s/api/v0/daily_information/%s' % (
                 serverConf['ip'], serverConf['port'], id)
             dataPayload = {}
-            dataPayload['本日收盤價'] = dataStock[priceCol].iloc[0]
+
             try:
-                if dataStock[priceDiffSignCol].iloc[0] == '-':
-                    dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0] * -1)
+                dataPayload['本日收盤價'] = float(dataStock[priceCol].iloc[0])
+
+                # otc have no priceDiffSignCol column
+                if stockType == 'sii':
+                    if dataStock[priceDiffSignCol].iloc[0] == '除息':
+                        dataPayload['本日漲跌'] = 0
+                    elif dataStock[priceDiffSignCol].iloc[0] == '-':
+                        dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0] * -1)
+                    else:
+                        dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0])
                 else:
                     dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0])
-            except KeyError:
-                # otc have no priceDiffSignCol column
-                dataPayload['本日漲跌'] = float(dataStock[priceDiffCol].iloc[0])
-
-            print(id)
-            print(dataPayload)
-            requests.post(dailyInfoApi, data=json.dumps(dataPayload))
-            # break
-            time.sleep(0.05)
+            except ValueError as ve:
+                print("%s get into ValueError with %s"% (id, ve))
+            except IndexError as ie:
+                print("%s get into IndexError with %s"% (id, ie))
+            except Exception as ex:
+                print(ex)
+                print(id)
+                print(dataStock)
+                print("!!!!!!!!!!!!!!!!!")
+            else:
+                requests.post(dailyInfoApi, data=json.dumps(dataPayload))
 
 
 # done
@@ -585,12 +591,9 @@ def updateStockCommodity():
                 dataPayload["small_stock_future"] = row["是否為股票期貨標的"]==u"\u25CF"
 
             dataPayload["stock_id"] = row["證券代號"]
-            print(dataPayload)
-            print("%s%s" % (serverStockCommodityApi, dataPayload['stock_id']))
             res = requests.post(
                     "%s%s" % (serverStockCommodityApi, dataPayload['stock_id']),
                     data=json.dumps(dataPayload))
-            print(res.status_code)
 
 
 # done
@@ -637,20 +640,17 @@ def getFinStatFromServer(
 
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
-    # for type in companyTypes:
-    #     getBasicInfo(type)
+    for type in companyTypes:
+        getBasicInfo(type)
     updateStockCommodity()
 
-    # updateDailyPrice('sii')
-    # updateDailyPrice('otc')
-    # data = crawlDailyPrice(datetime.now())
-    # print(data)
+    updateDailyPrice()
 
-    # now = datetime.now()
-    # if now.month-1 == 0:
-    #     getMonthlyRevenue(now.year-1, 12)
-    # else:
-    #     getMonthlyRevenue(now.year, now.month-1)
+    now = datetime.now()
+    if now.month-1 == 0:
+        getMonthlyRevenue(now.year-1, 12)
+    else:
+        getMonthlyRevenue(now.year, now.month-1)
 
     updateIncomeSheet(2019, 4)
 
@@ -707,6 +707,4 @@ if __name__ == '__main__':
     # getBalanceSheet(2337, 2019, 2)
 
     # getCashFlow()
-    updateDailyPrice()
-
     dailyRoutineWork()

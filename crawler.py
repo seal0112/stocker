@@ -265,7 +265,7 @@ def crawlBalanceSheet(companyID, westernYearIn, seasonIn):
             "Connection": "close"
         }
 
-    req = requests.post(url, headers, timeout=(2, 15))
+    req = requests.post(url, headers)
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
@@ -348,7 +348,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
 
     print("crawling incomeSheet " + str(coID), end=" ")
     print(str(westernYearIn) + "Q" + str(season), end="...")
-    req = requests.post(url, headers, timeout=(2, 15))
+    req = requests.post(url, headers)
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
@@ -652,47 +652,9 @@ def crawlSummaryStockNoFromTWSE(
     return stockNums
 
 
-def crawlerDailyPrice(stockNums, type='sii'):
-    """
-    stock num: tse_1101.tw/otc_3455.tw
-    type: sii / otc
-    """
-    typeTransform = {
-        'sii': 'tse',
-        'otc': 'otc'
-    }
-    print(type, stockNums)
-    nowtime = round(time.time()*1000)
-    url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?"\
-          + "delay=0&_=" + str(nowtime) +"&ex_ch="
-
-    stockNums = ["%s_%s.tw" % (
-        typeTransform[type], stockNum) for stockNum in stockNums]
-    stockNumStr = "|".join(stockNums)
-
-    data = None
-    while data is None:
-        try:
-            data = requests.get(url+stockNumStr, timeout=10)
-            data = json.loads(data.text)
-        except requests.exceptions.RequestException as e:
-            print(e)
-            data = None
-
-    idAndPrice = []
-    for i in data['msgArray']:
-        try:
-            idAndPrice.append({'stock_id': i['c'], "股價": float(i['z'])})
-        except Exception as ex:
-            print("%s %s" % (i['c'], ex))
-
-    return idAndPrice
-
-
 def crawlStockCommodity():
     print("StockCommodity")
     data = requests.get("https://www.taifex.com.tw/cht/2/stockLists")
     dfs = pd.read_html(data.text, converters={'證券代號': str})
     return dfs[0][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
-
 
