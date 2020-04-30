@@ -22,7 +22,7 @@ class Basic_Information(Base):
     update_date = Column(
         Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
-    type = Column(Enum('sii', 'otc', 'rotc', 'pub'), nullable=False)
+    exchangeType = Column(Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False)
     公司名稱 = Column(TEXT, nullable=False)
     公司簡稱 = Column(String(10))
     產業類別 = Column(String(10))

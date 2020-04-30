@@ -186,6 +186,32 @@ class handleBasicInfo(MethodView):
             json.dumps('Create'), 201)
         return res
 
+    def patch(self, stock_id):
+        basicInfo = session.query(Basic_Information).filter_by(
+            id=stock_id).one_or_none()
+        try:
+            # payload = json.loads(request.data)
+            if basicInfo is not None:
+                basicInfo['exchangeType'] = 'delist'
+                session.add(basicInfo)
+                session.commit()
+                res = make_response(json.dumps('OK'), 200)
+            else:
+                res = make_response(
+                    json.dumps('No such stock id.'), 404)
+            return res
+        except Exception as ex:
+            session.rollback()
+            print(ex)
+            logger.warning(
+                "400 %s is failed to update Daily Information. Reason: %s"
+                % (stock_id, ex))
+            res = make_response(
+                json.dumps(
+                    'Failed to update %s Daily Information.'
+                    % (stock_id)), 400)
+            return res
+
 
 class handleDailyInfo(MethodView):
     def get(self, stock_id):
