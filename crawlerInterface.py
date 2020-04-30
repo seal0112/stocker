@@ -1,7 +1,8 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryStockNoFromTWSE, crawlDailyPrice, crawlStockCommodity
+    crawlSummaryStockNoFromTWSE, crawlDailyPrice, 
+    crawlStockCommodity, crawlDelistedCompany
 )
 from datetime import datetime, timedelta
 import json
@@ -34,7 +35,6 @@ fileHandler.setFormatter(formatter)
 logger.addHandler(fileHandler)
 
 
-# done
 def getBasicInfo(dataType='sii'):
     # dataType: otc, sii, rotc, pub
     while(True):
@@ -51,7 +51,7 @@ def getBasicInfo(dataType='sii'):
     for i in range(len(data)):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
-        dataPayload['type'] = dataType
+        dataPayload['exchangeType'] = dataType
         url = "http://%s:%s/api/v0/basic_information/%s" % (
             serverConf['ip'],
             serverConf['port'],
@@ -63,7 +63,6 @@ def getBasicInfo(dataType='sii'):
         # time.sleep(0.05)
 
 
-# done
 def transformHeaderNoun(data, fileName):
     """this method is used to transefer header noun.
 
@@ -117,7 +116,6 @@ def transformHeaderNoun(data, fileName):
     return data
 
 
-# done
 def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
     # year, month: start at 2013, 1
     data = crawlMonthlyRevenue(westernYearIn, monthIn)
@@ -139,7 +137,6 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
         # time.sleep(0.05)
 
 
-# done
 def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     try:
         data = crawlIncomeSheet(companyID, westernYearIn, seasonIn)
@@ -249,7 +246,6 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         return {"stock_id": companyID, "status": res.status_code}
 
 
-# done
 def updateIncomeSheet(westernYearIn=2019, season=1):
     existStockNo = getSummaryStockNoServerExist(
         westernYearIn, season, 'income_sheet')
@@ -360,7 +356,6 @@ def updateDailyPrice(datetimeIn=datetime.now()):
                 requests.post(dailyInfoApi, data=json.dumps(dataPayload))
 
 
-# done
 def getBalanceSheet(
         companyID=2330, westernYearIn=2019, seasonIn=2):
     try:
@@ -456,7 +451,6 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
         time.sleep(3.5 + random.randrange(0, 2))
 
 
-# done
 def getCashFlow(
         companyID=2330, westernYearIn=2019, seasonIn=2):
     try:
@@ -577,6 +571,16 @@ def updateCashFlow(westernYearIn=2019, season=1):
         time.sleep(4 + random.randrange(0, 4))
 
 
+def updateDelistedCompany():
+    companyTypes = ['sii', 'otc']
+    for companyType in companyTypes:
+        data = crawlDelistedCompany(companyType)
+        for d in data:
+            serverBasicInfoApi = "http://%s:%s/api/v0/basic_information/%s" % (
+                serverConf['ip'], serverConf['port'], d)
+            requests.patch(serverBasicInfoApi)
+
+
 def updateStockCommodity():
     data = crawlStockCommodity()
     serverStockCommodityApi = "http://%s:%s/api/v0/stock_commodity/" % (
@@ -596,7 +600,6 @@ def updateStockCommodity():
                     data=json.dumps(dataPayload))
 
 
-# done
 def getSummaryStockNoServerExist(
         westernYearIn=2019, seasonIn=2, reportType='balance_sheet'):
     url = "http://%s:%s/api/v0/stock_number" % (

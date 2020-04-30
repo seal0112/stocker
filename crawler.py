@@ -96,7 +96,7 @@ def crawlBasicInformation(companyType):
         'off': '1',
         'TYPEK': companyType,
     }
-    result = requests.get(url, headers)
+    result = requests.get(url, headers, timeout=(2, 15))
     print("crawling basicInfo " + companyType, end='...')
     result.encoding = 'utf-8'
     html_df = pd.read_html(StringIO(result.text), header=0)
@@ -115,6 +115,54 @@ def crawlBasicInformation(companyType):
     ret = ret.drop(ret.index[drop_index])
 
     return ret
+
+
+def crawlDelistedCompany(companyType):
+    currentYear = datetime.now().year
+    lastYear = currentYear - 1
+    if companyType == 'sii':
+        url = 'https://www.twse.com.tw/company/suspendListingCsvAndHtml\
+            ?type=html&lang=zh'
+        resultCurrent = requests.get(
+            '%s&selectYear=%d' % (url, currentYear), timeout=(2, 15))
+        resultLast = requests.get(
+            '%s&selectYear=%d' % (url, lastYear), timeout=(2, 15))
+        resultCurrent.encoding = 'utf-8'
+        resultLast.encoding = 'utf-8'
+        html_dfCurr = pd.read_html(StringIO(resultCurrent.text), header=1)
+        html_dfLast = pd.read_html(StringIO(resultLast.text), header=1)
+        html_df = pd.concat([html_dfCurr[0], html_dfLast[0]])
+        # html_df.drop(["終止上市日期", "公司名稱"], axis=1, inplace=True)
+
+        return html_df['上市編號'].values.tolist()
+    elif companyType == 'otc':
+        url = 'https://www.tpex.org.tw/web/regular_emerging/deListed/de-listed_companies.php?l=zh-tw'
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        body = {
+            'Submit': '查詢',
+                        'select_year': str(currentYear - 1911),
+            'DELIST_REASON': '-1'
+        }
+        body['select_year'] = str(currentYear - 1911)
+        resultCurrent = requests.post(
+            url,
+            headers=headers,
+            data=json.dumps(body),
+            timeout=(2, 15))
+        body['select_year'] = str(lastYear - 1911)
+        resultLast = requests.post(
+            url,
+            headers=headers,
+            data=json.dumps(body),
+            timeout=(2, 15))
+        resultCurrent.encoding = 'utf-8'
+        resultLast.encoding = 'utf-8'
+        html_dfCurr = pd.read_html(StringIO(resultCurrent.text), header=0)
+        html_dfLast = pd.read_html(StringIO(resultLast.text), header=0)
+        html_df = pd.concat([html_dfCurr[0], html_dfLast[0]])
+        return html_df['股票代號'].values.tolist()
 
 
 def crawlMonthlyRevenue(westernYearIn, monthIn):

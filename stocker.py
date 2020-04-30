@@ -63,7 +63,7 @@ app.add_url_rule('/api/v0/basic_information/<string:stock_id>',
                  'handleBasicInfo',
                  view_func=handleBasicInfo.as_view(
                      'handleBasicInfo_api'),
-                 methods=['GET', 'POST'])
+                 methods=['GET', 'POST', 'PATCH'])
 app.add_url_rule('/api/v0/income_sheet/<string:stock_id>',
                  'handleIncomeSheet',
                  view_func=handleIncomeSheet.as_view(
