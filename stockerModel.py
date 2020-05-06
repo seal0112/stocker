@@ -56,7 +56,7 @@ class getStockNumber(MethodView):
             stockNum = session.query(Basic_Information.id).all()
         else:
             stockNum = session.query(
-                Basic_Information.id).filter_by(type=companyType).all()
+                Basic_Information.id).filter_by(exchangeType=companyType).all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)
@@ -700,7 +700,7 @@ def checkFourSeasonEPS(stock_id):
             stock_id=stock_id).scalar()
 
     stockType = session.query(
-        Basic_Information.type).filter_by(
+        Basic_Information.exchangeType).filter_by(
             id=stock_id).scalar()
 
     if stockType in ('sii', 'otc') and quantityOfIncomeSheet >= 4:
