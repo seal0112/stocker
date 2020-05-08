@@ -20,6 +20,9 @@ from stockerModel import (
     handleCashFlow, handleDailyInfo,
     handleStockCommodity
 )
+from frontendModel import (
+    handleRevenueFP
+)
 import time
 from flask_login import (
     LoginManager, UserMixin, login_user,
@@ -51,6 +54,7 @@ formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 # logger.addHandler(console)
 
 
+# Crawler APIs
 app.add_url_rule('/',
                  'showMain',
                  view_func=showMain)
@@ -94,6 +98,14 @@ app.add_url_rule('/api/v0/stock_commodity/<string:stock_id>',
                  view_func=handleStockCommodity.as_view(
                      'handleStockCommodity'),
                  methods=['GET', 'POST'])
+
+
+# Frontend APIs
+app.add_url_rule('/api/v0/f/month_revenue/<string:stock_id>',
+                 'handleRevenueFP',
+                 view_func=handleRevenueFP.as_view(
+                     'handleRevenueFP'),
+                 methods=['GET'])
 
 
 def after_request(response):
