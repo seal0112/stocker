@@ -1,3 +1,4 @@
+import os
 from flask import (
     Flask, request, redirect, url_for,
     jsonify, make_response, render_template
@@ -8,28 +9,24 @@ from flask_jwt_extended import (
 )
 from flask import Blueprint
 from flask.views import MethodView
+from flasgger import Swagger
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
 from datetime import datetime
 
-from stockerModel import (
-    showMain, getStockNumber,
-    handleBasicInfo, handleMonthRevenue,
-    handleIncomeSheet, handleBalanceSheet,
-    handleCashFlow, handleDailyInfo,
-    handleStockCommodity
-)
-from frontendModel import (
-    handleRevenueFP
-)
 import time
 from flask_login import (
     LoginManager, UserMixin, login_user,
     current_user, login_required, logout_user
 )
 
-app = Flask(__name__)
+from app import create_app, db
+
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+
+swagger = Swagger(app)
+
 app.config['JSON_AS_ASCII'] = False
 app.secret_key = 'my-secret-key'
 
@@ -53,61 +50,6 @@ formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 # console.setFormatter(formatter)
 # logger.addHandler(console)
 
-
-# Crawler APIs
-app.add_url_rule('/',
-                 'showMain',
-                 view_func=showMain)
-app.add_url_rule('/api/v0/stock_number',
-                 'getStockNumber',
-                 view_func=getStockNumber.as_view(
-                     'getStockNumber_api'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/basic_information/<string:stock_id>',
-                 'handleBasicInfo',
-                 view_func=handleBasicInfo.as_view(
-                     'handleBasicInfo_api'),
-                 methods=['GET', 'POST', 'PATCH'])
-app.add_url_rule('/api/v0/income_sheet/<string:stock_id>',
-                 'handleIncomeSheet',
-                 view_func=handleIncomeSheet.as_view(
-                     'handleIncomeSheet'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/balance_sheet/<string:stock_id>',
-                 'handleBalanceSheet',
-                 view_func=handleBalanceSheet.as_view(
-                     'handleBalanceSheet'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/cash_flow/<string:stock_id>',
-                 'handleCashFlow',
-                 view_func=handleCashFlow.as_view(
-                     'handleCashFlow'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/month_revenue/<string:stock_id>',
-                 'handleMonthRevenue',
-                 view_func=handleMonthRevenue.as_view(
-                     'handleMonthRevenue'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/daily_information/<string:stock_id>',
-                 'handleDailyInfo',
-                 view_func=handleDailyInfo.as_view(
-                     'handleDailyInfo'),
-                 methods=['GET', 'POST'])
-app.add_url_rule('/api/v0/stock_commodity/<string:stock_id>',
-                 'handleStockCommodity',
-                 view_func=handleStockCommodity.as_view(
-                     'handleStockCommodity'),
-                 methods=['GET', 'POST'])
-
-
-# Frontend APIs
-app.add_url_rule('/api/v0/f/month_revenue/<string:stock_id>',
-                 'handleRevenueFP',
-                 view_func=handleRevenueFP.as_view(
-                     'handleRevenueFP'),
-                 methods=['GET'])
-
-
 def after_request(response):
     response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3001'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
@@ -119,7 +61,23 @@ def after_request(response):
 
 @app.route('/testerror')
 def testerror():
+    """
+    This is using to test error.
+    ---
+    parameters:
+    definitions:
+    responses:
+      400:
+        description: A list of colors (may be filtered by palette)
+        schema:
+          $ref: '#/definitions/Palette'
+        examples:
+          rgb: ['red', 'green', 'blue']
+    """
     logging.warning("this is a test")
+    res = make_response(json.dumps("test error"), 400)
+
+    return res
 
 
 @app.route('/testsetcookie')
@@ -235,7 +193,7 @@ def pageNotfound(error):
 @app.errorhandler(500)
 def internalServerError(error):
     logging.error('Server Error: %s', (error))
-    return make_response(json.dumps('404 not found'), 404)
+    return make_response(json.dumps('500 server error'), 500)
 
 
 if __name__ == '__main__':
@@ -253,5 +211,5 @@ if __name__ == '__main__':
     else:
         fileHandler.setLevel(logging.WARNING)
     logger.addHandler(fileHandler)
-
     app.run(host='0.0.0.0', port=5000)
+

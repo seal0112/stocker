@@ -2,11 +2,7 @@ from flask import Flask, request, redirect, url_for
 from flask import jsonify, make_response, render_template
 from flask import Blueprint
 from flask.views import MethodView
-from sqlalchemy import asc, create_engine, func
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from database_setup import Base
-from database_setup import (
+from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
     Balance_Sheet, Cash_Flow, Daily_Information,
     Stock_Commodity
@@ -15,20 +11,8 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
 import datetime
-
-
-# Read file databaseAccount.json in directory critical_flie
-# then can get database username and password.
-with open('./critical_flie/databaseAccount.json') as accountReader:
-    dbAccount = json.loads(accountReader.read())
-
-engine = create_engine(
-    """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-        dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+from .. import db
+from . import main
 
 logger = logging.getLogger()
 BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -43,7 +27,7 @@ logger.addHandler(console)
 
 def showMain():
     checkFourSeasonEPS(2330)
-    b = session.query(Daily_Information).filter_by(
+    b = db.session.query(Daily_Information).filter_by(
         stock_id='1785').all()
     res = [i.serialize for i in b]
     return jsonify(res)
@@ -53,9 +37,9 @@ class getStockNumber(MethodView):
     def get(self):
         companyType = request.args.get('type')
         if companyType is None:
-            stockNum = session.query(Basic_Information.id).all()
+            stockNum = db.session.query(Basic_Information.id).all()
         else:
-            stockNum = session.query(
+            stockNum = db.session.query(
                 Basic_Information.id).filter_by(exchangeType=companyType).all()
         res = [i[0] for i in stockNum]
 
@@ -69,15 +53,15 @@ class getStockNumber(MethodView):
                 raise KeyError
             reportType = payload['reportType']
             if reportType == 'balance_sheet':
-                stockNums = session.query(Balance_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(Balance_Sheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'income_sheet':
-                stockNums = session.query(Income_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(Income_Sheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'cashflow':
-                stockNums = session.query(Cash_Flow.stock_id).filter_by(
+                stockNums = db.session.query(Cash_Flow.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             res = [i[0] for i in stockNums]
@@ -109,19 +93,39 @@ class handleBasicInfo(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new data into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's basic information.
         if request method is POST,
-            According to whether the data is written into the database
+            According to whether the data is written into the database.
             if true, then return http status 201(Create).
             if not, then return http status 200(Ok).
     Raises:
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        basicInfo = session.query(Basic_Information).filter_by(
+        """
+        this api is used to get specific stock's basic information.
+        ---
+        parameters:
+          - name: stock_id
+            in: path
+            type: String
+            required: true
+            default: all
+        definitions:
+        responses:
+          200:
+            description: A list of colors (may be filtered by palette)
+            schema:
+              $ref: '#/definitions/Palette'
+            examples:
+              rgb: ['red', 'green', 'blue']
+          404:
+            description: Couldn't find any basic info. for stock_id.
+        """
+        basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         if basicInfo is None:
             return make_response(
@@ -130,7 +134,7 @@ class handleBasicInfo(MethodView):
             return jsonify(basicInfo.serialize)
 
     def post(self, stock_id):
-        basicInfo = session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)
@@ -160,10 +164,10 @@ class handleBasicInfo(MethodView):
                 for key in payload:
                     basicInfo[key] = payload[key]
 
-            session.add(basicInfo)
-            session.commit()
+            db.session.add(basicInfo)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Basic Info. Reason: %s"
@@ -187,21 +191,21 @@ class handleBasicInfo(MethodView):
         return res
 
     def patch(self, stock_id):
-        basicInfo = session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
             # payload = json.loads(request.data)
             if basicInfo is not None:
                 basicInfo['exchangeType'] = 'delist'
-                session.add(basicInfo)
-                session.commit()
+                db.session.add(basicInfo)
+                db.session.commit()
                 res = make_response(json.dumps('OK'), 200)
             else:
                 res = make_response(
                     json.dumps('No such stock id.'), 404)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
@@ -215,14 +219,14 @@ class handleBasicInfo(MethodView):
 
 class handleDailyInfo(MethodView):
     def get(self, stock_id):
-        dailyInfo = session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(Daily_Information).filter_by(
             stock_id=stock_id).one_or_none()
         return 'Daily Information: %s' % stock_id\
             if dailyInfo is None else dailyInfo.serialize
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        dailyInfo = session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(Daily_Information).filter_by(
             stock_id=stock_id).one_or_none()
         try:
             if dailyInfo is not None:
@@ -238,10 +242,10 @@ class handleDailyInfo(MethodView):
 
             dailyInfo.updatePE()
 
-            session.add(dailyInfo)
-            session.commit()
+            db.session.add(dailyInfo)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Daily Price. Reason: %s"
@@ -251,7 +255,7 @@ class handleDailyInfo(MethodView):
                     'Failed to update %s Daily Price.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
@@ -277,12 +281,12 @@ class handleIncomeSheet(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new income sheet data into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's income sheet.
         if request method is POST,
-            According to whether the data is written into the database
+            According to whether the data is written into the database.
             if true, then return http status 201(Create).
             if not, then return http status 200(Ok).
     Raises:
@@ -291,21 +295,21 @@ class handleIncomeSheet(MethodView):
     def get(self, stock_id):
         mode = request.args.get('mode')
         if mode is None:
-            incomeSheet = session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).first()
         elif mode == 'single':
             year = request.args.get('year')
             season = request.args.get('season')
-            incomeSheet = session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
                         season=season).one_or_none()
         elif mode == 'multiple':
             year = request.args.get('year')
             season = 4 if year is None else int(year) * 4
-            incomeSheet = session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(Income_Sheet).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).limit(season).all()
@@ -325,7 +329,7 @@ class handleIncomeSheet(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        incomeSheet = session.query(Income_Sheet).filter_by(
+        incomeSheet = db.session.query(Income_Sheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -349,10 +353,10 @@ class handleIncomeSheet(MethodView):
                 for key in payload:
                     incomeSheet[key] = payload[key]
 
-            session.add(incomeSheet)
-            session.commit()
+            db.session.add(incomeSheet)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
@@ -362,7 +366,7 @@ class handleIncomeSheet(MethodView):
                     'Failed to update %s Income Sheet.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
@@ -388,7 +392,7 @@ class handleBalanceSheet(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new balance sheet data into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's balance sheet.
@@ -404,7 +408,7 @@ class handleBalanceSheet(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        balanceSheet = session.query(Balance_Sheet).filter_by(
+        balanceSheet = db.session.query(Balance_Sheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -428,10 +432,10 @@ class handleBalanceSheet(MethodView):
                 for key in payload:
                     balanceSheet[key] = payload[key]
 
-            session.add(balanceSheet)
-            session.commit()
+            db.session.add(balanceSheet)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Balance Sheet. Reason: %s"
@@ -441,7 +445,7 @@ class handleBalanceSheet(MethodView):
                     'Failed to update %s Balance Sheet.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Balance Sheett. Reason: %s"
@@ -466,7 +470,7 @@ class handleCashFlow(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new cash flow data into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's cash flow.
@@ -482,7 +486,7 @@ class handleCashFlow(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        cashFlow = session.query(Cash_Flow).filter_by(
+        cashFlow = db.session.query(Cash_Flow).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -506,10 +510,10 @@ class handleCashFlow(MethodView):
                 for key in payload:
                     cashFlow[key] = payload[key]
 
-            session.add(cashFlow)
-            session.commit()
+            db.session.add(cashFlow)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Cash Flowe. Reason: %s"
@@ -519,7 +523,7 @@ class handleCashFlow(MethodView):
                     'Failed to update %s Cash Flow.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Cash Flow. Reason: %s"
@@ -544,7 +548,7 @@ class handleMonthRevenue(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new data into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's month revenue.
@@ -556,10 +560,9 @@ class handleMonthRevenue(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
-        monthReve = session.query(Month_Revenue).filter_by(
+        monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id
             ).order_by(Month_Revenue.year.desc()).limit(60).all()
-        print(monthReve)
         if monthReve is None:
             return make_response(404)
         else:
@@ -568,7 +571,7 @@ class handleMonthRevenue(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        monthReve = session.query(Month_Revenue).filter_by(
+        monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
@@ -596,10 +599,10 @@ class handleMonthRevenue(MethodView):
                 for key in payload:
                     monthReve[key] = payload[key]
 
-            session.add(monthReve)
-            session.commit()
+            db.session.add(monthReve)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Month Revenue. Reason: %s"
@@ -609,7 +612,7 @@ class handleMonthRevenue(MethodView):
                     'Failed to update %s Month Revenue.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ex))
             logging.warning(
                 "400 %s is failed to update Month Revenue. Reason: %s"
@@ -634,7 +637,7 @@ class handleStockCommodity(MethodView):
         if request method is POST, then according to the data entered,
         decide whether to update or add new commodity into database.
     Args:
-        stock_id: a string of stock number.
+        stock_id: a String of stock number.
     Return:
         if request method is GET,
             then return stock_id's commodity.
@@ -646,14 +649,14 @@ class handleStockCommodity(MethodView):
         Exception: An error occurred then return 400.
     """
     def get(self, stock_id):
-        stockCommodity = session.query(Stock_Commodity).filter_by(
+        stockCommodity = db.session.query(Stock_Commodity).filter_by(
             stock_id=stock_id).one_or_none()
         return 'Stock Commodity: %s' % stock_id\
             if stockCommodity is None else stockCommodity.serialize
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        stockCommodity = session.query(Stock_Commodity).filter_by(
+        stockCommodity = db.session.query(Stock_Commodity).filter_by(
             stock_id=stock_id).one_or_none()
         try:
             if stockCommodity is not None:
@@ -665,10 +668,10 @@ class handleStockCommodity(MethodView):
                 for key in payload:
                     stockCommodity[key] = payload[key]
 
-            session.add(stockCommodity)
-            session.commit()
+            db.session.add(stockCommodity)
+            db.session.commit()
         except IntegrityError as ie:
-            session.rollback()
+            db.session.rollback()
             print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
@@ -678,7 +681,7 @@ class handleStockCommodity(MethodView):
                     'Failed to update %s Stock Commodity.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
             logger.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
@@ -695,23 +698,23 @@ class handleStockCommodity(MethodView):
 
 
 def checkFourSeasonEPS(stock_id):
-    quantityOfIncomeSheet = session.query(
-        func.count(Income_Sheet.id)).filter_by(
+    quantityOfIncomeSheet = db.session.query(
+        db.func.count(Income_Sheet.id)).filter_by(
             stock_id=stock_id).scalar()
 
-    stockType = session.query(
+    stockType = db.session.query(
         Basic_Information.exchangeType).filter_by(
             id=stock_id).scalar()
 
     if stockType in ('sii', 'otc') and quantityOfIncomeSheet >= 4:
-        stockEps = session.query(
+        stockEps = db.session.query(
             (Income_Sheet.基本每股盈餘).label('eps')).filter_by(
                 stock_id=stock_id).order_by(
                     Income_Sheet.year.desc()).order_by(
                         Income_Sheet.season.desc()).limit(4).subquery()
-        fourSeasonEps = session.query(func.sum(stockEps.c.eps)).scalar()
+        fourSeasonEps = db.session.query(db.func.sum(stockEps.c.eps)).scalar()
 
-        dailyInfo = session.query(
+        dailyInfo = db.session.query(
             Daily_Information).filter_by(
                 stock_id=stock_id).one_or_none()
         try:
@@ -724,8 +727,53 @@ def checkFourSeasonEPS(stock_id):
 
             dailyInfo.updatePE()
 
-            session.add(dailyInfo)
-            session.commit()
+            db.session.add(dailyInfo)
+            db.session.commit()
         except Exception as ex:
-            session.rollback()
+            db.session.rollback()
             print(ex)
+
+
+main.add_url_rule('/',
+                 'showMain',
+                 view_func=showMain)
+main.add_url_rule('/stock_number',
+                 'getStockNumber',
+                 view_func=getStockNumber.as_view(
+                     'getStockNumber_api'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/basic_information/<stock_id>',
+                 'handleBasicInfo',
+                 view_func=handleBasicInfo.as_view(
+                     'handleBasicInfo_api'),
+                 methods=['GET', 'POST', 'PATCH'])
+main.add_url_rule('/income_sheet/<stock_id>',
+                 'handleIncomeSheet',
+                 view_func=handleIncomeSheet.as_view(
+                     'handleIncomeSheet'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/balance_sheet/<stock_id>',
+                 'handleBalanceSheet',
+                 view_func=handleBalanceSheet.as_view(
+                     'handleBalanceSheet'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/cash_flow/<stock_id>',
+                 'handleCashFlow',
+                 view_func=handleCashFlow.as_view(
+                     'handleCashFlow'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/month_revenue/<stock_id>',
+                 'handleMonthRevenue',
+                 view_func=handleMonthRevenue.as_view(
+                     'handleMonthRevenue'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/daily_information/<stock_id>',
+                 'handleDailyInfo',
+                 view_func=handleDailyInfo.as_view(
+                     'handleDailyInfo'),
+                 methods=['GET', 'POST'])
+main.add_url_rule('/stock_commodity/<stock_id>',
+                 'handleStockCommodity',
+                 view_func=handleStockCommodity.as_view(
+                     'handleStockCommodity'),
+                 methods=['GET', 'POST'])

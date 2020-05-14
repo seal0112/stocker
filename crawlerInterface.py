@@ -1,7 +1,7 @@
 from crawler import (
     crawlBasicInformation, crawlMonthlyRevenue,
     crawlBalanceSheet, crawlIncomeSheet, crawlCashFlow,
-    crawlSummaryStockNoFromTWSE, crawlDailyPrice, 
+    crawlSummaryStockNoFromTWSE, crawlDailyPrice,
     crawlStockCommodity, crawlDelistedCompany
 )
 from datetime import datetime, timedelta
@@ -645,6 +645,7 @@ def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
     for type in companyTypes:
         getBasicInfo(type)
+    updateDelistedCompany()
     updateStockCommodity()
 
     updateDailyPrice()
@@ -655,7 +656,7 @@ def dailyRoutineWork():
     else:
         getMonthlyRevenue(now.year, now.month-1)
 
-    updateIncomeSheet(2019, 4)
+    updateIncomeSheet(2020, 1)
 
 
 if __name__ == '__main__':

@@ -2,11 +2,7 @@ from flask import Flask, request, redirect, url_for
 from flask import jsonify, make_response, render_template
 from flask import Blueprint
 from flask.views import MethodView
-from sqlalchemy import asc, create_engine, func
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from database_setup import Base
-from database_setup import (
+from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
     Balance_Sheet, Cash_Flow, Daily_Information,
     Stock_Commodity
@@ -15,19 +11,8 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
 import datetime
-
-# Read file databaseAccount.json in directory critical_flie
-# then can get database username and password.
-with open('./critical_flie/databaseAccount.json') as accountReader:
-    dbAccount = json.loads(accountReader.read())
-
-engine = create_engine(
-    """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-        dbAccount["username"], dbAccount["password"], dbAccount["ip"]))
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+from . import frontend
+from .. import db
 
 # logger = logging.getLogger()
 # BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -42,8 +27,9 @@ session = DBSession()
 
 class handleRevenueFP(MethodView):
     def get(self, stock_id):
-        monthlyReve = session\
-            .query(
+        monthlyReve = db.session\
+            .query()\
+            .with_entities(
                 Month_Revenue.year,
                 Month_Revenue.month,
                 Month_Revenue.當月營收,
@@ -53,3 +39,10 @@ class handleRevenueFP(MethodView):
             .order_by(Month_Revenue.month.desc())\
             .limit(60).all()
         return json.dumps(monthlyReve)
+
+# Frontend APIs
+frontend.add_url_rule('/month_revenue/<stock_id>',
+                 'handleRevenueFP',
+                 view_func=handleRevenueFP.as_view(
+                     'handleRevenueFP'),
+                 methods=['GET'])
