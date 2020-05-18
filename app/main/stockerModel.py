@@ -1,6 +1,4 @@
-from flask import Flask, request, redirect, url_for
-from flask import jsonify, make_response, render_template
-from flask import Blueprint
+from flask import request, jsonify, make_response
 from flask.views import MethodView
 from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
