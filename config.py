@@ -16,6 +16,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_RECORD_QUERIES = True
     FLASKY_SLOW_DB_QUERY_TIME = 0.5
+    SQLALCHEMY_ENGINE_OPTION = {
+        'pool_pre_ping': True,
+        'pool_recycle': 1800
+    }
 
     @staticmethod
     def init_app(app):
