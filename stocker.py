@@ -9,6 +9,7 @@ from flask_jwt_extended import (
 )
 from flask import Blueprint
 from flask.views import MethodView
+from flask_migrate import Migrate
 from flasgger import Swagger
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -16,15 +17,12 @@ import json
 from datetime import datetime
 
 import time
-from flask_login import (
-    LoginManager, UserMixin, login_user,
-    current_user, login_required, logout_user
-)
 
 from app import create_app, db
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
+migrate = Migrate(app, db)
 swagger = Swagger(app)
 
 app.config['JSON_AS_ASCII'] = False
@@ -34,8 +32,6 @@ app.secret_key = 'my-secret-key'
 app.config['JWT_SECRET_KEY'] = 'tmp-secret'
 jwt = JWTManager(app)
 
-login_manager = LoginManager(app)
-login_manager.init_app(app)
 #  假裝是我們的使用者
 users = {'test': {'password': 'test'}}
 
@@ -89,62 +85,6 @@ def test():
     return res
 
 
-class User(UserMixin):
-    username = ""
-
-    def __repr__(self):
-        return self.username
-
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return self.username
-
-
-@login_manager.user_loader
-def user_loader(username):
-    if username not in users:
-        return
-    user = User()
-    user.id = username
-    return user
-
-
-@app.route('/testforlogin')
-@login_required
-def testlogin():
-    print(current_user.username)
-    return json.dumps("test for login")
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    data = json.loads(request.data)
-    username = data['username']
-    if data['password'] == users[username]['password']:
-        print('password: %s' % users[username]['password'])
-        user = User()
-        user.username = username
-        print(user)
-        print(user.is_authenticated())
-        login_user(user, remember=True)
-
-    return json.dumps('login_test')
-
-
-@app.route('/logout', methods=['GET'])
-@login_required
-def logout():
-    logout_user()
-    return json.dumps('Logged out')
-
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(identity):
@@ -196,6 +136,11 @@ def internalServerError(error):
     return make_response(json.dumps('500 server error'), 500)
 
 
+@app.shell_context_processor
+def make_shell_context():
+    return dict(db=db)
+
+
 if __name__ == '__main__':
     app.debug = True
     app.after_request(after_request)
@@ -211,5 +156,5 @@ if __name__ == '__main__':
     else:
         fileHandler.setLevel(logging.WARNING)
     logger.addHandler(fileHandler)
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
 
