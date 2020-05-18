@@ -26,7 +26,7 @@ from .. import db
 
 
 @frontend.route('/month_revenue/<stock_id>')
-def getFrontEndMonthRevenue(self, stock_id):
+def getFrontEndMonthRevenue(stock_id):
     monthlyReve = db.session\
         .query()\
         .with_entities(
@@ -43,7 +43,7 @@ def getFrontEndMonthRevenue(self, stock_id):
 
 
 @frontend.route('/eps/<stock_id>')
-def getFrontEndEPS(self, stock_id):
+def getFrontEndEPS(stock_id):
     EPS = db.session\
         .query()\
         .with_entities(
@@ -59,7 +59,7 @@ def getFrontEndEPS(self, stock_id):
 
 
 @frontend.route('/daily_info/<stock_id>')
-def getFrontEndDailyInfo(self, stock_id):
+def getFrontEndDailyInfo(stock_id):
     dailyInfo = db.session\
         .query()\
         .with_entities(
@@ -74,7 +74,7 @@ def getFrontEndDailyInfo(self, stock_id):
 
 
 @frontend.route('/daily_info/<stock_id>')
-def getFrontEndIncomeSheet(self, stock_id):
+def getFrontEndIncomeSheet(stock_id):
     incomeSheet = db.session\
         .query()\
         .with_entities(
@@ -95,7 +95,7 @@ def getFrontEndIncomeSheet(self, stock_id):
 
 
 @frontend.route('/daily_info/<stock_id>')
-def getFrontEndProfitAnalysis(self, stock_id):
+def getFrontEndProfitAnalysis(stock_id):
     profit = db.session\
         .query()\
         .with_entities(
@@ -114,7 +114,7 @@ def getFrontEndProfitAnalysis(self, stock_id):
 
 
 @frontend.route('/op_expense_analysis/<stock_id>')
-def getFrontEndOperationExpenseAnalysis(self, stock_id):
+def getFrontEndOperationExpenseAnalysis(stock_id):
     operationExpense = db.session\
         .query()\
         .with_entities(
