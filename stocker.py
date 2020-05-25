@@ -1,14 +1,13 @@
 import os
 from flask import (
     Flask, request, redirect, url_for,
-    jsonify, make_response, render_template
+    jsonify, make_response, render_template,
 )
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
-from flask import Blueprint
-from flask.views import MethodView
+
 from flask_migrate import Migrate
 from flasgger import Swagger
 import logging
@@ -26,7 +25,6 @@ migrate = Migrate(app, db)
 swagger = Swagger(app)
 
 app.config['JSON_AS_ASCII'] = False
-app.secret_key = 'my-secret-key'
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'tmp-secret'
@@ -47,7 +45,7 @@ formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 # logger.addHandler(console)
 
 def after_request(response):
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3001'
+    response.headers['Access-Control-Allow-Origin'] = 'https://localhost:3001'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
     response.headers['Access-Control-Allow-Headers'] =\

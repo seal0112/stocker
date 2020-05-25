@@ -3,11 +3,17 @@ import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-with open('./critical_flie/databaseAccount.json') as accountReader:
+with open('{}/critical_flie/databaseAccount.json'.format(
+        basedir)) as accountReader:
     dbAccount = json.loads(accountReader.read())
+
+with open('{}/critical_flie/client_secret.json'.format(
+        basedir)) as clientSecretReader:
+    client_secret = json.loads(clientSecretReader.read())
 
 DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
         dbAccount["username"], dbAccount["password"], dbAccount["ip"])
+
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess db.String'
@@ -20,6 +26,7 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 1800
     }
+    CLIENT_SECRET = client_secret
 
     @staticmethod
     def init_app(app):
