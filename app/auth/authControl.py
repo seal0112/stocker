@@ -22,9 +22,8 @@ def login():
     store_user_id = current_user.get_id()
     if store_id_token is not None and store_user_id is not None:
         response = make_response(
-            json.dumps(
-                {'res': 'Current user is already connected'}),200)
-        print('Current user is already connected.')
+            jsonify(
+                {'res': 'Current user is already connected'}), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -51,7 +50,6 @@ def login():
             if userInfo['aud'] != CLIENT_ID:
                 res = make_response(
                     "Token's client ID does not match app's",401)
-                res.headers['Content-Type'] = 'application/json'
                 return res
 
             external_id = userInfo['sub']
@@ -91,7 +89,6 @@ def login():
         res = make_response(
             json.dumps(
                 'Failed to upgrade the authorization code'), 401)
-        res.headers['Content-Type'] = 'application/json'
         return res
 
     userId = getUserID(external_id, code['external_type'])
@@ -105,11 +102,10 @@ def login():
         login_user(user=user, remember=True, duration=timedelta(days=1))
     else:
         res = make_response(
-            json.dumps(
+            jsonify(
                 'Account is not active'), 403)
-        res.headers['Content-Type'] = 'application/json'
         return res
-    return json.dumps({'isAuthenticated': True})
+    return make_response(jsonify({'isAuth': True}), 200)
 
 
 @auth.route("/logout")
@@ -117,7 +113,20 @@ def login():
 def logout():
     del session['token']
     logout_user()
-    return json.dumps({'isAuthenticated': False})
+    return jsonify({'isAuth': False})
+
+
+@auth.route("/check_auth")
+def checkAuthenticated():
+    store_id_token = session.get('token')
+    store_user_id = current_user.get_id()
+    if store_id_token is not None and store_user_id is not None:
+        response = make_response(jsonify({'isAuth': True}), 200)
+        response.headers['Content-Type'] = 'application/json'
+    else:
+        response = make_response(jsonify({'isAuth': False}), 200)
+        response.headers['Content-Type'] = 'application/json'
+    return response
 
 
 def createUser(personalData, external_type):
