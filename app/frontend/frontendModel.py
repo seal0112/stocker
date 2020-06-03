@@ -22,6 +22,44 @@ from sqlalchemy.sql import func
 # console.setFormatter(formatter)
 # logger.addHandler(console)
 
+
+@frontend.route('/stock_info_commodity/<stock_id>')
+def getFrontEndStockInfoAndCommodity(stock_id):
+    resData = {}
+
+    stockInfo = db.session\
+        .query()\
+        .with_entities(
+            Basic_Information.公司簡稱,
+            Basic_Information.產業類別,
+            Basic_Information.exchangeType)\
+        .filter_by(id=stock_id)\
+        .one_or_none()
+    infoData = stockInfo._asdict()
+    resData['stockInformation'] = infoData
+
+    stockCommo = db.session\
+        .query()\
+        .with_entities(
+            Stock_Commodity.stock_future,
+            Stock_Commodity.stock_option,
+            Stock_Commodity.small_stock_future,)\
+        .filter_by(stock_id=stock_id)\
+        .one_or_none()
+
+    if stockCommo is None:
+        commoData = {
+            'stock_future': False,
+            'stock_option': False,
+            'small_stock_future': False
+        }
+    else:
+        commoData = stockCommo._asdict()
+    resData['stockCommodity'] = commoData
+
+    return jsonify(resData)
+
+
 @frontend.route('/daily_info/<stock_id>')
 def getFrontEndDailyInfo(stock_id):
     dailyInfo = db.session\
@@ -51,7 +89,7 @@ def getFrontEndMonthRevenue(stock_id):
         .order_by(Month_Revenue.year.desc())\
         .order_by(Month_Revenue.month.desc())\
         .limit(60).all()
-    data = [row._asdict() for row in monthlyReve]
+    data = [row._asdict() for row in monthlyReve][::-1]
     return jsonify(data)
 
 
@@ -61,14 +99,14 @@ def getFrontEndEPS(stock_id):
         .query()\
         .with_entities(
             func.concat(
-                Income_Sheet.year, '-', Income_Sheet.season).label(
+                Income_Sheet.year, 'Q', Income_Sheet.season).label(
                     "Year/Season"),
             Income_Sheet.基本每股盈餘)\
         .filter_by(stock_id=stock_id)\
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
         .limit(20).all()
-    data = [row._asdict() for row in EPS]
+    data = [row._asdict() for row in EPS][::-1]
     return jsonify(data)
 
 
@@ -90,7 +128,7 @@ def getFrontEndIncomeSheet(stock_id):
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
         .limit(20).all()
-    data = [row._asdict() for row in incomeSheet]
+    data = [row._asdict() for row in incomeSheet][::-1]
     return jsonify(data)
 
 
@@ -110,7 +148,7 @@ def getFrontEndProfitAnalysis(stock_id):
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
         .limit(20).all()
-    data = [row._asdict() for row in profit]
+    data = [row._asdict() for row in profit][::-1]
     return jsonify(data)
 
 
@@ -134,5 +172,5 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
         .limit(20).all()
-    data = [row._asdict() for row in operationExpense]
+    data = [row._asdict() for row in operationExpense][::-1]
     return jsonify(data)
