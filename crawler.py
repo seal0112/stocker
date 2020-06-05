@@ -6,6 +6,7 @@ import time
 import random
 from datetime import datetime
 from io import StringIO
+import feedparser
 
 
 def crawlCriticalInformation(parse_to_json=False):
@@ -650,7 +651,7 @@ def crawlSummaryStockNoFromTWSE(
           + str(westernYearIn) + 'Q' + str(season), end='...')
     year = str(westernYearIn - 1911)
 
-    if reportTypes is 'balance_sheet':
+    if reportTypes == 'balance_sheet':
         url = "https://mops.twse.com.tw/mops/web/ajax_t163sb05"
     else:
         url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb04'
@@ -706,3 +707,27 @@ def crawlStockCommodity():
     dfs = pd.read_html(data.text, converters={'證券代號': str})
     return dfs[0][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
 
+
+
+def crawlRSSCompanyNews(companyID):
+    """
+    @description:
+        爬取各股每日新聞
+    @return:
+
+    @param:
+        companyID => int
+    """
+
+    coID = str(companyID)
+    url = "https://tw.stock.yahoo.com/rss/s/" + coID
+    
+    res = requests.get(url)
+    res.encoding = "big5"
+    feed = feedparser.parse(res.text)
+    for item in feed.entries:
+        print(item.title)
+        print(item.link)
+        print(item.published)
+        print(item.description)
+        print("======================================")
