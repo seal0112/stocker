@@ -154,5 +154,5 @@ if __name__ == '__main__':
     else:
         fileHandler.setLevel(logging.WARNING)
     logger.addHandler(fileHandler)
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(host='0.0.0.0', port=5000, ssl_context='adhoc', threaded=True)
 
