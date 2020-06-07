@@ -648,16 +648,45 @@ def dailyRoutineWork():
     updateDelistedCompany()
     updateStockCommodity()
 
-    updateDailyPrice()
+    if datetime.date.today().weekday() in [0,1,2,3,4]:
+        updateDailyPrice()
 
     now = datetime.now()
-    if now.month-1 == 0:
+    if now.month == 1:
         getMonthlyRevenue(now.year-1, 12)
     else:
         getMonthlyRevenue(now.year, now.month-1)
 
+    if 1 <= now.month <= 5:
+        updateIncomeSheet(now.year, 4)
+    if 4 <= now.month <= 5:
+        updateIncomeSheet(now.year, 1)
+    if 7 <= now.month <= 9:
+        updateIncomeSheet(now.year, 2)
+    if 10 <= now.month <= 11:
+        updateIncomeSheet(now.year, 3)
 
-    updateIncomeSheet(2020, 1)
+
+def requireHistoryData():
+    for type in companyTypes:
+        getBasicInfo(type)
+    updateDelistedCompany()
+    updateStockCommodity()
+
+    if datetime.date.today().weekday() in [0,1,2,3,4]:
+        updateDailyPrice()
+
+    now = datetime.now()
+    for month in range(now.month-1, 1, -1):
+        getMonthlyRevenue(now.year, month)
+
+    for year in range(now.year-1, 2012, -1):
+        for month in range(12, 0, -1):
+            getMonthlyRevenue(year, month)
+
+    for year in range(now.year-1, 2012, -1):
+        for season in [1,2,3,4]:
+            updateIncomeSheet(year, season)
 
 
 if __name__ == '__main__':
