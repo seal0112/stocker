@@ -16,7 +16,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import pandas as pd
 
-with open('./critical_flie/serverConfig.json') as configReader:
+with open('./critical_file/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
 
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
@@ -656,6 +656,7 @@ def dailyRoutineWork():
     else:
         getMonthlyRevenue(now.year, now.month-1)
 
+
     updateIncomeSheet(2020, 1)
 
 
@@ -663,10 +664,8 @@ if __name__ == '__main__':
     '''
     usage: get basic information
     '''
-    # getBasicInfo('sii')
-    # getBasicInfo('otc')
-    # getBasicInfo('rotc')
-    # getBasicInfo('pub')
+    # for type in companyTypes:
+    #     getBasicInfo(type)
 
     '''
     usage: get monthly revenue
@@ -688,27 +687,4 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    # years = [2015, 2014, 2013, 2012]
-    # seasons = [1, 2, 3, 4]
-    # for year in years:
-    #     for season in seasons:
-    #         updateCashFlow(year, season)
-
-    # start = datetime.now()
-    # year = 2013
-    # reportType = 'income_sheet'
-    # seasons = [1, 2, 3, 4]
-
-    # for season in seasons:
-    # updateIncomeSheet(2018, 4)
-
-    # end = datetime.now()
-    # print("start time: " + str(start))
-    # print("end time: " + str(end))
-    # print("time elapse: " + str(end-start))
-
-    # getIncomeSheet(3443, 2019, 4)
-    # getBalanceSheet(2337, 2019, 2)
-
-    # getCashFlow()
     dailyRoutineWork()

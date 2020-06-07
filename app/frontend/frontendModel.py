@@ -35,7 +35,12 @@ def getFrontEndStockInfoAndCommodity(stock_id):
             Basic_Information.exchangeType)\
         .filter_by(id=stock_id)\
         .one_or_none()
-    infoData = stockInfo._asdict()
+    if stockInfo == None:
+        res = make_response(
+                json.dumps("Couldn't find stock: {}".format(stock_id)), 404)
+        return res
+    else:
+        infoData = stockInfo._asdict()
     resData['stockInformation'] = infoData
 
     stockCommo = db.session\

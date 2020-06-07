@@ -3,11 +3,11 @@ import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-with open('{}/critical_flie/databaseAccount.json'.format(
+with open('{}/critical_file/databaseAccount.json'.format(
         basedir)) as accountReader:
     dbAccount = json.loads(accountReader.read())
 
-with open('{}/critical_flie/client_secret.json'.format(
+with open('{}/critical_file/client_secret.json'.format(
         basedir)) as clientSecretReader:
     client_secret = json.loads(clientSecretReader.read())
 

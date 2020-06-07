@@ -3,7 +3,6 @@ from . import main
 
 @main.errorhandler(404)
 def pageNotfound(error):
-    logging.info('Page not found: %s', (request.path))
     return make_response(json.dumps('404 not foundss'), 404)
 
 
