@@ -3,6 +3,8 @@
 ## Crawler and Back-End for Taiwan stocks
 Stocker是一個使用```爬蟲(Crawler)```抓取台灣上市櫃股票財報並使用```後端程式(Flask)```存入資料庫(MariaDB)的專案，資料庫的選用可以依照個人喜好選擇其他SQL類型資料庫
 
+前端可以和[react-stocker](https://github.com/seal0112/react-stocker)一起搭配使用
+
 ## Prerequisites
 
 請事先安裝好python3以及SQL database
@@ -19,7 +21,7 @@ $ cd stocker/
 
 #### 安裝virtual environment
 ```shell
-$ pip3 install virtualenv
+$ pip install virtualenv
 ```
 
 #### 建立虛擬環境
@@ -44,7 +46,13 @@ $ pip install -r requirements.txt
 
 #### 啟動
 ```shell
-$ python3 stocker.py
+$ gunicorn wsgi:app
+$ gunicorn --bind=0.0.0.0:5000 wsgi:app # 指定host以及port
+```
+
+#### 測試用的啟動, 程式更動時會重啟
+```shell
+$ gunicorn --reload wsgi:app
 ```
 
 ## Configuration
