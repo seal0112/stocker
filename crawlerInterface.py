@@ -4,7 +4,7 @@ from crawler import (
     crawlSummaryStockNoFromTWSE, crawlDailyPrice,
     crawlStockCommodity, crawlDelistedCompany
 )
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import json
 import requests
 import time
@@ -21,6 +21,8 @@ with open('./critical_file/serverConfig.json') as configReader:
 
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
+stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
+print(stockerUrl)
 
 # logging setting
 log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
@@ -52,10 +54,7 @@ def getBasicInfo(dataType='sii'):
         dataPayload = json.loads(
             data.iloc[i].to_json(force_ascii=False))
         dataPayload['exchangeType'] = dataType
-        url = "http://%s:%s/api/v0/basic_information/%s" % (
-            serverConf['ip'],
-            serverConf['port'],
-            dataPayload['id'])
+        url = "{}/basic_information/{}".format(stockerUrl, dataPayload['id'])
         res = requests.post(url, data=json.dumps(dataPayload))
         # print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
         # print(dataPayload['id'], end=' ')
@@ -125,10 +124,7 @@ def getMonthlyRevenue(westernYearIn=2013, monthIn=1):
         dataPayload = json.loads(data.iloc[i].to_json(force_ascii=False))
         dataPayload['year'] = westernYearIn
         dataPayload['month'] = str(monthIn)
-        url = "http://%s:%s/api/v0/month_revenue/%s" % (
-            serverConf['ip'],
-            serverConf['port'],
-            str(dataPayload['stock_id']))
+        url = "{}/month_revenue/{}".format(stockerUrl, dataPayload['stock_id'])
         res = requests.post(url, data=json.dumps(dataPayload))
         # print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
         # print(dataPayload['stock_id'], end=' ')
@@ -219,8 +215,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
                     dataPayload[key] = round((dataPayload[
                         key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
 
-        basicInfoUrl = "http://%s:%s/api/v0/basic_information/%s" % (
-            serverConf['ip'], serverConf['port'], companyID)
+        url = "{}/basic_information/{}".format(stockerUrl, companyID)
 
         basicInfo = requests.get(basicInfoUrl)
 
@@ -234,10 +229,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    incomeSheetApi = "http://%s:%s/api/v0/income_sheet/%s" % (
-            serverConf['ip'],
-            serverConf['port'],
-            str(companyID))
+    incomeSheetApi = "{}/income_sheet/{}".format(stockerUrl, companyID)
     res = requests.post(incomeSheetApi, data=json.dumps(dataPayload))
 
     if res.status_code == 201:
@@ -305,8 +297,7 @@ def updateDailyPrice(datetimeIn=datetime.now()):
 
     stockTypes = ['sii', 'otc']
     for stockType in stockTypes:
-        stockNumsApi = 'http://%s:%s/api/v0/stock_number?type=%s' % (
-            serverConf['ip'], serverConf['port'], stockType)
+        stockNumsApi = "{}/stock_number?type={}".format(stockerUrl, stockType)
         stockIDs = json.loads(requests.get(stockNumsApi).text)
 
         for id in stockIDs:
@@ -326,8 +317,7 @@ def updateDailyPrice(datetimeIn=datetime.now()):
             except:
                 break
 
-            dailyInfoApi = 'http://%s:%s/api/v0/daily_information/%s' % (
-                serverConf['ip'], serverConf['port'], id)
+            dailyInfoApi = "{}/daily_information/{}".format(stockerUrl, id)
             dataPayload = {}
 
             try:
@@ -349,9 +339,7 @@ def updateDailyPrice(datetimeIn=datetime.now()):
                 print("%s get into IndexError with %s"% (id, ie))
             except Exception as ex:
                 print(ex)
-                print(id)
-                print(dataStock)
-                print("!!!!!!!!!!!!!!!!!")
+                print("{}: {}".format(id, dataStock))
             else:
                 requests.post(dailyInfoApi, data=json.dumps(dataPayload))
 
@@ -388,10 +376,7 @@ def getBalanceSheet(
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    balanceSheetApi = "http://%s:%s/api/v0/balance_sheet/%s" % (
-        serverConf['ip'],
-        serverConf['port'],
-        str(companyID))
+    balanceSheetApi = "{}/daily_information/{}".format(stockerUrl, companyID)
     res = requests.post(balanceSheetApi, data=json.dumps(dataPayload))
 
     if res.status_code == 201:
@@ -487,10 +472,7 @@ def getCashFlow(
     dataPayload['year'] = westernYearIn
     dataPayload['season'] = str(seasonIn)
 
-    cashflowApi = "http://%s:%s/api/v0/cash_flow/%s" % (
-        serverConf['ip'],
-        serverConf['port'],
-        str(companyID))
+    cashflowApi = "{}/cash_flow/{}".format(stockerUrl, companyID)
 
     idx = 0
     while(True):
@@ -576,15 +558,13 @@ def updateDelistedCompany():
     for companyType in companyTypes:
         data = crawlDelistedCompany(companyType)
         for d in data:
-            serverBasicInfoApi = "http://%s:%s/api/v0/basic_information/%s" % (
-                serverConf['ip'], serverConf['port'], d)
+            serverBasicInfoApi = "{}/basic_information/{}".format(stockerUrl, d)
             requests.patch(serverBasicInfoApi)
 
 
 def updateStockCommodity():
     data = crawlStockCommodity()
-    serverStockCommodityApi = "http://%s:%s/api/v0/stock_commodity/" % (
-        serverConf['ip'], serverConf['port'])
+    serverStockCommodityApi = "{}/stock_commodity".format(stockerUrl)
     for index, row in data.iterrows():
         dataPayload = {}
         if row["標準型證券股數"] in [2000, 100]:
@@ -596,29 +576,27 @@ def updateStockCommodity():
 
             dataPayload["stock_id"] = row["證券代號"]
             res = requests.post(
-                    "%s%s" % (serverStockCommodityApi, dataPayload['stock_id']),
+                    "{}/{}".format(
+                        serverStockCommodityApi, dataPayload['stock_id']),
                     data=json.dumps(dataPayload))
 
 
 def getSummaryStockNoServerExist(
         westernYearIn=2019, seasonIn=2, reportType='balance_sheet'):
-    url = "http://%s:%s/api/v0/stock_number" % (
-        serverConf['ip'],
-        serverConf['port'])
+    stockNumUrl = "{}/stock_number".format(stockerUrl)
     payload = {}
     payload['year'] = westernYearIn
     payload['season'] = seasonIn
     payload['reportType'] = reportType
     print("exist " + reportType + " " +
           str(westernYearIn) + "Q" + str(seasonIn), end='...')
-    res = requests.post(url, data=json.dumps(payload))
+    res = requests.post(stockNumUrl, data=json.dumps(payload))
     print("done.")
     return json.loads(res.text)
 
 
 def getStockNoBasicInfo():
-    url = "http://%s:%s/api/v0/stock_number" % (
-        serverConf['ip'], serverConf['port'])
+    url = "{}/stock_number".format(stockerUrl)
     print('Basic Infomation', end='...')
     res = requests.get(url)
     print("done.")
@@ -630,9 +608,13 @@ def getFinStatFromServer(
         westernYear,
         season,
         reportTypes='income_sheet',):
-    finStatApi = "http://%s:%s/api/v0/%s/%s?mode=single&year=%s&season=%s" % (
-        serverConf['ip'], serverConf['port'], reportTypes,
-        stock_id, westernYear, season)
+    finStatApi = "{url}/{reportType}/{stockId}?mode=single&year={year}&season={season}"\
+    .format(
+        url=stockerUrl,
+        reportType=reportTypes,
+        stockId=stock_id,
+        year=westernYear,
+        season=season)
 
     data = requests.get(finStatApi)
     if data.status_code == 404:
@@ -648,7 +630,7 @@ def dailyRoutineWork():
     updateDelistedCompany()
     updateStockCommodity()
 
-    if datetime.date.today().weekday() in [0,1,2,3,4]:
+    if date.today().weekday() in [0,1,2,3,4]:
         updateDailyPrice()
 
     now = datetime.now()
@@ -667,7 +649,7 @@ def dailyRoutineWork():
         updateIncomeSheet(now.year, 3)
 
 
-def requireHistoryData():
+def crawlHistoryData():
     for type in companyTypes:
         getBasicInfo(type)
     updateDelistedCompany()
