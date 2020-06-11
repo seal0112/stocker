@@ -9,7 +9,7 @@ Stocker是一個使用```爬蟲(Crawler)```抓取台灣上市櫃股票財報並�
 
 請事先安裝好python3以及SQL database
 - [python3](https://www.python.org/downloads/)
-- [SQL (MySQl, PostgreSQL)]()
+- [SQL (MySQL/MariaDB, PostgreSQL, SQLite)]()
 
 ## Installation
 
