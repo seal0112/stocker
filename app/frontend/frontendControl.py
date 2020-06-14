@@ -65,6 +65,22 @@ def getFrontEndStockInfoAndCommodity(stock_id):
     return jsonify(resData)
 
 
+@frontend.route('/check_stock_exist/<stock_id>')
+def checkStockExist(stock_id):
+    stockInfo = db.session\
+        .query(Basic_Information)\
+        .filter_by(id=stock_id)\
+        .one_or_none()
+    if stockInfo == None:
+        res = make_response(
+                json.dumps("Couldn't find stock: {}".format(stock_id)), 404)
+        return res
+    else:
+        res = make_response(
+                json.dumps("stock exist: {}".format(stock_id)), 200)
+        return res
+
+
 @frontend.route('/daily_info/<stock_id>')
 def getFrontEndDailyInfo(stock_id):
     dailyInfo = db.session\
@@ -76,8 +92,13 @@ def getFrontEndDailyInfo(stock_id):
             Daily_Information.近四季每股盈餘)\
         .filter_by(stock_id=stock_id)\
         .one_or_none()
-    data = dailyInfo._asdict()
-    return jsonify(data)
+    if dailyInfo == None:
+        res = make_response(
+                json.dumps("Couldn't find stock: {}".format(stock_id)), 404)
+        return res
+    else:
+        data = dailyInfo._asdict()
+        return jsonify(data)
 
 
 @frontend.route('/month_revenue/<stock_id>')
