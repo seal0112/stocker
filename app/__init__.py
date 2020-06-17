@@ -1,12 +1,14 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
 from config import config
 
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'https://localhost:3001/login'
+jwt = JWTManager()
 
 
 def create_app(config_name):
@@ -16,6 +18,7 @@ def create_app(config_name):
 
     db.init_app(app)
     login_manager.init_app(app)
+    jwt.init_app(app)
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')

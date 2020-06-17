@@ -12,7 +12,7 @@ with open('{}/critical_file/client_secret.json'.format(
     client_secret = json.loads(clientSecretReader.read())
 
 DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-        dbAccount["username"], dbAccount["password"], dbAccount["ip"])
+    dbAccount["username"], dbAccount["password"], dbAccount["ip"])
 
 
 class Config:
@@ -26,6 +26,7 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 1800
     }
+    JWT_SECRET_KEY = 'tmp-secret'
     CLIENT_SECRET = client_secret
 
     @staticmethod
@@ -56,4 +57,3 @@ config = {
 
     'default': DevelopmentConfig
 }
-

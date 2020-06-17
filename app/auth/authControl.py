@@ -6,6 +6,10 @@ from flask_login import (
     login_user, logout_user,
     login_required, current_user
 )
+from flask_jwt_extended import (
+    JWTManager, jwt_required,
+    create_access_token, get_jwt_identity
+)
 from . import auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -29,14 +33,14 @@ def login():
 
     try:
         code = request.get_json()
-        if code['external_type']=='google':
+        if code['external_type'] == 'google':
             # Specify the CLIENT_ID of the app that accesses the backend:
             CLIENT_ID = current_app.config[
                 'CLIENT_SECRET']['google']['CLIENT_ID']
             userInfo = id_token.verify_oauth2_token(
-               code['token'],
-               grequests.Request(),
-               CLIENT_ID
+                code['token'],
+                grequests.Request(),
+                CLIENT_ID
             )
 
             # Or, if multiple clients access the backend server:
@@ -49,11 +53,11 @@ def login():
 
             if userInfo['aud'] != CLIENT_ID:
                 res = make_response(
-                    "Token's client ID does not match app's",401)
+                    "Token's client ID does not match app's", 401)
                 return res
 
             external_id = userInfo['sub']
-        elif code['external_type']=='facebook':
+        elif code['external_type'] == 'facebook':
 
             app_id = current_app.config[
                 'CLIENT_SECRET']['facebook']['app_id']
@@ -74,10 +78,14 @@ def login():
             print(payload.json())
             token = payload.json()['access_token']
 
-            personalUrl = 'https://graph.facebook.com/v7.0/me?access_token={}&fields=name,id,email'\
-            .format((token))
-            picUrl = 'https://graph.facebook.com/v7.0/me/picture?access_token=%s&redirect=0&height=200&width=200'\
-            % token
+            personalUrl = \
+                'https://graph.facebook.com/v7.0/me?\
+                access_token={}&fields=name,id,email'\
+                .format((token))
+            picUrl = \
+                'https://graph.facebook.com/v7.0/me/picture?\
+                access_token=%s&redirect=0&height=200&width=200'\
+                % token
 
             userInfo = requests.get(personalUrl).json()
             pictureData = requests.get(picUrl).json()
@@ -85,7 +93,6 @@ def login():
 
             external_id = userInfo['id']
     except Exception as fx:
-        print(fx)
         res = make_response(
             json.dumps(
                 'Failed to upgrade the authorization code'), 401)
@@ -129,6 +136,18 @@ def checkAuthenticated():
     return response
 
 
+@auth.route("/user_info")
+@login_required
+def getUserInfo():
+    store_id_token = session.get('token')
+    store_user_id = current_user.get_id()
+    data = {
+        "username": current_user.username,
+        "picture": current_user.profile_pic,
+    }
+    return jsonify(data)
+
+
 def createUser(personalData, external_type):
     newUser = User()
 
@@ -143,6 +162,9 @@ def createUser(personalData, external_type):
         newUser['external_id'] = personalData['id']
         newUser['email'] = personalData['email']
         newUser['profile_pic'] = personalData['profile_pic']
+    elif external_type == 'internal':
+        newUser['username'] = personalData['name']
+        newUser['password'] = personalData['password']
     newUser['authenticate'] = True
     newUser['active'] = False
 
@@ -170,3 +192,33 @@ def getUserID(external_id, external_type):
         return user.id
     except:
         return None
+
+
+@auth.route('/login_jwt', methods=['POST'])
+def login_jwt():
+    print(request.is_json)
+    print(request.data)
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    username = request.json.get('username', None)
+    password = request.json.get('password', None)
+    if not username:
+        return jsonify({"msg": "Missing username parameter"}), 400
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+
+    if username != 'test' or password != 'test':
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    # Identity can be any data that is json serializable
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token), 200
+
+
+@auth.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200

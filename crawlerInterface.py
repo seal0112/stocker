@@ -56,10 +56,6 @@ def getBasicInfo(dataType='sii'):
         dataPayload['exchangeType'] = dataType
         url = "{}/basic_information/{}".format(stockerUrl, dataPayload['id'])
         res = requests.post(url, data=json.dumps(dataPayload))
-        # print('(' + str(i) + '/' + str(len(data)) + ')', end=' ')
-        # print(dataPayload['id'], end=' ')
-        # print(res)
-        # time.sleep(0.05)
 
 
 def transformHeaderNoun(data, fileName):
@@ -609,12 +605,8 @@ def getFinStatFromServer(
         season,
         reportTypes='income_sheet',):
     finStatApi = "{url}/{reportType}/{stockId}?mode=single&year={year}&season={season}"\
-    .format(
-        url=stockerUrl,
-        reportType=reportTypes,
-        stockId=stock_id,
-        year=westernYear,
-        season=season)
+    .format(url=stockerUrl, reportType=reportTypes, stockId=stock_id,
+            year=westernYear, season=season)
 
     data = requests.get(finStatApi)
     if data.status_code == 404:

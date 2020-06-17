@@ -24,6 +24,31 @@ logger.addHandler(console)
 
 
 def showMain():
+    """
+    This is the summary defined in yaml file
+    First line is the summary
+    All following lines until the hyphens is added to description
+    the format of the first lines until 3 hyphens will be not yaml compliant
+    but everything below the 3 hyphens should be.
+    ---
+    tags:
+      - main page
+    parameters:
+      - in: path
+        name: username
+        type: string
+        required: true
+    responses:
+      200:
+        description: A single user item
+        schema:
+          id: rec_username
+          properties:
+            username:
+              type: string
+              description: The name of the user
+              default: 'steve-harris'
+    """
     checkFourSeasonEPS(2330)
     b = db.session.query(Daily_Information).filter_by(
         stock_id='1785').all()
@@ -32,6 +57,7 @@ def showMain():
 
 
 class getStockNumber(MethodView):
+    decorators = []
     def get(self):
         companyType = request.args.get('type')
         if companyType is None:

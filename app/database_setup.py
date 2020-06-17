@@ -236,7 +236,8 @@ class Income_Sheet(db.Model):
         return res
 
     def __repr__(self):
-        return "%s: %s: %s: %s" % (self.id, self.stock_id, self.year, self.season)
+        return "%s: %s: %s: %s" % (
+            self.id, self.stock_id, self.year, self.season)
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -255,7 +256,7 @@ class Month_Revenue(db.Model):
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(
         db.Enum('1', '2', '3', '4', '5', '6',
-             '7', '8', '9', '10', '11', '12'), nullable=False)
+                '7', '8', '9', '10', '11', '12'), nullable=False)
     update_date = db.Column(
         db.Date, nullable=False,
         default=datetime.datetime.now().strftime("%Y-%m-%d"))
@@ -403,5 +404,3 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-

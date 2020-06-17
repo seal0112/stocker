@@ -4,6 +4,7 @@ from ..database_setup import (
     Balance_Sheet, Cash_Flow, Daily_Information,
     Stock_Commodity
 )
+from flask_login import login_required, current_user
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
@@ -24,6 +25,7 @@ from sqlalchemy.sql import func
 
 
 @frontend.route('/stock_info_commodity/<stock_id>')
+@login_required
 def getFrontEndStockInfoAndCommodity(stock_id):
     resData = {}
 
@@ -66,6 +68,7 @@ def getFrontEndStockInfoAndCommodity(stock_id):
 
 
 @frontend.route('/check_stock_exist/<stock_id>')
+@login_required
 def checkStockExist(stock_id):
     stockInfo = db.session\
         .query(Basic_Information)\
@@ -82,6 +85,7 @@ def checkStockExist(stock_id):
 
 
 @frontend.route('/daily_info/<stock_id>')
+@login_required
 def getFrontEndDailyInfo(stock_id):
     dailyInfo = db.session\
         .query()\
@@ -102,6 +106,7 @@ def getFrontEndDailyInfo(stock_id):
 
 
 @frontend.route('/month_revenue/<stock_id>')
+@login_required
 def getFrontEndMonthRevenue(stock_id):
     monthlyReve = db.session\
         .query()\
@@ -120,6 +125,7 @@ def getFrontEndMonthRevenue(stock_id):
 
 
 @frontend.route('/eps/<stock_id>')
+@login_required
 def getFrontEndEPS(stock_id):
     EPS = db.session\
         .query()\
@@ -137,6 +143,7 @@ def getFrontEndEPS(stock_id):
 
 
 @frontend.route('/income_sheet/<stock_id>')
+@login_required
 def getFrontEndIncomeSheet(stock_id):
     incomeSheet = db.session\
         .query()\
@@ -159,6 +166,7 @@ def getFrontEndIncomeSheet(stock_id):
 
 
 @frontend.route('/profit_analysis/<stock_id>')
+@login_required
 def getFrontEndProfitAnalysis(stock_id):
     profit = db.session\
         .query()\
@@ -179,6 +187,7 @@ def getFrontEndProfitAnalysis(stock_id):
 
 
 @frontend.route('/op_expense_analysis/<stock_id>')
+@login_required
 def getFrontEndOperationExpenseAnalysis(stock_id):
     operationExpense = db.session\
         .query()\
