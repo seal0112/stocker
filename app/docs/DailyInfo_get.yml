@@ -1,0 +1,41 @@
+GET stock's daily information
+---
+tags:
+  - Daily Information
+summary: GET stock's daily information.
+parameters:
+  - name: stock_id
+    in: path
+    description: ID of basic information
+    required: true
+    schema:
+      type: String
+produces:
+  - 'application/json'
+responses:
+  200:
+    description: A json object of stock's daily information
+    schema:
+      id: Daily_information
+      type: object
+      properties:
+        stock_id:
+          default: '2330'
+          type: string
+        update_date:
+          type: string
+          default: 'Mon, 1 Jan 2013 00:00:00 GMT'
+        本日收盤價:
+          type: number
+          default: 0
+        本日漲跌:
+          type: number
+          default: 0
+        本益比:
+          type: number
+          default: 0
+        近四季每股盈餘:
+          type: number
+          default: 0
+  404:
+    description: stock's daily information not found

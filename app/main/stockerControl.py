@@ -32,7 +32,7 @@ def showMain():
     but everything below the 3 hyphens should be.
     ---
     tags:
-      - main page
+      - main page for test api11
     parameters:
       - in: path
         name: username
@@ -40,7 +40,7 @@ def showMain():
         required: true
     responses:
       200:
-        description: A single user item
+        description: a 2330 daily information
         schema:
           id: rec_username
           properties:
@@ -51,13 +51,14 @@ def showMain():
     """
     checkFourSeasonEPS(2330)
     b = db.session.query(Daily_Information).filter_by(
-        stock_id='1785').all()
+        stock_id='2330').all()
     res = [i.serialize for i in b]
     return jsonify(res)
 
 
 class getStockNumber(MethodView):
     decorators = []
+
     def get(self):
         companyType = request.args.get('type')
         if companyType is None:
@@ -130,24 +131,8 @@ class handleBasicInfo(MethodView):
     """
     def get(self, stock_id):
         """
-        this api is used to get specific stock's basic information.
-        ---
-        parameters:
-          - name: stock_id
-            in: path
-            type: String
-            required: true
-            default: all
-        definitions:
-        responses:
-          200:
-            description: A list of colors (may be filtered by palette)
-            schema:
-              $ref: '#/definitions/Palette'
-            examples:
-              rgb: ['red', 'green', 'blue']
-          404:
-            description: Couldn't find any basic info. for stock_id.
+        GET stock's basic information
+        swagger_from_file: BasicInformation_get.yml
         """
         basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
@@ -158,6 +143,10 @@ class handleBasicInfo(MethodView):
             return jsonify(basicInfo.serialize)
 
     def post(self, stock_id):
+        """
+        Add or Update stock basic information.
+        swagger_from_file: BasicInformation_post.yml
+        """
         basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
@@ -207,7 +196,7 @@ class handleBasicInfo(MethodView):
                 % (stock_id, ex))
             res = make_response(
                 json.dumps(
-                    'Failed to update basic_information.'), 400)
+                    'Failed to update %s Basic Info.'), 400)
             return res
 
         res = make_response(
@@ -215,6 +204,10 @@ class handleBasicInfo(MethodView):
         return res
 
     def patch(self, stock_id):
+        """
+        Add or Update stock basic information.
+        swagger_from_file: BasicInformation_post.yml
+        """
         basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
@@ -243,12 +236,24 @@ class handleBasicInfo(MethodView):
 
 class handleDailyInfo(MethodView):
     def get(self, stock_id):
+        """
+        GET stock's daily information
+        swagger_from_file: DailyInfo_get.yml
+        """
         dailyInfo = db.session.query(Daily_Information).filter_by(
             stock_id=stock_id).one_or_none()
-        return 'Daily Information: %s' % stock_id\
-            if dailyInfo is None else dailyInfo.serialize
 
+        if dailyInfo is None:
+            res = make_response(json.dumps(
+                'Failed to get %s Daily information.' % (stock_id)), 404)
+            return res
+        else:
+            return jsonify(dailyInfo.serialize)
     def post(self, stock_id):
+        """
+        Create or Update stock_id's daily information
+        swagger_from_file: DailyInfo_post.yml
+        """
         payload = json.loads(request.data)
         dailyInfo = db.session.query(Daily_Information).filter_by(
             stock_id=stock_id).one_or_none()
@@ -317,6 +322,8 @@ class handleIncomeSheet(MethodView):
         Exception: An error occurred.
     """
     def get(self, stock_id):
+        """
+        """
         mode = request.args.get('mode')
         if mode is None:
             incomeSheet = db.session.query(Income_Sheet).filter_by(
@@ -342,7 +349,7 @@ class handleIncomeSheet(MethodView):
 
         if incomeSheet is None:
             res = make_response(json.dumps(
-                    'Failed to get %s Income Sheet.' % (stock_id)), 404)
+                'Failed to get %s Income Sheet.' % (stock_id)), 404)
             return res
         elif mode == 'single' or mode == None:
             res = [incomeSheet.serialize]
@@ -370,7 +377,7 @@ class handleIncomeSheet(MethodView):
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 incomeSheet['update_date'] = datetime.datetime.now(
-                    ).strftime("%Y-%m-%d")
+                ).strftime("%Y-%m-%d")
             else:
                 incomeSheet = Income_Sheet()
                 incomeSheet['stock_id'] = stock_id
@@ -427,6 +434,7 @@ class handleBalanceSheet(MethodView):
     Raises:
         Exception: An error occurred.
     """
+
     def get(self, stock_id):
         return 'balance_sheet: %s' % stock_id
 
@@ -449,7 +457,7 @@ class handleBalanceSheet(MethodView):
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 balanceSheet['update_date'] = datetime.datetime.now(
-                    ).strftime("%Y-%m-%d")
+                ).strftime("%Y-%m-%d")
             else:
                 balanceSheet = Balance_Sheet()
                 balanceSheet['stock_id'] = stock_id
@@ -505,6 +513,7 @@ class handleCashFlow(MethodView):
     Raises:
         Exception: An error occurred.
     """
+
     def get(self, stock_id):
         return 'cash_flow: %s' % stock_id
 
@@ -527,7 +536,7 @@ class handleCashFlow(MethodView):
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 cashFlow['update_date'] = datetime.datetime.now(
-                    ).strftime("%Y-%m-%d")
+                ).strftime("%Y-%m-%d")
             else:
                 cashFlow = Cash_Flow()
                 cashFlow['stock_id'] = stock_id
@@ -583,10 +592,11 @@ class handleMonthRevenue(MethodView):
     Raises:
         Exception: An error occurred.
     """
+
     def get(self, stock_id):
         monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id
-            ).order_by(Month_Revenue.year.desc()).limit(60).all()
+        ).order_by(Month_Revenue.year.desc()).limit(60).all()
         if monthReve is None:
             return make_response(404)
         else:
@@ -672,6 +682,7 @@ class handleStockCommodity(MethodView):
     Raises:
         Exception: An error occurred then return 400.
     """
+
     def get(self, stock_id):
         stockCommodity = db.session.query(Stock_Commodity).filter_by(
             stock_id=stock_id).one_or_none()
@@ -759,45 +770,45 @@ def checkFourSeasonEPS(stock_id):
 
 
 main.add_url_rule('/',
-                 'showMain',
-                 view_func=showMain)
+                  'showMain',
+                  view_func=showMain)
 main.add_url_rule('/stock_number',
-                 'getStockNumber',
-                 view_func=getStockNumber.as_view(
-                     'getStockNumber_api'),
-                 methods=['GET', 'POST'])
+                  'getStockNumber',
+                  view_func=getStockNumber.as_view(
+                      'getStockNumber_api'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/basic_information/<stock_id>',
-                 'handleBasicInfo',
-                 view_func=handleBasicInfo.as_view(
-                     'handleBasicInfo_api'),
-                 methods=['GET', 'POST', 'PATCH'])
+                  'handleBasicInfo',
+                  view_func=handleBasicInfo.as_view(
+                      'handleBasicInfo_api'),
+                  methods=['GET', 'POST', 'PATCH'])
 main.add_url_rule('/income_sheet/<stock_id>',
-                 'handleIncomeSheet',
-                 view_func=handleIncomeSheet.as_view(
-                     'handleIncomeSheet'),
-                 methods=['GET', 'POST'])
+                  'handleIncomeSheet',
+                  view_func=handleIncomeSheet.as_view(
+                      'handleIncomeSheet'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/balance_sheet/<stock_id>',
-                 'handleBalanceSheet',
-                 view_func=handleBalanceSheet.as_view(
-                     'handleBalanceSheet'),
-                 methods=['GET', 'POST'])
+                  'handleBalanceSheet',
+                  view_func=handleBalanceSheet.as_view(
+                      'handleBalanceSheet'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/cash_flow/<stock_id>',
-                 'handleCashFlow',
-                 view_func=handleCashFlow.as_view(
-                     'handleCashFlow'),
-                 methods=['GET', 'POST'])
+                  'handleCashFlow',
+                  view_func=handleCashFlow.as_view(
+                      'handleCashFlow'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/month_revenue/<stock_id>',
-                 'handleMonthRevenue',
-                 view_func=handleMonthRevenue.as_view(
-                     'handleMonthRevenue'),
-                 methods=['GET', 'POST'])
+                  'handleMonthRevenue',
+                  view_func=handleMonthRevenue.as_view(
+                      'handleMonthRevenue'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/daily_information/<stock_id>',
-                 'handleDailyInfo',
-                 view_func=handleDailyInfo.as_view(
-                     'handleDailyInfo'),
-                 methods=['GET', 'POST'])
+                  'handleDailyInfo',
+                  view_func=handleDailyInfo.as_view(
+                      'handleDailyInfo'),
+                  methods=['GET', 'POST'])
 main.add_url_rule('/stock_commodity/<stock_id>',
-                 'handleStockCommodity',
-                 view_func=handleStockCommodity.as_view(
-                     'handleStockCommodity'),
-                 methods=['GET', 'POST'])
+                  'handleStockCommodity',
+                  view_func=handleStockCommodity.as_view(
+                      'handleStockCommodity'),
+                  methods=['GET', 'POST'])

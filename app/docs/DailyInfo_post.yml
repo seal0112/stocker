@@ -1,0 +1,28 @@
+Create or Update stock_id's daily information
+---
+tags:
+  - Daily Information
+summary: Create or Update stock's daily information.
+parameters:
+  - in: path
+    name: stock_id
+    description: ID of basic information
+    required: true
+    schema:
+      type: String
+  - in: body
+    name: body
+    required: true
+    schema:
+      id: Daily_Price
+      type: object
+      properties:
+        本日收盤價:
+          type: number
+        本日漲跌:
+          type: number
+responses:
+  200:
+    description: Create or Update OK
+  400:
+    description: failed to update Daily Price
