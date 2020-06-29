@@ -1,0 +1,113 @@
+Get basic information by stock ID.
+---
+tags:
+  - Basic Information
+summary: GET stock's basic information.
+parameters:
+  - name: stock_id
+    in: path
+    description: ID of basic information
+    required: true
+    schema:
+      type: String
+produces:
+  - 'application/json'
+responses:
+  200:
+    description: A Json object of stock basic information.
+    schema:
+      id: Basic_Information
+      type: object
+      properties:
+        id:
+          default: '2330'
+          type: string
+        update_date:
+          type: string
+          default: 'Mon, 1 Jan 2013 00:00:00 GMT'
+        exchangeType:
+          type: string
+          enum:
+            - sii
+            - otc
+            - rotc
+            - pub
+            - delist
+        上市上櫃興櫃公開發行日期:
+          type: string
+        代理發言人:
+          type: string
+        住址:
+          type: string
+        傳真機號碼:
+          type: string
+        公司名稱:
+          type: string
+        公司簡稱:
+          type: string
+        公司網址:
+          type: string
+        公司網站內利害關係人專區網址:
+          type: string
+        外國企業註冊地國:
+          type: string
+        實收資本額:
+          type: string
+        已發行普通股數或TDR原發行股數:
+          type: number
+        成立日期:
+          type: string
+        投資人關係聯絡人:
+          type: string
+        投資人關係聯絡人職稱:
+          type: string
+        投資人關係聯絡電子郵件:
+          type: string
+        投資人關係聯絡電話:
+          type: string
+        普通股年度現金股息及紅利決議層級:
+          type: string
+        普通股每股面額:
+          type: string
+        普通股盈餘分派或虧損撥補頻率:
+          type: string
+        營利事業統一編號:
+          type: string
+        特別股:
+          type: string
+        產業類別:
+          type: string
+        發言人:
+          type: string
+        發言人職稱:
+          type: string
+        私募普通股:
+          type: string
+        簽證會計師一:
+          type: string
+        簽證會計師事務所:
+          type: string
+        簽證會計師二:
+          type: string
+        編製財務報告類型:
+          type: string
+        總機電話:
+          type: string
+        總經理:
+          type: string
+        股票過戶機構:
+          type: string
+        英文簡稱:
+          type: string
+        英文通訊地址:
+          type: string
+        董事長:
+          type: string
+        過戶地址:
+          type: string
+        過戶電話:
+          type: string
+        電子郵件信箱:
+          type: string
+  404:
+    description: 'Can not find basic information of {stock_id}'
