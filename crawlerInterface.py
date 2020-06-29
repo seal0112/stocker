@@ -647,7 +647,7 @@ def crawlHistoryData():
     updateDelistedCompany()
     updateStockCommodity()
 
-    if datetime.date.today().weekday() in [0,1,2,3,4]:
+    if date.today().weekday() in [0,1,2,3,4]:
         updateDailyPrice()
 
     now = datetime.now()
@@ -690,4 +690,5 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    dailyRoutineWork()
+    # dailyRoutineWork()
+    crawlHistoryData()

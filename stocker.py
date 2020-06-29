@@ -67,6 +67,10 @@ if __name__ == '__main__':
     app.debug = True
     app.after_request(after_request)
 
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    logdir = os.path.join(basedir, 'log')
+    if os.path.exists(logdir) is False:
+        os.mkdir(logdir)
     log_filename = datetime.now().strftime("log/app %Y-%m-%d.log")
     fileHandler = TimedRotatingFileHandler(
         log_filename, when='D', interval=1,
