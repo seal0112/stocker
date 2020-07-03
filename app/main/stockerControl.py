@@ -32,22 +32,32 @@ def showMain():
     but everything below the 3 hyphens should be.
     ---
     tags:
-      - main page for test api11
-    parameters:
-      - in: path
-        name: username
-        type: string
-        required: true
+      - main page for test
     responses:
       200:
         description: a 2330 daily information
         schema:
-          id: rec_username
+          id: Daily_information
+          type: array
           properties:
-            username:
+            stock_id:
+              default: '2330'
               type: string
-              description: The name of the user
-              default: 'steve-harris'
+          update_date:
+            type: string
+            default: 'Mon, 1 Jan 2013 00:00:00 GMT'
+          本日收盤價:
+            type: number
+            default: 0
+          本日漲跌:
+            type: number
+            default: 0
+          本益比:
+            type: number
+            default: 0
+          近四季每股盈餘:
+            type: number
+            default: 0
     """
     checkFourSeasonEPS(2330)
     b = db.session.query(Daily_Information).filter_by(
@@ -129,6 +139,7 @@ class handleBasicInfo(MethodView):
     Raises:
         Exception: An error occurred.
     """
+
     def get(self, stock_id):
         """
         GET stock's basic information
@@ -205,8 +216,8 @@ class handleBasicInfo(MethodView):
 
     def patch(self, stock_id):
         """
-        Add or Update stock basic information.
-        swagger_from_file: BasicInformation_post.yml
+        Update stock basic information.
+        swagger_from_file: BasicInformation_patch.yml
         """
         basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
@@ -249,6 +260,7 @@ class handleDailyInfo(MethodView):
             return res
         else:
             return jsonify(dailyInfo.serialize)
+
     def post(self, stock_id):
         """
         Create or Update stock_id's daily information
@@ -321,8 +333,11 @@ class handleIncomeSheet(MethodView):
     Raises:
         Exception: An error occurred.
     """
+
     def get(self, stock_id):
         """
+        return stock's Income Sheet with designated Year and season
+        swagger_from_file: IncomeSheet_get.yml
         """
         mode = request.args.get('mode')
         if mode is None:
@@ -359,6 +374,10 @@ class handleIncomeSheet(MethodView):
             return jsonify(res)
 
     def post(self, stock_id):
+        """
+        Create or Update stock_id's Income Sheet
+        swagger_from_file: IncomeSheet_post.yml
+        """
         payload = json.loads(request.data)
         incomeSheet = db.session.query(Income_Sheet).filter_by(
             stock_id=stock_id).filter_by(
@@ -594,6 +613,10 @@ class handleMonthRevenue(MethodView):
     """
 
     def get(self, stock_id):
+        """
+        return stock's monthly revenue data for the last five years
+        swagger_from_file: MonthRevenue_get.yml
+        """
         monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id
         ).order_by(Month_Revenue.year.desc()).limit(60).all()
@@ -604,6 +627,10 @@ class handleMonthRevenue(MethodView):
             return jsonify(result)
 
     def post(self, stock_id):
+        """
+        Create or Update stock_id's month revenue data
+        swagger_from_file: MonthRevenue_post.yml
+        """
         payload = json.loads(request.data)
         monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id).filter_by(

@@ -20,11 +20,9 @@ responses:
       type: object
       properties:
         id:
-          default: '2330'
           type: string
         update_date:
           type: string
-          default: 'Mon, 1 Jan 2013 00:00:00 GMT'
         exchangeType:
           type: string
           enum:
