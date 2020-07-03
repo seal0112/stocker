@@ -1,0 +1,102 @@
+Get basic information by stock ID.
+---
+tags:
+  - Income Sheet
+summary: GET stock's income sheet.
+parameters:
+  - name: stock_id
+    in: path
+    description: ID of basic information
+    required: true
+    schema:
+      type: String
+  - name: mode
+    in: query
+    description: Return single season or multi-year data.
+    schema:
+      type: string
+      default: single
+  - name: year
+    in: query
+    description: when mode is single, is used to designated specify year. When mode is multiple, is used to Decided how many years of data to return.
+    schema:
+      type: string
+  - name: season
+    in: query
+    description: Specify which season's data
+    schema:
+      type: string
+produces:
+  - 'application/json'
+responses:
+  200:
+    description: A Json object of stock income sheet.
+    schema:
+      id: Income_Sheet
+      type: object
+      properties:
+        id:
+          type: number
+        season:
+          type: string
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+        stock_id:
+          type: string
+        update_date:
+          type: string
+        year:
+          type: number
+        基本每股盈餘:
+          type: number
+        所得稅費用:
+          type: number
+        所得稅費用率:
+          type: number
+        推銷費用:
+          type: number
+        推銷費用率:
+          type: number
+        本期淨利:
+          type: number
+        本期淨利率:
+          type: number
+        母公司業主淨利:
+          type: number
+        營業利益:
+          type: number
+        營業利益率:
+          type: number
+        營業外收入及支出合計:
+          type: number
+        營業成本合計:
+          type: number
+        營業收入合計:
+          type: number
+        營業毛利:
+          type: number
+        營業毛利率:
+          type: number
+        營業費用:
+          type: number
+        營業費用率:
+          type: number
+        研究發展費用:
+          type: number
+        研究發展費用率:
+          type: number
+        稀釋每股盈餘:
+          type: number
+        稅前淨利:
+          type: number
+        稅前淨利率:
+          type: number
+        管理費用:
+          type: number
+        管理費用率:
+          type: number
+  404:
+    description: 'Can not find Income_Sheet of {stock_id}'

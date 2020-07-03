@@ -1,8 +1,8 @@
-Add or Update stock basic information.
+Add or Update stock month revenue.
 ---
 tags:
-  - Basic Information
-summary: Create or Update stock basic information.
+  - Month Revenue
+summary: Create or Update stock month revenue.
 parameters:
   - name: stock_id
     in: path
@@ -14,11 +14,11 @@ parameters:
     name: body
     required: true
     schema:
-      $ref: '#/definitions/Basic_Information'
+      $ref: '#/definitions/Month_Revenue'
 responses:
   200:
     description: OK
   201:
     description: Create
   400:
-    description: Failed to update {stock_id} Basic Info.
+    description: Failed to update {stock_id} month_revenue

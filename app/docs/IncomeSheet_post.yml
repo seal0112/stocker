@@ -1,8 +1,8 @@
-Add or Update stock basic information.
+Add or Update stock Income Sheet.
 ---
 tags:
-  - Basic Information
-summary: Create or Update stock basic information.
+  - Income Sheet
+summary: Create or Update stock Income Sheet.
 parameters:
   - name: stock_id
     in: path
@@ -14,11 +14,11 @@ parameters:
     name: body
     required: true
     schema:
-      $ref: '#/definitions/Basic_Information'
+      $ref: '#/definitions/Income_Sheet'
 responses:
   200:
     description: OK
   201:
     description: Create
   400:
-    description: Failed to update {stock_id} Basic Info.
+    description: Failed to update {stock_id} Income_Sheet
