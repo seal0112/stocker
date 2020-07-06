@@ -218,9 +218,9 @@ class handleBasicInfo(MethodView):
         basicInfo = db.session.query(Basic_Information).filter_by(
             id=stock_id).one_or_none()
         try:
-            # payload = json.loads(request.data)
+            payload = json.loads(request.data)
             if basicInfo is not None:
-                basicInfo['exchangeType'] = 'delist'
+                basicInfo['exchangeType'] = payload['exchangeType']
                 db.session.add(basicInfo)
                 db.session.commit()
                 res = make_response(json.dumps('OK'), 200)
