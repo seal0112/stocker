@@ -551,11 +551,14 @@ def updateCashFlow(westernYearIn=2019, season=1):
 
 def updateDelistedCompany():
     companyTypes = ['sii', 'otc']
+    dataPayload = {}
+    dataPayload['exchangeType'] = 'delist'
     for companyType in companyTypes:
         data = crawlDelistedCompany(companyType)
         for d in data:
             serverBasicInfoApi = "{}/basic_information/{}".format(stockerUrl, d)
-            requests.patch(serverBasicInfoApi)
+            requests.patch(serverBasicInfoApi, 
+                           data=json.dumps(dataPayload))
 
 
 def updateStockCommodity():

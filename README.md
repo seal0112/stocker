@@ -44,6 +44,13 @@ $ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
+#### 初始化migrati
+````shell
+$ flask db init
+$ flask db migrate -m "commit message"
+$ flask db upgrade
+````
+
 #### 啟動
 ```shell
 $ gunicorn wsgi:app
