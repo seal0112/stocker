@@ -557,7 +557,7 @@ def updateDelistedCompany():
         data = crawlDelistedCompany(companyType)
         for d in data:
             serverBasicInfoApi = "{}/basic_information/{}".format(stockerUrl, d)
-            requests.patch(serverBasicInfoApi, 
+            requests.patch(serverBasicInfoApi,
                            data=json.dumps(dataPayload))
 
 
@@ -618,7 +618,7 @@ def getFinStatFromServer(
         return data.json()
 
 
-def dailyRoutineWork():
+def handleDailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
     for type in companyTypes:
         getBasicInfo(type)
@@ -654,14 +654,14 @@ def crawlHistoryData():
         updateDailyPrice()
 
     now = datetime.now()
-    for month in range(now.month-1, 1, -1):
+    for month in range(now.month-1, 0, -1):
         getMonthlyRevenue(now.year, month)
 
     for year in range(now.year-1, 2012, -1):
         for month in range(12, 0, -1):
             getMonthlyRevenue(year, month)
 
-    for year in range(now.year-1, 2012, -1):
+    for year in range(now.year, 2012, -1):
         for season in [1,2,3,4]:
             updateIncomeSheet(year, season)
 
@@ -693,5 +693,5 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    # dailyRoutineWork()
-    crawlHistoryData()
+    handleDailyRoutineWork()
+    # crawlHistoryData()

@@ -143,7 +143,7 @@ def crawlDelistedCompany(companyType):
         }
         body = {
             'Submit': '查詢',
-                        'select_year': str(currentYear - 1911),
+            'select_year': str(currentYear - 1911),
             'DELIST_REASON': '-1'
         }
         body['select_year'] = str(currentYear - 1911)
@@ -179,57 +179,17 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
     year = str(westernYearIn - 1911)
     month = str(monthIn)
 
-    urlSiiDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
-                               + year + "_" + month + "_0.html",
-                        "type": "SiiDomestic"
-                     }
-    urlSiiForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
-                               + year + "_" + month + "_1.html",
-                        "type":  "SiiForiegn"
-                    }
-    urlOtcDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"
-                               + year + "_" + month + "_0.html",
-                        "type": "OtcDomestic"
-                    }
-    urlOtcForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"
-                               + year + "_" + month + "_1.html",
-                        "type": "OtcForiegn"
-                    }
-    urlRotcDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/rotc/t21sc03_"
-                               + year + "_" + month + "_0.html",
-                        "type": "RotcDomestic"
-                    }
-    urlRotcForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/rotc/t21sc03_"
-                               + year + "_" + month + "_1.html",
-                        "type": "RotcForiegn"
-                    }
-    urlPubDomestic = {
-                        "url": "https://mops.twse.com.tw/nas/t21/pub/t21sc03_"
-                               + year + "_" + month + "_0.html",
-                        "type": "PubDomestic"
-                    }
-    urlPubForiegn = {
-                        "url": "https://mops.twse.com.tw/nas/t21/pub/t21sc03_"
-                               + year + "_" + month + "_1.html",
-                        "type": "PubForiegn"
-                    }
+    url = "https://mops.twse.com.tw/nas/t21/{}/t21sc03_{}_{}_{}.html"
+    urls = []
+    stockType = ["Sii", "Otc", "Rotc", "Pub"]
+    stockLocate = ["Domestic", "Foriegn"]
 
-    urls = [
-        urlSiiDomestic,
-        urlSiiForiegn,
-        urlOtcDomestic,
-        urlOtcForiegn,
-        urlRotcDomestic,
-        urlRotcForiegn,
-        urlPubDomestic,
-        urlPubForiegn
-    ]
+    for i in range(len(stockType)):
+        for j in range(len(stockLocate)):
+            urls.append({
+                "url": url.format(stockType[i].lower(),year,month, j),
+                "type": "{}{}".format(stockType[i], stockLocate[j])
+            })
 
     results = pd.DataFrame()
     print(str(westernYearIn) + "-" + str(monthIn))
@@ -708,7 +668,6 @@ def crawlStockCommodity():
     return dfs[0][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
 
 
-
 def crawlRSSCompanyNews(companyID):
     """
     @description:
@@ -721,7 +680,7 @@ def crawlRSSCompanyNews(companyID):
 
     coID = str(companyID)
     url = "https://tw.stock.yahoo.com/rss/s/" + coID
-    
+
     res = requests.get(url)
     res.encoding = "big5"
     feed = feedparser.parse(res.text)
