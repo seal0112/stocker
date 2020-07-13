@@ -46,7 +46,7 @@ $ pip install -r requirements.txt
 
 #### 初始化migrati
 ````shell
-$ flask db init
+$ flask db stamp head
 $ flask db migrate -m "commit message"
 $ flask db upgrade
 ````
