@@ -265,6 +265,9 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             dfs = dfs.drop(columns=['公司名稱'])
 
             results = results.append(dfs)
+        
+        delay = 10 + random.randrange(0, 4)
+        time.sleep(delay)
 
     return results
 
@@ -500,7 +503,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
             if ve.args[0] == "No tables found":
                 return None
         except Exception as ex:
-            delay = 5 + random.randrange(0, 4)
+            delay = 10 + random.randrange(0, 4)
             print("\n  ", end="")
             print(ex.__class__.__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))
@@ -523,14 +526,14 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     # sii/otc/rotc issue cashflow report seasonally
     # pub issue report semiannually/seasonally
     if seasonIn != 1:
-        time.sleep(4 + random.randrange(0, 4))
+        time.sleep(10 + random.randrange(0, 4))
         prev = crawlCashFlow(companyID, westernYearIn, seasonIn-1, True)
         if prev is None:
             # pub semiannually report
             if seasonIn == 2:
                 return results
             elif seasonIn == 4:
-                time.sleep(4 + random.randrange(0, 4))
+                time.sleep(10 + random.randrange(0, 4))
                 prev = crawlCashFlow(companyID, westernYearIn, 2, True)
             else:
                 return None
@@ -688,7 +691,7 @@ def crawlSummaryStockNoFromTWSE(
             if retry == 2:
                 return []
             retry = retry + 1
-            delay = 3 + random.randrange(0, 4)
+            delay = 10 + random.randrange(0, 4)
             print("  ", end="")
             print(type(ex).__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))

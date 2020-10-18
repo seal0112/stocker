@@ -267,7 +267,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(3.5 + random.randrange(0, 2))
+        time.sleep(7 + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getIncomeSheet(
@@ -282,7 +282,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(3.5 + random.randrange(0, 2))
+        time.sleep(7 + random.randrange(0, 4))
 
 
 # need to update feature
@@ -414,7 +414,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(3.5 + random.randrange(0, 2))
+        time.sleep(7 + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getBalanceSheet(
@@ -429,7 +429,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(3.5 + random.randrange(0, 2))
+        time.sleep(7 + random.randrange(0, 4))
 
 
 def getCashFlow(
@@ -524,7 +524,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(4 + random.randrange(0, 4))
+        time.sleep(7 + random.randrange(0, 4))
 
     while(len(exceptList)):
         # print("(len=" + str(len(exceptList)) + ")", end=" ")
@@ -546,7 +546,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(4 + random.randrange(0, 4))
+        time.sleep(7 + random.randrange(0, 4))
 
 
 def updateDelistedCompany():
@@ -645,21 +645,21 @@ def dailyRoutineWork():
 
 
 def crawlHistoryData():
-    for type in companyTypes:
-        getBasicInfo(type)
-    updateDelistedCompany()
-    updateStockCommodity()
+    #for type in companyTypes:
+    #    getBasicInfo(type)
+    #updateDelistedCompany()
+    #updateStockCommodity()
 
-    if date.today().weekday() in [0,1,2,3,4]:
-        updateDailyPrice()
+    #if date.today().weekday() in [0,1,2,3,4]:
+    #    updateDailyPrice()
 
     now = datetime.now()
-    for month in range(now.month-1, 1, -1):
-        getMonthlyRevenue(now.year, month)
+    #for month in range(now.month-1, 1, -1):
+    #    getMonthlyRevenue(now.year, month)
 
-    for year in range(now.year-1, 2012, -1):
-        for month in range(12, 0, -1):
-            getMonthlyRevenue(year, month)
+    #for year in range(now.year-6, 2012, -1):
+    #    for month in range(12, 0, -1):
+    #        getMonthlyRevenue(year, month)
 
     for year in range(now.year-1, 2012, -1):
         for season in [1,2,3,4]:
@@ -693,5 +693,5 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    # dailyRoutineWork()
-    crawlHistoryData()
+    dailyRoutineWork()
+    #crawlHistoryData()
