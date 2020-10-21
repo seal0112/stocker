@@ -211,7 +211,7 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
                     dataPayload[key] = round((dataPayload[
                         key.replace('率', '')]/dataPayload['營業收入合計'])*100, 2)
 
-        url = "{}/basic_information/{}".format(stockerUrl, companyID)
+        basicInfoUrl = "{}/basic_information/{}".format(stockerUrl, companyID)
 
         basicInfo = requests.get(basicInfoUrl)
 
@@ -252,6 +252,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
                     crawlList.append(no)
         else:
             crawlList.extend(targetStockNo)
+        time.sleep(8 + random.randrange(0, 4))
 
     total = len(crawlList)
     exceptList = []
@@ -267,7 +268,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getIncomeSheet(
@@ -282,7 +283,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
 
 # need to update feature
@@ -414,7 +415,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getBalanceSheet(
@@ -429,7 +430,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
 
 def getCashFlow(
@@ -482,7 +483,7 @@ def getCashFlow(
                 break
             else:
                 print(ex.__class__.__name__)
-                time.sleep(10)
+                time.sleep(8)
 
     print(res, end=" ")
 
@@ -524,7 +525,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
     while(len(exceptList)):
         # print("(len=" + str(len(exceptList)) + ")", end=" ")
@@ -546,7 +547,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(7 + random.randrange(0, 4))
+        time.sleep(8 + random.randrange(0, 4))
 
 
 def updateDelistedCompany():
@@ -693,5 +694,5 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    dailyRoutineWork()
-    #crawlHistoryData()
+    #dailyRoutineWork()
+    crawlHistoryData()

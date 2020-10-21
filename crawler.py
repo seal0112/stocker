@@ -266,7 +266,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
             results = results.append(dfs)
         
-        delay = 10 + random.randrange(0, 4)
+        delay = 8 + random.randrange(0, 4)
         time.sleep(delay)
 
     return results
@@ -691,7 +691,7 @@ def crawlSummaryStockNoFromTWSE(
             if retry == 2:
                 return []
             retry = retry + 1
-            delay = 10 + random.randrange(0, 4)
+            delay = 8 + random.randrange(0, 4)
             print("  ", end="")
             print(type(ex).__name__, end=" ")
             print("catched. Retry in %s sec." % (delay))
