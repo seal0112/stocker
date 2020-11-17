@@ -19,6 +19,9 @@ import pandas as pd
 with open('./critical_file/serverConfig.json') as configReader:
     serverConf = json.loads(configReader.read())
 
+with open('./critical_file/testWebhook.json') as webhookReader:
+    testWebhook = json.loads(webhookReader.read())
+
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
@@ -623,7 +626,7 @@ def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
     curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
     r = requests.post(
-        "https://hooks.slack.com/services/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",
+        testWebhook['slack'],
         data=json.dumps({"username": "Stocker日常工作", "text": '{} crawler work start.'.format(curTime)}),
         headers = {"content-type": "application/json"})
 
@@ -654,7 +657,7 @@ def dailyRoutineWork():
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         r = requests.post(
-            "https://hooks.slack.com/services/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",
+            testWebhook['slack'],
             data=json.dumps({
                 "username": "Stocker日常工作",
                 "text": '{} work error: {}'.format(curTime, e)
@@ -663,7 +666,7 @@ def dailyRoutineWork():
     finally:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         r = requests.post(
-            "https://hooks.slack.com/services/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",
+            testWebhook['slack'],
             data=json.dumps({
                 "username": "Stocker日常工作",
                 "text": '{} crawler work done.'.format(curTime)
