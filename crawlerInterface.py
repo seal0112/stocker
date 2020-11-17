@@ -22,7 +22,7 @@ with open('./critical_file/serverConfig.json') as configReader:
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
-print(stockerUrl)
+SLEEP_TIME = 10
 
 # logging setting
 log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
@@ -252,7 +252,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
                     crawlList.append(no)
         else:
             crawlList.extend(targetStockNo)
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
     total = len(crawlList)
     exceptList = []
@@ -262,13 +262,13 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
         crawlerResult = getIncomeSheet(stock, westernYearIn, season)
         print(crawlerResult['stock_id'], crawlerResult['status'])
         if crawlerResult["status"] == 'IndexError':
-            time.sleep(60)
+            time.sleep(90)
         if crawlerResult["status"] != 'ok':
             exceptList.append({
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getIncomeSheet(
@@ -283,7 +283,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
 
 # need to update feature
@@ -291,7 +291,7 @@ def updateDailyPrice(datetimeIn=datetime.now()):
     # now = datetime.now() - timedelta(days=1)
     # now = datetime(2020,4,15)
     data = crawlDailyPrice(datetimeIn)
-
+    print(data)
     stockTypes = ['sii', 'otc']
     for stockType in stockTypes:
         stockNumsApi = "{}/stock_number?type={}".format(stockerUrl, stockType)
@@ -409,13 +409,13 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
         crawlerResult = getBalanceSheet(stock, westernYearIn, season)
         print(crawlerResult['stock_id'], crawlerResult['status'])
         if crawlerResult["status"] == 'IndexError':
-            time.sleep(60)
+            time.sleep(90)
         if crawlerResult["status"] != 'ok':
             exceptList.append({
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
     while(len(exceptList)):
         reCrawler = getBalanceSheet(
@@ -430,7 +430,7 @@ def updateBalanceSheet(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
 
 def getCashFlow(
@@ -519,13 +519,13 @@ def updateCashFlow(westernYearIn=2019, season=1):
         crawlerResult = getCashFlow(stock, westernYearIn, season)
         print(crawlerResult['status'])
         if crawlerResult["status"] == "IndexError":
-            time.sleep(60)
+            time.sleep(90)
         if crawlerResult["status"] != "ok":
             exceptList.append({
                 "stock_id": crawlerResult["stock_id"],
                 "retry_times": 0
             })
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
     while(len(exceptList)):
         # print("(len=" + str(len(exceptList)) + ")", end=" ")
@@ -547,7 +547,7 @@ def updateCashFlow(westernYearIn=2019, season=1):
             tmpStock = exceptList.pop(0)
             tmpStock["retry_times"] = tmpStock["retry_times"]+1
             exceptList.append(tmpStock)
-        time.sleep(8 + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(0, 4))
 
 
 def updateDelistedCompany():
@@ -621,6 +621,57 @@ def getFinStatFromServer(
 
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
+    curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+    r = requests.post(
+        "https://hooks.slack.com/services/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",
+        data=json.dumps({"username": "Stocker日常工作", "text": '{} crawler work start.'.format(curTime)}),
+        headers = {"content-type": "application/json"})
+
+    try:
+        for type in companyTypes:
+            getBasicInfo(type)
+            time.sleep(SLEEP_TIME + random.randrange(0, 4))
+        updateDelistedCompany()
+        updateStockCommodity()
+
+        if date.today().weekday() in [0,1,2,3,4]:
+            updateDailyPrice()
+
+        now = datetime.now()
+        if now.month == 1:
+            getMonthlyRevenue(now.year-1, 12)
+        else:
+            getMonthlyRevenue(now.year, now.month-1)
+
+        if 1 <= now.month <= 5:
+            updateIncomeSheet(now.year, 4)
+        elif 4 <= now.month <= 5:
+            updateIncomeSheet(now.year, 1)
+        elif 7 <= now.month <= 9:
+            updateIncomeSheet(now.year, 2)
+        elif 10 <= now.month <= 11:
+            updateIncomeSheet(now.year, 3)
+    except Exception as e:
+        curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        r = requests.post(
+            "https://hooks.slack.com/services/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",
+            data=json.dumps({
+                "username": "Stocker日常工作",
+                "text": '{} work error: {}'.format(curTime, e)
+            }),
+            headers={"content-type": "application/json"}) 
+    finally:
+        curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+        r = requests.post(
+            "https://hooks.slack.com/services/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",
+            data=json.dumps({
+                "username": "Stocker日常工作",
+                "text": '{} crawler work done.'.format(curTime)
+            }),
+            headers = {"content-type": "application/json"})
+
+
+def crawlHistoryData():
     for type in companyTypes:
         getBasicInfo(type)
     updateDelistedCompany()
@@ -630,37 +681,12 @@ def dailyRoutineWork():
         updateDailyPrice()
 
     now = datetime.now()
-    if now.month == 1:
-        getMonthlyRevenue(now.year-1, 12)
-    else:
-        getMonthlyRevenue(now.year, now.month-1)
+    for month in range(now.month-1, 1, -1):
+        getMonthlyRevenue(now.year, month)
 
-    if 1 <= now.month <= 5:
-        updateIncomeSheet(now.year, 4)
-    if 4 <= now.month <= 5:
-        updateIncomeSheet(now.year, 1)
-    if 7 <= now.month <= 9:
-        updateIncomeSheet(now.year, 2)
-    if 10 <= now.month <= 11:
-        updateIncomeSheet(now.year, 3)
-
-
-def crawlHistoryData():
-    #for type in companyTypes:
-    #    getBasicInfo(type)
-    #updateDelistedCompany()
-    #updateStockCommodity()
-
-    #if date.today().weekday() in [0,1,2,3,4]:
-    #    updateDailyPrice()
-
-    now = datetime.now()
-    #for month in range(now.month-1, 1, -1):
-    #    getMonthlyRevenue(now.year, month)
-
-    #for year in range(now.year-6, 2012, -1):
-    #    for month in range(12, 0, -1):
-    #        getMonthlyRevenue(year, month)
+    for year in range(now.year-6, 2012, -1):
+        for month in range(12, 0, -1):
+            getMonthlyRevenue(year, month)
 
     for year in range(now.year-1, 2012, -1):
         for season in [1,2,3,4]:
@@ -680,7 +706,6 @@ if __name__ == '__main__':
     # for year in range(2019, 2012, -1):
     #     for i in range(12, 0, -1):
     #         getMonthlyRevenue(year, i)
-
     '''
     usage: update incomeSheet/BalanceSheet
     '''
@@ -694,5 +719,5 @@ if __name__ == '__main__':
     #         # updateBalanceSheet(year, season)
     #         UpdateCashFlow(year, season)
 
-    #dailyRoutineWork()
-    crawlHistoryData()
+    dailyRoutineWork()
+    # crawlHistoryData()
