@@ -25,7 +25,7 @@ with open('./critical_file/testWebhook.json') as webhookReader:
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
-SLEEP_TIME = 10
+SLEEP_TIME = 9
 
 # logging setting
 log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
@@ -291,10 +291,7 @@ def updateIncomeSheet(westernYearIn=2019, season=1):
 
 # need to update feature
 def updateDailyPrice(datetimeIn=datetime.now()):
-    # now = datetime.now() - timedelta(days=1)
-    # now = datetime(2020,4,15)
     data = crawlDailyPrice(datetimeIn)
-    print(data)
     stockTypes = ['sii', 'otc']
     for stockType in stockTypes:
         stockNumsApi = "{}/stock_number?type={}".format(stockerUrl, stockType)
@@ -341,7 +338,10 @@ def updateDailyPrice(datetimeIn=datetime.now()):
                 print(ex)
                 print("{}: {}".format(id, dataStock))
             else:
-                requests.post(dailyInfoApi, data=json.dumps(dataPayload))
+                try:
+                    requests.post(dailyInfoApi, data=json.dumps(dataPayload))
+                except Exception as ex:
+                    print("ERROE: {}".format(ex))
 
 
 def getBalanceSheet(

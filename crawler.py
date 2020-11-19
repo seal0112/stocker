@@ -8,7 +8,7 @@ from datetime import datetime
 from io import StringIO
 import feedparser
 
-SLEEP_TIME = 10
+SLEEPTIME = 9
 
 def crawlCriticalInformation(parse_to_json=False):
     '''
@@ -267,7 +267,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
             results = results.append(dfs)
         
-        time.sleep(SLEEP_TIME + random.randrange(0, 4))
+        time.sleep(SLEEPTIME + random.randrange(0, 4))
 
     return results
 

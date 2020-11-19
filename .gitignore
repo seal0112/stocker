@@ -3,5 +3,7 @@ __pycache__
 node_modules/
 critical_file/
 *.csv
+*.out
+*.err
 log/*
 venv/
