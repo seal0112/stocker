@@ -406,7 +406,7 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
     print(str(westernYearIn) + "Q" + str(season), end="...")
     s = requests.session()
     s.keep_alive = False
-    req = s.post(url, headers)
+    req = s.post(url, headers, timeout=10)
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
