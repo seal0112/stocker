@@ -234,15 +234,19 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
     results = pd.DataFrame()
     print(str(westernYearIn) + "-" + str(monthIn))
+    
+    s = requests.session()
+    s.keep_alive = False
 
     for url in urls:
         print("crawling monthlyRevenue " + url["type"], end='...')
-        req = requests.get(url["url"], timeout=10)
+        req = s.get(url["url"], timeout=10)
         req.encoding = "big5"
         print("done.")
 
         try:
             html_df = pd.read_html(StringIO(req.text))
+            req.close()
         except ValueError:
             print('%s no %s month revenue data for %s/%s'
                   % (datetime.today().strftime("%Y-%m-%d"),
@@ -400,11 +404,14 @@ def crawlIncomeSheet(companyID, westernYearIn, seasonIn):
 
     print("crawling incomeSheet " + str(coID), end=" ")
     print(str(westernYearIn) + "Q" + str(season), end="...")
-    req = requests.post(url, headers)
+    s = requests.session()
+    s.keep_alive = False
+    req = s.post(url, headers)
     req.encoding = "utf-8"
     try:
         html_df = pd.read_html(StringIO(req.text))
         results = html_df[len(html_df)-1]
+        req.close()
     except ValueError as ve:
         if ve.args[0] == "No tables found":
             return None
