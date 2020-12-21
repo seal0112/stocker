@@ -634,6 +634,7 @@ def dailyRoutineWork():
         for type in companyTypes:
             getBasicInfo(type)
             time.sleep(SLEEP_TIME + random.randrange(0, 4))
+        time.sleep(SLEEP_TIME + random.randrange(1, 4))
         updateDelistedCompany()
         updateStockCommodity()
 
