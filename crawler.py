@@ -234,7 +234,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
     results = pd.DataFrame()
     print(str(westernYearIn) + "-" + str(monthIn))
-    
+
     s = requests.session()
     s.keep_alive = False
 
@@ -270,7 +270,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
             dfs = dfs.drop(columns=['公司名稱'])
 
             results = results.append(dfs)
-        
+
         time.sleep(SLEEPTIME + random.randrange(0, 4))
 
     return results
@@ -715,7 +715,8 @@ def crawlStockCommodity():
     print("StockCommodity")
     data = requests.get("https://www.taifex.com.tw/cht/2/stockLists")
     dfs = pd.read_html(data.text, converters={'證券代號': str})
-    return dfs[0][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
+    print(dfs)
+    return dfs[1][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
 
 
 
@@ -731,7 +732,7 @@ def crawlRSSCompanyNews(companyID):
 
     coID = str(companyID)
     url = "https://tw.stock.yahoo.com/rss/s/" + coID
-    
+
     res = requests.get(url)
     res.encoding = "big5"
     feed = feedparser.parse(res.text)

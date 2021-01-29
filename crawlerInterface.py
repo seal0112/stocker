@@ -561,7 +561,7 @@ def updateDelistedCompany():
         data = crawlDelistedCompany(companyType)
         for d in data:
             serverBasicInfoApi = "{}/basic_information/{}".format(stockerUrl, d)
-            requests.patch(serverBasicInfoApi, 
+            requests.patch(serverBasicInfoApi,
                            data=json.dumps(dataPayload))
 
 
@@ -636,7 +636,6 @@ def dailyRoutineWork():
             time.sleep(SLEEP_TIME + random.randrange(0, 4))
         time.sleep(SLEEP_TIME + random.randrange(1, 4))
         updateDelistedCompany()
-        updateStockCommodity()
 
         if date.today().weekday() in [0,1,2,3,4]:
             updateDailyPrice()
@@ -655,6 +654,8 @@ def dailyRoutineWork():
             updateIncomeSheet(now.year, 2)
         elif 10 <= now.month <= 11:
             updateIncomeSheet(now.year, 3)
+        updateStockCommodity()
+
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         r = requests.post(
@@ -663,7 +664,7 @@ def dailyRoutineWork():
                 "username": "Stocker日常工作",
                 "text": '{} work error: {}'.format(curTime, e)
             }),
-            headers={"content-type": "application/json"}) 
+            headers={"content-type": "application/json"})
     finally:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         r = requests.post(
