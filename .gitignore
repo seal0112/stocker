@@ -7,3 +7,4 @@ critical_file/
 *.err
 log/*
 venv/
+.env

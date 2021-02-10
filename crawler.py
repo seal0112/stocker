@@ -8,7 +8,7 @@ from datetime import datetime
 from io import StringIO
 import feedparser
 
-SLEEPTIME = 9
+SLEEPTIME = 10
 
 def crawlCriticalInformation(parse_to_json=False):
     '''
@@ -56,7 +56,6 @@ def crawlCriticalInformation(parse_to_json=False):
         colHeader = list(ret.columns.values)
         colHeader.pop(0)
         rowHeader = list(ret.index)
-        # print(dfs.loc[rowHeader[1]])
 
         dataArr = []
 
@@ -576,23 +575,30 @@ def crawlDailyPrice(datetime):
         + "daily_close_quotes/stk_quote_result.php?l=zh-tw"\
         + "&o=htm&d=" + dateOtc + "&s=0,asc,0"
 
-    print("crawling sii daily price.")
-    print(urlSii)
     reqSii = requests.get(urlSii)
     reqSii.encoding = 'utf-8'
-    print("parsing sii daily price.")
-    resultSii = pd.read_html(StringIO(reqSii.text))
-    resultSii = resultSii[8]
-    resultSii.columns = resultSii.columns.droplevel([0, 1])
+    try:
+        resultSii = pd.read_html(StringIO(reqSii.text))
+        resultSii = resultSii[8]
+        resultSii.columns = resultSii.columns.droplevel([0, 1])
+    except ValueError as ve:
+        if ve.args[0] == "No tables found":
+            resultSii = None
+        else:
+            return ve
 
-    print("crawling otc daily price.")
-    print(urlOtc)
+
     reqOtc = requests.get(urlOtc)
     reqOtc.encoding = 'utf-8'
-    print("parsing otc daily price")
-    resultOtc = pd.read_html(StringIO(reqOtc.text))
-    resultOtc = resultOtc[0]
-    resultOtc.columns = resultOtc.columns.droplevel(0)
+    try:
+        resultOtc = pd.read_html(StringIO(reqOtc.text))
+        resultOtc = resultOtc[0]
+        resultOtc.columns = resultOtc.columns.droplevel(0)
+    except ValueError as ve:
+        if ve.args[0] == "No tables found":
+            resultOtc = None
+        else:
+            return ve
 
     results = {'sii': resultSii, 'otc': resultOtc}
 
@@ -712,12 +718,9 @@ def crawlSummaryStockNoFromTWSE(
 
 
 def crawlStockCommodity():
-    print("StockCommodity")
     data = requests.get("https://www.taifex.com.tw/cht/2/stockLists")
     dfs = pd.read_html(data.text, converters={'證券代號': str})
-    print(dfs)
     return dfs[1][["證券代號", "是否為股票期貨標的", "是否為股票選擇權標的", "標準型證券股數"]]
-
 
 
 def crawlRSSCompanyNews(companyID):

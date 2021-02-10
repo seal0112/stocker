@@ -25,7 +25,7 @@ with open('./critical_file/testWebhook.json') as webhookReader:
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
-SLEEP_TIME = 9
+SLEEP_TIME = 10
 
 # logging setting
 log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
@@ -184,7 +184,6 @@ def getIncomeSheet(companyID=1101, westernYearIn=2019, seasonIn=1):
         elif len(data.loc["母公司業主淨利"]) >= 2:
             dataPayload["母公司業主淨利"] = data.loc["母公司業主淨利"].iloc[0][0]
 
-    # print(dataPayload)
     # The fourth quarter financial statements are annual reports
     # So we must use the data from the first three quarters to subtract them
     # to get the fourth quarter single-quarter financial report.
@@ -294,6 +293,8 @@ def updateDailyPrice(datetimeIn=datetime.now()):
     data = crawlDailyPrice(datetimeIn)
     stockTypes = ['sii', 'otc']
     for stockType in stockTypes:
+        if data[stockType] is None:
+            continue
         stockNumsApi = "{}/stock_number?type={}".format(stockerUrl, stockType)
         stockIDs = json.loads(requests.get(stockNumsApi).text)
 
@@ -319,7 +320,6 @@ def updateDailyPrice(datetimeIn=datetime.now()):
 
             try:
                 dataPayload['本日收盤價'] = float(dataStock[priceCol].iloc[0])
-
                 # otc have no priceDiffSignCol column
                 if stockType == 'sii':
                     if dataStock[priceDiffSignCol].iloc[0] == '除息':
@@ -341,7 +341,7 @@ def updateDailyPrice(datetimeIn=datetime.now()):
                 try:
                     requests.post(dailyInfoApi, data=json.dumps(dataPayload))
                 except Exception as ex:
-                    print("ERROE: {}".format(ex))
+                    print("ERROR: {}".format(ex))
 
 
 def getBalanceSheet(
@@ -444,8 +444,6 @@ def getCashFlow(
         return {"stock_id": companyID, "status": e.args[0]}
 
     data = transformHeaderNoun(data, "cashflow")
-
-    # print(data)
     dataPayload = {}
     with open(
             './data_key_select/cashflow_key_select.txt',
@@ -463,9 +461,6 @@ def getCashFlow(
             if ke.args[0] == 0:
                 dataPayload[key] = int(data.loc[key].iloc[0])
         except Exception as ex:
-            # print(ex.__class__.__name__)
-            # print(sys.exc_info())
-            # raise ex
             return {"stock_id": companyID, "status": ex.__class__.__name__}
             # TODO: write into log file
 
@@ -489,7 +484,6 @@ def getCashFlow(
                 time.sleep(8)
 
     print(res, end=" ")
-
     return {"stock_id": companyID, "status": "ok"}
 
 
@@ -561,8 +555,9 @@ def updateDelistedCompany():
         data = crawlDelistedCompany(companyType)
         for d in data:
             serverBasicInfoApi = "{}/basic_information/{}".format(stockerUrl, d)
-            requests.patch(serverBasicInfoApi,
-                           data=json.dumps(dataPayload))
+            requests.patch(
+                serverBasicInfoApi,
+                data=json.dumps(dataPayload))
 
 
 def updateStockCommodity():
@@ -622,20 +617,27 @@ def getFinStatFromServer(
         return data.json()
 
 
+def pushSlackMessage(username, content):
+    requests.post(
+        testWebhook['slack'],
+        data=json.dumps({
+            "username": username,
+            "text": content
+        }),
+        headers = {"content-type": "application/json"})
+
+
 def dailyRoutineWork():
     # 差財報三表, shareholder可以禮拜六抓
     curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-    r = requests.post(
-        testWebhook['slack'],
-        data=json.dumps({"username": "Stocker日常工作", "text": '{} crawler work start.'.format(curTime)}),
-        headers = {"content-type": "application/json"})
+    pushSlackMessage("Stocker日常工作", '{} crawler work start.'.format(curTime))
 
     try:
         for type in companyTypes:
             getBasicInfo(type)
             time.sleep(SLEEP_TIME + random.randrange(0, 4))
-        time.sleep(SLEEP_TIME + random.randrange(1, 4))
         updateDelistedCompany()
+        updateStockCommodity()
 
         if date.today().weekday() in [0,1,2,3,4]:
             updateDailyPrice()
@@ -646,7 +648,7 @@ def dailyRoutineWork():
         else:
             getMonthlyRevenue(now.year, now.month-1)
 
-        if 1 <= now.month <= 5:
+        if 1 <= now.month <= 4:
             updateIncomeSheet(now.year, 4)
         elif 4 <= now.month <= 5:
             updateIncomeSheet(now.year, 1)
@@ -654,26 +656,12 @@ def dailyRoutineWork():
             updateIncomeSheet(now.year, 2)
         elif 10 <= now.month <= 11:
             updateIncomeSheet(now.year, 3)
-        updateStockCommodity()
-
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-        r = requests.post(
-            testWebhook['slack'],
-            data=json.dumps({
-                "username": "Stocker日常工作",
-                "text": '{} work error: {}'.format(curTime, e)
-            }),
-            headers={"content-type": "application/json"})
+        pushSlackMessage("Stocker日常工作", '{} work error: {}'.format(curTime, e))
     finally:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-        r = requests.post(
-            testWebhook['slack'],
-            data=json.dumps({
-                "username": "Stocker日常工作",
-                "text": '{} crawler work done.'.format(curTime)
-            }),
-            headers = {"content-type": "application/json"})
+        pushSlackMessage("Stocker日常工作", '{} crawler work done.'.format(curTime))
 
 
 def crawlHistoryData():
