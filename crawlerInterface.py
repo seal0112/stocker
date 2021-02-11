@@ -13,6 +13,7 @@ import math
 import sys
 import traceback
 import logging
+import asyncio
 from logging.handlers import TimedRotatingFileHandler
 import pandas as pd
 
@@ -595,9 +596,7 @@ def getSummaryStockNoServerExist(
 
 def getStockNoBasicInfo():
     url = "{}/stock_number".format(stockerUrl)
-    print('Basic Infomation', end='...')
     res = requests.get(url)
-    print("done.")
     return json.loads(res.text)
 
 
@@ -605,7 +604,7 @@ def getFinStatFromServer(
         stock_id,
         westernYear,
         season,
-        reportTypes='income_sheet',):
+        reportTypes='income_sheet'):
     finStatApi = "{url}/{reportType}/{stockId}?mode=single&year={year}&season={season}"\
     .format(url=stockerUrl, reportType=reportTypes, stockId=stock_id,
             year=westernYear, season=season)
@@ -656,6 +655,10 @@ def dailyRoutineWork():
             updateIncomeSheet(now.year, 2)
         elif 10 <= now.month <= 11:
             updateIncomeSheet(now.year, 3)
+        if datetime.now().hour >= 21:
+            url = "{}/{}"
+            requests.get(url.format(stockerUrl, 'Bullish_stocks'))
+            requests.get(url.format(stockerUrl, 'Bearish_stocks'))
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         pushSlackMessage("Stocker日常工作", '{} work error: {}'.format(curTime, e))

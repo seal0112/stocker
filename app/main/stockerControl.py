@@ -7,7 +7,9 @@ from ..database_setup import (
 )
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import requests
 import json
+import math
 import datetime
 from .. import db
 from . import main
@@ -64,6 +66,117 @@ def showMain():
         stock_id='2330').all()
     res = [i.serialize for i in b]
     return jsonify(res)
+
+
+@main.route('/Bullish_stocks')
+def getBullishStocks():
+    """
+    This is the summary defined in yaml file
+    First line is the summary
+    All following lines until the hyphens is added to description
+    the format of the first lines until 3 hyphens will be not yaml compliant
+    but everything below the 3 hyphens should be.
+    """
+    from string import Template
+    with open('./critical_file/sqlSyntax.json') as sqlReader:
+        sqlSyntax = json.loads(sqlReader.read())
+
+    now = datetime.datetime.now()
+    season = (math.ceil(now.month/3)-2)%4+1
+    year = now.year-1 if season==4 else now.year
+    date = now.strftime('%Y-%m-%d')
+
+    template = Template(sqlSyntax['bullishStocks'])
+    sqlCommand = template.substitute(year=year, season=season, date=date)
+    results = db.engine.execute(sqlCommand).fetchall()
+
+    if len(results) <= 0:
+        return 'No recommended Bullish stocks'
+    else:
+        payload = {
+            "message": "{} {}年Q{}偏多".format(date, year, season)
+        }
+        with open('./critical_file/testWebhook.json') as webhookReader:
+            testWebhook = json.loads(webhookReader.read())
+        notifyUrl = 'https://notify-api.line.me/api/notify'
+        headers = {
+            'Authorization': f'Bearer {testWebhook["lineNotify"]}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        count = 0
+        page = 2
+        for result in results:
+            payload['message'] += '\n{} EPS:{} YOY:{}% 本益比:{}'.format(
+                result[0], result[1], result[2], result[3])
+            count += 1
+
+            if count == 10:
+                requests.post(notifyUrl, headers=headers, data=payload)
+                count = 0
+                payload['message'] = "{} 偏多 第{}頁".format(date, page)
+                page += 1
+
+        try:
+            requests.post(notifyUrl, headers=headers, data=payload)
+            return 'OK'
+        except Exception as ex:
+            return make_response(
+                json.dumps(str(ex)), 500)
+
+
+# Bearish stock
+@main.route('/Bearish_stocks')
+def getBearishStocks():
+    from string import Template
+    with open('./critical_file/sqlSyntax.json') as sqlReader:
+        sqlSyntax = json.loads(sqlReader.read())
+
+    now = datetime.datetime.now()
+    season = (math.ceil(now.month/3)-2)%4+1
+    year = now.year-1 if season==4 else now.year
+    date = now.strftime('%Y-%m-%d')
+
+    template = Template(sqlSyntax['bearishStocks'])
+    sqlCommand = template.substitute(year=year, season=season, date=date)
+    results = db.engine.execute(sqlCommand).fetchall()
+    print(results)
+    if len(results) <= 0:
+        return 'No recommended Bearish stocks'
+    else:
+        payload = {
+            'message': "{} {}年Q{}偏空".format(date, year, season)
+        }
+        with open('./critical_file/testWebhook.json') as webhookReader:
+            testWebhook = json.loads(webhookReader.read())
+        notifyUrl = 'https://notify-api.line.me/api/notify'
+        headers = {
+            'Authorization': f'Bearer {testWebhook["lineNotify"]}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        count = 0
+        page = 2
+        for result in results:
+            payload['message'] += '\n{} EPS:{} YOY:{}% 本益比:{}'.format(
+                result[0], result[1], result[2], result[3])
+            count += 1
+
+            if count == 10:
+                requests.post(notifyUrl, headers=headers, data=payload)
+                count = 0
+                payload['message'] = "{} 偏空 第{}頁".format(date, page)
+                page += 1
+
+        try:
+            requests.post(
+                notifyUrl,
+                headers=headers,
+                data=payload)
+            return 'OK'
+        except Exception as ex:
+            return make_response(
+                json.dumps(ex), 500)
 
 
 class getStockNumber(MethodView):
