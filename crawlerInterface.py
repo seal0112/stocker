@@ -648,7 +648,7 @@ def dailyRoutineWork():
             getMonthlyRevenue(now.year, now.month-1)
 
         if 1 <= now.month <= 4:
-            updateIncomeSheet(now.year, 4)
+            updateIncomeSheet(now.year-1, 4)
         elif 4 <= now.month <= 5:
             updateIncomeSheet(now.year, 1)
         elif 7 <= now.month <= 9:
