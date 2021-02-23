@@ -552,7 +552,7 @@ def crawlCashFlow(companyID, westernYearIn, seasonIn, recursiveBreak=False):
     return results
 
 
-def crawlDailyPrice(datetime):
+def crawlDailyPrice(dateTime):
     """
     @description:
         爬取上市/上櫃每日股價，並以dict回傳
@@ -561,15 +561,16 @@ def crawlDailyPrice(datetime):
     @param:
         datetime => datetime
     """
-    dateSii = datetime.strftime("%Y%m%d")
+    dateSii = dateTime.strftime("%Y%m%d")
     # dateSii = '"' + "20190909" + '"'
     urlSii = "https://www.twse.com.tw/exchangeReport/"\
         + "MI_INDEX?response=html&date="\
         + dateSii + "&type=ALLBUT0999"
 
-    dateOtc = str(datetime.year-1911) + "/"\
-        + str(datetime.month).zfill(2) + "/"\
-        + str(datetime.day).zfill(2)
+    dateOtc = str(dateTime.year-1911) + dateTime.strftime("/%m/%d")
+    # dateOtc = str(datetime.year-1911) + "/"\
+    #     + str(datetime.month).zfill(2) + "/"\
+    #     + str(datetime.day).zfill(2)
     # dateOtc = "108/09/09"
     urlOtc = "https://www.tpex.org.tw/web/stock/aftertrading/"\
         + "daily_close_quotes/stk_quote_result.php?l=zh-tw"\

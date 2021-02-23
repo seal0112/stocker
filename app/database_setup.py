@@ -5,6 +5,9 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+def getCurrentDate():
+    return datetime.datetime.now().strftime("%Y-%m-%d")
+
 # done
 class Basic_Information(db.Model):
     __tablename__ = 'basic_information'
@@ -12,7 +15,7 @@ class Basic_Information(db.Model):
     id = db.Column(db.String(6), primary_key=True, autoincrement=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     exchangeType = db.Column(
         db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False)
     公司名稱 = db.Column(db.Text, nullable=False)
@@ -78,7 +81,7 @@ class Balance_Sheet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
@@ -141,7 +144,7 @@ class Cash_Flow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
@@ -194,7 +197,7 @@ class Income_Sheet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
@@ -259,7 +262,7 @@ class Month_Revenue(db.Model):
                 '7', '8', '9', '10', '11', '12'), nullable=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     當月營收 = db.Column(db.BigInteger)
     上月營收 = db.Column(db.BigInteger)
     去年當月營收 = db.Column(db.BigInteger)
@@ -296,7 +299,7 @@ class Daily_Information(db.Model):
         primary_key=True, nullable=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=datetime.datetime.now().strftime("%Y-%m-%d"))
+        default=getCurrentDate)
     本日收盤價 = db.Column(db.Float)
     本日漲跌 = db.Column(db.Float)
     近四季每股盈餘 = db.Column(db.Float)
