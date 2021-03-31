@@ -117,15 +117,13 @@ def getRecommendedStocks():
             count += 1
 
             if count == 10:
-                payload = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
                 requests.post(notifyUrl, headers=headers, data=payload)
                 count = 0
-                payload['message'] = ""
+                payload['message'] = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
                 page += 1
 
         try:
             if len(payload) > 0:
-                payload = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
                 requests.post(notifyUrl, headers=headers, data=payload)
             return 'OK'
         except Exception as ex:

@@ -689,7 +689,6 @@ def dailyRoutineWork():
                         'bullish', webhook['gugugu'])
                 )
             )
-            requests.get(url.format(stockerUrl, 'Bearish_stocks'))
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         pushSlackMessage("Stocker日常工作", '{} work error: {}'.format(curTime, e))
