@@ -655,9 +655,40 @@ def dailyRoutineWork():
             updateIncomeSheet(now.year, 2)
         elif 10 <= now.month <= 11:
             updateIncomeSheet(now.year, 3)
+
         if datetime.now().hour >= 21:
-            url = "{}/{}"
-            requests.get(url.format(stockerUrl, 'Bullish_stocks'))
+            with open('./critical_file/testWebhook.json') as webhookReader:
+                webhook = json.loads(webhookReader.read())
+
+            url = "{}/{}?{}"
+            queryString = 'option={}&webhook={}'
+
+            requests.get(
+                url.format(
+                    stockerUrl,
+                    'recommended_stocks',
+                    queryString.format(
+                        'bullish', webhook['stocker'])
+                )
+            )
+
+            requests.get(
+                url.format(
+                    stockerUrl,
+                    'recommended_stocks',
+                    queryString.format(
+                        'bearish', webhook['stocker'])
+                )
+            )
+
+            requests.get(
+                url.format(
+                    stockerUrl,
+                    'recommended_stocks',
+                    queryString.format(
+                        'bullish', webhook['gugugu'])
+                )
+            )
             requests.get(url.format(stockerUrl, 'Bearish_stocks'))
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")

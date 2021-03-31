@@ -67,9 +67,8 @@ def showMain():
     res = [i.serialize for i in b]
     return jsonify(res)
 
-
-@main.route('/Bullish_stocks')
-def getBullishStocks():
+@main.route('recommended_stocks')
+def getRecommendedStocks():
     """
     This is the summary defined in yaml file
     First line is the summary
@@ -77,30 +76,36 @@ def getBullishStocks():
     the format of the first lines until 3 hyphens will be not yaml compliant
     but everything below the 3 hyphens should be.
     """
+    option = request.args.get('option')
+    webhook = request.args.get('webhook')
     from string import Template
     with open('./critical_file/sqlSyntax.json') as sqlReader:
         sqlSyntax = json.loads(sqlReader.read())
+
+    optionWord = {
+        'bullish': '偏多',
+        'bearish': '偏空'
+    }
 
     now = datetime.datetime.now()
     season = (math.ceil(now.month/3)-2)%4+1
     year = now.year-1 if season==4 else now.year
     date = now.strftime('%Y-%m-%d')
 
-    template = Template(sqlSyntax['bullishStocks'])
+    template = Template(sqlSyntax[option])
     sqlCommand = template.substitute(year=year, season=season, date=date)
     results = db.engine.execute(sqlCommand).fetchall()
 
     if len(results) <= 0:
-        return 'No recommended Bullish stocks'
+        return f'No recommended {option} stocks'
     else:
         payload = {
-            "message": "{} {}年Q{}偏多".format(date, year, season)
+            "message": "{} {}年Q{}{}".format(date, year, season, optionWord[option])
         }
-        with open('./critical_file/testWebhook.json') as webhookReader:
-            testWebhook = json.loads(webhookReader.read())
+
         notifyUrl = 'https://notify-api.line.me/api/notify'
         headers = {
-            'Authorization': f'Bearer {testWebhook["lineNotify"]}',
+            'Authorization': f'Bearer {webhook}',
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
@@ -112,71 +117,20 @@ def getBullishStocks():
             count += 1
 
             if count == 10:
+                payload = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
                 requests.post(notifyUrl, headers=headers, data=payload)
                 count = 0
-                payload['message'] = "{} 偏多 第{}頁".format(date, page)
+                payload['message'] = ""
                 page += 1
 
         try:
-            requests.post(notifyUrl, headers=headers, data=payload)
+            if len(payload) > 0:
+                payload = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
+                requests.post(notifyUrl, headers=headers, data=payload)
             return 'OK'
         except Exception as ex:
             return make_response(
                 json.dumps(str(ex)), 500)
-
-
-# Bearish stock
-@main.route('/Bearish_stocks')
-def getBearishStocks():
-    from string import Template
-    with open('./critical_file/sqlSyntax.json') as sqlReader:
-        sqlSyntax = json.loads(sqlReader.read())
-
-    now = datetime.datetime.now()
-    season = (math.ceil(now.month/3)-2)%4+1
-    year = now.year-1 if season==4 else now.year
-    date = now.strftime('%Y-%m-%d')
-
-    template = Template(sqlSyntax['bearishStocks'])
-    sqlCommand = template.substitute(year=year, season=season, date=date)
-    results = db.engine.execute(sqlCommand).fetchall()
-    print(results)
-    if len(results) <= 0:
-        return 'No recommended Bearish stocks'
-    else:
-        payload = {
-            'message': "{} {}年Q{}偏空".format(date, year, season)
-        }
-        with open('./critical_file/testWebhook.json') as webhookReader:
-            testWebhook = json.loads(webhookReader.read())
-        notifyUrl = 'https://notify-api.line.me/api/notify'
-        headers = {
-            'Authorization': f'Bearer {testWebhook["lineNotify"]}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-
-        count = 0
-        page = 2
-        for result in results:
-            payload['message'] += '\n{} EPS:{} YOY:{}% 本益比:{}'.format(
-                result[0], result[1], result[2], result[3])
-            count += 1
-
-            if count == 10:
-                requests.post(notifyUrl, headers=headers, data=payload)
-                count = 0
-                payload['message'] = "{} 偏空 第{}頁".format(date, page)
-                page += 1
-
-        try:
-            requests.post(
-                notifyUrl,
-                headers=headers,
-                data=payload)
-            return 'OK'
-        except Exception as ex:
-            return make_response(
-                json.dumps(ex), 500)
 
 
 class getStockNumber(MethodView):
