@@ -649,11 +649,11 @@ def dailyRoutineWork():
 
         if 1 <= now.month <= 4:
             updateIncomeSheet(now.year-1, 4)
-        elif 4 <= now.month <= 5:
+        if 4 <= now.month <= 5:
             updateIncomeSheet(now.year, 1)
-        elif 7 <= now.month <= 9:
+        if 7 <= now.month <= 9:
             updateIncomeSheet(now.year, 2)
-        elif 10 <= now.month <= 11:
+        if 10 <= now.month <= 11:
             updateIncomeSheet(now.year, 3)
 
         if datetime.now().hour >= 21:
@@ -663,14 +663,15 @@ def dailyRoutineWork():
             url = "{}/{}?{}"
             queryString = 'option={}&webhook={}'
 
-            requests.get(
-                url.format(
-                    stockerUrl,
-                    'recommended_stocks',
-                    queryString.format(
-                        'bullish', webhook['stocker'])
+            for group in ['stocker', 'gugugu']:
+                requests.get(
+                    url.format(
+                        stockerUrl,
+                        'recommended_stocks',
+                        queryString.format(
+                            'bullish', webhook[group])
+                    )
                 )
-            )
 
             requests.get(
                 url.format(
@@ -684,9 +685,9 @@ def dailyRoutineWork():
             requests.get(
                 url.format(
                     stockerUrl,
-                    'recommended_stocks',
+                    'revenue_notify',
                     queryString.format(
-                        'bullish', webhook['gugugu'])
+                        'revenue', webhook['stocker'])
                 )
             )
     except Exception as e:
