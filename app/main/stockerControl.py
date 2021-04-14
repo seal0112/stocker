@@ -149,6 +149,12 @@ def sendRevenueNotify():
     """
     option = request.args.get('option')
     webhook = request.args.get('webhook')
+    monthList = [
+        (1, 2, 3),
+        (4, 5, 6),
+        (7, 8, 9),
+        (10, 11, 12)
+    ]
     from string import Template
     with open('./critical_file/sqlSyntax.json') as sqlReader:
         sqlSyntax = json.loads(sqlReader.read())
@@ -158,13 +164,17 @@ def sendRevenueNotify():
     if now.month == 1:
         month = 12
         year = now.year - 1
+        season = 4
     else:
         month = now.month - 1
         year = now.year
+        season = math.ceil(month/4)
     date = now.strftime('%Y-%m-%d')
 
     template = Template(sqlSyntax[option])
-    sqlCommand = template.substitute(year=year, month=month, date=date)
+    sqlCommand = template.substitute(
+        year=year, month=month, season=season,
+        monthList=monthList[season-1], date=date)
     results = db.engine.execute(sqlCommand).fetchall()
 
     if len(results) <= 0:
@@ -183,7 +193,7 @@ def sendRevenueNotify():
         count = 0
         page = 2
         for result in results:
-            payload['message'] += '\n{} YOY:{}% MOM:{}%'.format(
+            payload['message'] += '\n{} YOY:{}% 本益比:{}%'.format(
                 result[0], result[1], result[2])
             count += 1
 

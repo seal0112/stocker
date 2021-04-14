@@ -681,15 +681,16 @@ def dailyRoutineWork():
                         'bearish', webhook['stocker'])
                 )
             )
-
-            requests.get(
-                url.format(
-                    stockerUrl,
-                    'revenue_notify',
-                    queryString.format(
-                        'revenue', webhook['stocker'])
+            
+            if (datetime.now().month in (1, 4, 7, 10)):
+                requests.get(
+                    url.format(
+                        stockerUrl,
+                        'revenue_notify',
+                        queryString.format(
+                            'revenue', webhook['stocker'])
+                    )
                 )
-            )
     except Exception as e:
         curTime = datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
         pushSlackMessage("Stocker日常工作", '{} work error: {}'.format(curTime, e))
