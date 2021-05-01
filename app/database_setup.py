@@ -355,6 +355,66 @@ class Stock_Commodity(db.Model):
         setattr(self, key, value)
 
 
+feedsAndfeedsTags = db.Table('feed_feedTag',
+                             db.Column('feed_id', db.Integer, db.ForeignKey(
+                                 'feed.id'), primary_key=True),
+                             db.Column('feedTag', db.String(20), db.ForeignKey(
+                                 'feed_tag.name'), primary_key=True)
+                             )
+
+
+class Feed(db.Model):
+    __tablename__ = 'feed'
+
+    id = db.Column(db.Integer, primary_key=True)
+    stock_id = db.Column(
+        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+    update_date = db.Column(
+        db.Date, nullable=False, default=getCurrentDate)
+    releaseTime = db.Column(db.DateTime, nullable=False, index=True)
+    title = db.Column(db.String(100), nullable=False)
+    link = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)
+    feedType = db.Column(
+        db.Enum('announcement', 'news'),
+        nullable=False, default='announcement')
+    tags = db.relationship(
+        'FeedTag', secondary=feedsAndfeedsTags,
+        lazy='joined', backref=db.backref('feed'))
+
+    @property
+    def serialize(self):
+        print(self.tags)
+        if self.tags:
+            tags = [tag.name for tag in self.tags]
+        res = {}
+        for attr, val in self.__dict__.items():
+            if attr == '_sa_instance_state':
+                continue
+            else:
+                res[attr] = val
+        res['tags'] = tags
+        return res
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+
+class FeedTag(db.Model):
+    __tablename__ = 'feed_tag'
+
+    name = db.Column(db.String(20), primary_key=True)
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name
+        }
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
 

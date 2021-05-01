@@ -3,14 +3,14 @@ from flask.views import MethodView
 from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
     Balance_Sheet, Cash_Flow, Daily_Information,
-    Stock_Commodity
+    Stock_Commodity, Feed, FeedTag
 )
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import requests
 import json
 import math
-import datetime
+from datetime import datetime, timezone
 from .. import db
 from . import main
 
@@ -67,11 +67,33 @@ def showMain():
             type: number
             default: 0
     """
-    checkFourSeasonEPS(2330)
-    b = db.session.query(Daily_Information).filter_by(
-        stock_id='2330').all()
-    res = [i.serialize for i in b]
-    return jsonify(res)
+    # try:
+    #     tagName = ['財報', '財務報表']
+    #     tags = []
+    #     for name in tagName:
+    #         print(name)
+    #         tag = db.session.query(FeedTag).filter_by(
+    #             name=name).one_or_none()
+    #         if tag == None:
+    #             tags.append(FeedTag(name=name))
+    #         else:
+    #             tags.append(tag)
+
+    #     feed = Feed()
+    #     feed.stock_id = '1101'
+    #     feed.dateTime= '2021-04-19T12:57:34'
+    #     feed.title = '我用台泥測試新的功能'
+    #     feed.link = 'https://link.lasd.com/asd/dasdsda?aaa=123'
+    #     for tag in tags:
+    #         feed.tags.append(tag)
+
+    #     db.session.add(tag, feed)
+    #     db.session.commit()
+    # except Exception as ex:
+    #     print(ex)
+    #     db.session.rollback()
+
+    return 'ok'
 
 
 @main.route('recommended_stocks')
@@ -94,9 +116,9 @@ def getRecommendedStocks():
     with open('./critical_file/sqlSyntax.json') as sqlReader:
         sqlSyntax = json.loads(sqlReader.read())
 
-    now = datetime.datetime.now()
-    season = (math.ceil(now.month/3)-2)%4+1
-    year = now.year-1 if season==4 else now.year
+    now = datetime.now()
+    season = (math.ceil(now.month/3)-2) % 4 + 1
+    year = now.year-1 if season == 4 else now.year
     date = now.strftime('%Y-%m-%d')
 
     template = Template(sqlSyntax[option])
@@ -107,7 +129,8 @@ def getRecommendedStocks():
         return f'No recommended {option} stocks'
     else:
         payload = {
-            "message": "{} {}年Q{}{}".format(date, year, season, optionWord[option])
+            "message": "{} {}年Q{}{}".format(
+                date, year, season, optionWord[option])
         }
 
         notifyUrl = 'https://notify-api.line.me/api/notify'
@@ -126,7 +149,8 @@ def getRecommendedStocks():
             if count == 10:
                 requests.post(notifyUrl, headers=headers, data=payload)
                 count = 0
-                payload['message'] = "{} {} 第{}頁".format(date, optionWord[option], page) + payload
+                payload['message'] = "{} {} 第{}頁".format(
+                    date, optionWord[option], page) + payload
                 page += 1
 
         try:
@@ -159,7 +183,7 @@ def sendRevenueNotify():
     with open('./critical_file/sqlSyntax.json') as sqlReader:
         sqlSyntax = json.loads(sqlReader.read())
 
-    now = datetime.datetime.now()
+    now = datetime.now()
 
     if now.month == 1:
         month = 12
@@ -181,7 +205,8 @@ def sendRevenueNotify():
         return f'No recommended {option} stocks'
     else:
         payload = {
-            "message": "{} {}年{}月 {}".format(date, year, month, optionWord[option])
+            "message": "{} {}年{}月 {}".format(
+                date, year, month, optionWord[option])
         }
 
         notifyUrl = 'https://notify-api.line.me/api/notify'
@@ -329,7 +354,7 @@ class handleBasicInfo(MethodView):
 
                 # If any data is modified,
                 # update update_date to today's date
-                basicInfo['update_date'] = datetime.datetime.now(
+                basicInfo['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
                 basicInfo = Basic_Information()
@@ -421,7 +446,7 @@ class handleDailyInfo(MethodView):
             if dailyInfo is not None:
                 for key in payload:
                     dailyInfo[key] = payload[key]
-                    dailyInfo['update_date'] = datetime.datetime.now(
+                    dailyInfo['update_date'] = datetime.now(
                     ).strftime("%Y-%m-%d")
             else:
                 dailyInfo = Daily_Information()
@@ -543,7 +568,7 @@ class handleIncomeSheet(MethodView):
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
-                incomeSheet['update_date'] = datetime.datetime.now(
+                incomeSheet['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
                 incomeSheet = Income_Sheet()
@@ -623,7 +648,7 @@ class handleBalanceSheet(MethodView):
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
-                balanceSheet['update_date'] = datetime.datetime.now(
+                balanceSheet['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
                 balanceSheet = Balance_Sheet()
@@ -702,7 +727,7 @@ class handleCashFlow(MethodView):
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
-                cashFlow['update_date'] = datetime.datetime.now(
+                cashFlow['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
                 cashFlow = Cash_Flow()
@@ -801,7 +826,7 @@ class handleMonthRevenue(MethodView):
                     return make_response(json.dumps('OK'), 200)
                 # if there is any data to modify,
                 # then record currennt date for update_date
-                monthReve['update_date'] = datetime.datetime.now(
+                monthReve['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
                 monthReve = Month_Revenue()
@@ -907,6 +932,76 @@ class handleStockCommodity(MethodView):
         return res
 
 
+class handleFeed(MethodView):
+    """
+    Description:
+        this api is used to handle Stock Feed request.
+    Detail:
+        According to the received stock_id and request method(GET/POST),
+        if request method is GET, then return stock_id's Feed.
+        if request method is POST, then according to the data entered,
+        decide whether to update or add new Feed into database.
+    Args:
+        stock_id: a String of stock number.
+    Return:
+        if request method is GET,
+            then return stock_id's Feed.
+        if request method is POST,
+            According to whether the data is written into the database
+            if true, then return http status 201(Create).
+            if not, then return http status 200(Ok).
+    Raises:
+        Exception: An error occurred then return 400.
+    """
+
+    def get(self, stock_id):
+        page = int(request.args.get('page', default=1))
+        page_size = 15
+        feeds = Feed.query.filter_by(
+            stock_id=stock_id).limit(
+                page_size).offset((page-1)*page_size)
+        res = [feed.serialize for feed in feeds]
+        return jsonify(res)
+
+    def post(self, stock_id):
+        feedData = json.loads(request.data)
+        feed = Feed.query.filter_by(
+            stock_id=stock_id,
+            title=feedData['title'],
+            link=feedData['link']).one_or_none()
+
+        if feed != None:
+            return make_response(json.dumps('OK'), 200)
+
+        try:
+            feed = Feed()
+            feed.stock_id = stock_id
+            feed.releaseTime = datetime.strptime(
+                feedData['releaseTime'],
+                '%Y-%m-%d %H:%M:%S').astimezone(timezone.utc)
+            feed.title = feedData['title']
+            feed.link = feedData['link']
+            feed.description = feedData.get('description', None)
+            feed.feedType = feedData['feedType']
+            for tagName in feedData['tags']:
+                tag = FeedTag.query.filter_by(
+                    name=tagName).one_or_none()
+                print(tag)
+                if tag == None:
+                    feed.tags.append(FeedTag(name=tagName))
+                else:
+                    feed.tags.append(tag)
+
+            db.session.add(feed)
+            db.session.commit()
+        except Exception as ex:
+            logging.exception(ex)
+            db.session.rollback()
+            return make_response(json.dumps(str(ex)), 500)
+        else:
+            return make_response(json.dumps('Create'), 201)
+
+
 def checkFourSeasonEPS(stock_id):
     quantityOfIncomeSheet = db.session.query(
         db.func.count(Income_Sheet.id)).filter_by(
@@ -941,7 +1036,7 @@ def checkFourSeasonEPS(stock_id):
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
-            print(ex)
+            logging.exception(ex)
 
 
 main.add_url_rule('/',
@@ -986,4 +1081,9 @@ main.add_url_rule('/stock_commodity/<stock_id>',
                   'handleStockCommodity',
                   view_func=handleStockCommodity.as_view(
                       'handleStockCommodity'),
+                  methods=['GET', 'POST'])
+main.add_url_rule('/feed/<stock_id>',
+                  'handleFeed',
+                  view_func=handleFeed.as_view(
+                      'handleFeed'),
                   methods=['GET', 'POST'])
