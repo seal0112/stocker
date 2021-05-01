@@ -741,8 +741,10 @@ def crawlRSSCompanyNews(companyID):
     res.encoding = "big5"
     feed = feedparser.parse(res.text)
     for item in feed.entries:
-        print(item.title)
-        print(item.link)
-        print(item.published)
-        print(item.description)
+        dateTime = datetime.strptime(item.pubDate, '%a, %d %b %Y %H:%M:%S %Z')
+        print('datetime', dateTime.isoformat())
+        print('title', item.title)
+        print('link', item.link)
+        print('description', item.description)
+        print('stock_id', coID)
         print("======================================")
