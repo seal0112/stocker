@@ -358,8 +358,8 @@ class Stock_Commodity(db.Model):
 feedsAndfeedsTags = db.Table('feed_feedTag',
                              db.Column('feed_id', db.Integer, db.ForeignKey(
                                  'feed.id'), primary_key=True),
-                             db.Column('feedTag', db.String(20), db.ForeignKey(
-                                 'feed_tag.name'), primary_key=True)
+                             db.Column('feedTag', db.Integer, db.ForeignKey(
+                                 'feed_tag.id'), primary_key=True)
                              )
 
 
@@ -384,7 +384,6 @@ class Feed(db.Model):
 
     @property
     def serialize(self):
-        print(self.tags)
         if self.tags:
             tags = [tag.name for tag in self.tags]
         res = {}
@@ -406,7 +405,8 @@ class Feed(db.Model):
 class FeedTag(db.Model):
     __tablename__ = 'feed_tag'
 
-    name = db.Column(db.String(20), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(20), unique=True, nullable=False)
 
     @property
     def serialize(self):

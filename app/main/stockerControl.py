@@ -30,7 +30,6 @@ optionWord = {
     'revenue': '營收整理'
 }
 
-
 def showMain():
     """
     This is the summary defined in yaml file
@@ -92,6 +91,11 @@ def showMain():
     # except Exception as ex:
     #     print(ex)
     #     db.session.rollback()
+    feed = Feed.query.filter_by(
+            stock_id='2352',
+            title='本公司受邀參加「2021年元大金控線上亞洲投資創富論壇」',
+            releaseTime='2021-06-04 12:23:54').one_or_none()
+    print(feed)
 
     return 'ok'
 
@@ -956,7 +960,7 @@ class handleFeed(MethodView):
 
     def get(self, stock_id):
         page = int(request.args.get('page', default=1))
-        page_size = 15
+        page_size = 20
         feeds = Feed.query.filter_by(
             stock_id=stock_id).limit(
                 page_size).offset((page-1)*page_size)
@@ -965,10 +969,11 @@ class handleFeed(MethodView):
 
     def post(self, stock_id):
         feedData = json.loads(request.data)
+        releaseTime = datetime.fromisoformat(feedData['releaseTime'])
         feed = Feed.query.filter_by(
             stock_id=stock_id,
             title=feedData['title'],
-            link=feedData['link']).one_or_none()
+            releaseTime=releaseTime).one_or_none()
 
         if feed != None:
             return make_response(json.dumps('OK'), 200)
@@ -976,9 +981,7 @@ class handleFeed(MethodView):
         try:
             feed = Feed()
             feed.stock_id = stock_id
-            feed.releaseTime = datetime.strptime(
-                feedData['releaseTime'],
-                '%Y-%m-%d %H:%M:%S').astimezone(timezone.utc)
+            feed.releaseTime = releaseTime
             feed.title = feedData['title']
             feed.link = feedData['link']
             feed.description = feedData.get('description', None)
@@ -986,7 +989,6 @@ class handleFeed(MethodView):
             for tagName in feedData['tags']:
                 tag = FeedTag.query.filter_by(
                     name=tagName).one_or_none()
-                print(tag)
                 if tag == None:
                     feed.tags.append(FeedTag(name=tagName))
                 else:
