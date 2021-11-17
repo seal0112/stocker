@@ -26,7 +26,7 @@ with open('./critical_file/testWebhook.json') as webhookReader:
 companyTypes = ['sii', 'otc', 'rotc', 'pub']
 
 stockerUrl = "http://{}:{}/api/v0".format(serverConf['ip'], serverConf['port'])
-SLEEP_TIME = 10
+SLEEP_TIME = 11
 
 # logging setting
 log_filename = datetime.now().strftime("log/crawler %Y-%m-%d.log")
@@ -632,10 +632,10 @@ def dailyRoutineWork():
     pushSlackMessage("Stocker日常工作", '{} crawler work start.'.format(curTime))
 
     try:
+        updateDelistedCompany()
         for type in companyTypes:
             getBasicInfo(type)
             time.sleep(SLEEP_TIME + random.randrange(0, 4))
-        updateDelistedCompany()
         updateStockCommodity()
 
         if date.today().weekday() in [0,1,2,3,4]:
