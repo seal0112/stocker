@@ -23,26 +23,6 @@ BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
 DATE_FORMAT = '%Y-%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
 
-SWAGGER_URL = '/api/docs'
-API_URL = '/spec'
-
-swaggerui_blueprint = get_swaggerui_blueprint(
-    # Swagger UI static files will be mapped to '{SWAGGER_URL}/dist/'
-    SWAGGER_URL,
-    API_URL,
-    config={  # Swagger UI config overrides
-        'app_name': "Stocker Application"
-    }
-)
-
-app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
-
-# console = logging.StreamHandler()
-# console.setLevel(logging.INFO)
-# console.setFormatter(formatter)
-# logger.addHandler(console)
-
-
 @app.route("/spec")
 def spec():
     base_path = os.path.join(app.root_path, 'docs')
