@@ -7,6 +7,7 @@ import random
 from datetime import datetime
 from io import StringIO
 import feedparser
+from lxml import etree
 
 SLEEPTIME = 10
 
@@ -184,7 +185,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                                + year + "_" + month + "_0.html",
                         "type": "SiiDomestic"
                      }
-    urlSiiForiegn = {
+    urlSiiForeign = {
                         "url": "https://mops.twse.com.tw/nas/t21/sii/t21sc03_"
                                + year + "_" + month + "_1.html",
                         "type":  "SiiForiegn"
@@ -194,7 +195,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                                + year + "_" + month + "_0.html",
                         "type": "OtcDomestic"
                     }
-    urlOtcForiegn = {
+    urlOtcForeign = {
                         "url": "https://mops.twse.com.tw/nas/t21/otc/t21sc03_"
                                + year + "_" + month + "_1.html",
                         "type": "OtcForiegn"
@@ -204,7 +205,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                                + year + "_" + month + "_0.html",
                         "type": "RotcDomestic"
                     }
-    urlRotcForiegn = {
+    urlRotcForeign = {
                         "url": "https://mops.twse.com.tw/nas/t21/rotc/t21sc03_"
                                + year + "_" + month + "_1.html",
                         "type": "RotcForiegn"
@@ -214,7 +215,7 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                                + year + "_" + month + "_0.html",
                         "type": "PubDomestic"
                     }
-    urlPubForiegn = {
+    urlPubForeign = {
                         "url": "https://mops.twse.com.tw/nas/t21/pub/t21sc03_"
                                + year + "_" + month + "_1.html",
                         "type": "PubForiegn"
@@ -222,13 +223,13 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
 
     urls = [
         urlSiiDomestic,
-        urlSiiForiegn,
+        urlSiiForeign,
         urlOtcDomestic,
-        urlOtcForiegn,
+        urlOtcForeign,
         urlRotcDomestic,
-        urlRotcForiegn,
+        urlRotcForeign,
         urlPubDomestic,
-        urlPubForiegn
+        urlPubForeign
     ]
 
     results = pd.DataFrame()
@@ -252,6 +253,8 @@ def crawlMonthlyRevenue(westernYearIn, monthIn):
                      url["type"],
                      westernYearIn,
                      monthIn))
+        except etree.XMLSyntaxError as xmlError:
+            print('XMLError {}'.format(xmlError))
         else:
             dfs = pd.DataFrame()
             for df in html_df:
