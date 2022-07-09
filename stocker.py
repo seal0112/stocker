@@ -1,7 +1,7 @@
 import os
 from flask import (
     Flask, request, redirect, url_for,
-    jsonify, make_response, render_template,)
+    jsonify, make_response)
 from flask_migrate import Migrate
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -9,13 +9,15 @@ import json
 from datetime import datetime
 from flask_swagger import swagger
 from flask_swagger_ui import get_swaggerui_blueprint
-import time
-
 from app import create_app, db
+
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
 migrate = Migrate(app, db)
+
+HOST = os.environ.get('HOST', '0.0.0.0')
+PORT = os.environ.get('PORT', 9900)
 app.config['JSON_AS_ASCII'] = False
 # Logger setup
 logger = logging.getLogger()
@@ -37,10 +39,6 @@ swaggerui_blueprint = get_swaggerui_blueprint(
 
 app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
-# console = logging.StreamHandler()
-# console.setLevel(logging.INFO)
-# console.setFormatter(formatter)
-# logger.addHandler(console)
 
 
 @app.route("/spec")
@@ -99,4 +97,7 @@ if __name__ == '__main__':
     fileHandler.setLevel(logging.WARNING)
 
     logger.addHandler(fileHandler)
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    app.run(
+        host=HOST,
+        port=PORT,
+        threaded=True)
