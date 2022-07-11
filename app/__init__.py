@@ -19,6 +19,20 @@ def create_app(config_name):
     login_manager.init_app(app)
     jwt.init_app(app)
 
+    from .basic_information import basic_information
+    from .income_sheet import income_sheet
+    from .balance_sheet import balance_sheet
+    from .cash_flow import cash_flow
+    from .month_revenue import month_revenue
+    from .feed import feed
+
+    app.register_blueprint(basic_information, url_prefix='/api/basic_information')
+    app.register_blueprint(income_sheet, url_prefix='/api/income_sheet')
+    app.register_blueprint(balance_sheet, url_prefix='/api/balance_sheet')
+    app.register_blueprint(cash_flow, url_prefix='/api/cash_flow')
+    app.register_blueprint(month_revenue, url_prefix='/api/month_revenue')
+    app.register_blueprint(feed, url_prefix='/api/feed')
+
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')
 

@@ -3,16 +3,14 @@ import json
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-with open('{}/critical_file/databaseAccount.json'.format(
-        basedir)) as accountReader:
-    dbAccount = json.loads(accountReader.read())
-
 with open('{}/critical_file/client_secret.json'.format(
         basedir)) as clientSecretReader:
     client_secret = json.loads(clientSecretReader.read())
 
 DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-    dbAccount["username"], dbAccount["password"], dbAccount["ip"])
+    os.getenv('DB_USER'),
+    os.getenv('DB_PASSWORD'),
+    os.getenv('DB_HOST'))
 
 
 class Config:

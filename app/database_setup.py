@@ -5,6 +5,8 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+# db.Index('revenue_idx_stock', Month_Revenue.stock_id)
+
 def getCurrentDate():
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
@@ -248,7 +250,6 @@ class Income_Sheet(db.Model):
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
-
 # done
 class Month_Revenue(db.Model):
     __tablename__ = 'month_revenue'
@@ -304,6 +305,8 @@ class Daily_Information(db.Model):
     本日漲跌 = db.Column(db.Float)
     近四季每股盈餘 = db.Column(db.Float)
     本益比 = db.Column(db.Float)
+    殖利率 = db.Column(db.Float)
+    股價淨值比 = db.Column(db.Float)
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property
@@ -384,8 +387,9 @@ class Feed(db.Model):
 
     @property
     def serialize(self):
+        tags = []
         if self.tags:
-            tags = [tag.name for tag in self.tags]
+            tags = tags + [tag.name for tag in self.tags]
         res = {}
         for attr, val in self.__dict__.items():
             if attr == '_sa_instance_state':
