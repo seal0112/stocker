@@ -7,7 +7,4 @@ node_modules/
 log/*
 venv/
 .env
-critical_flie/databaseAccount.json
-critical_flie/serverConfig.json
-critical_file/client_secret.json
-critical_file/databaseAccount.json
+critical_file

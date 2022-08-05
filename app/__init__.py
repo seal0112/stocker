@@ -26,12 +26,12 @@ def create_app(config_name):
     from .month_revenue import month_revenue
     from .feed import feed
 
-    app.register_blueprint(basic_information, url_prefix='/api/basic_information')
-    app.register_blueprint(income_sheet, url_prefix='/api/income_sheet')
-    app.register_blueprint(balance_sheet, url_prefix='/api/balance_sheet')
-    app.register_blueprint(cash_flow, url_prefix='/api/cash_flow')
-    app.register_blueprint(month_revenue, url_prefix='/api/month_revenue')
-    app.register_blueprint(feed, url_prefix='/api/feed')
+    app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
+    app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
+    app.register_blueprint(balance_sheet, url_prefix='/api/v0/balance_sheet')
+    app.register_blueprint(cash_flow, url_prefix='/api/v0/cash_flow')
+    app.register_blueprint(month_revenue, url_prefix='/api/v0/month_revenue')
+    app.register_blueprint(feed, url_prefix='/api/v0/feed')
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')
