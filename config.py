@@ -7,19 +7,11 @@ with open('{}/critical_file/client_secret.json'.format(
         basedir)) as clientSecretReader:
     client_secret = json.loads(clientSecretReader.read())
 
-with open('{}/critical_file/databaseAccount.json'.format(
-        basedir)) as databaseAccountReader:
-    database_account = json.loads(databaseAccountReader.read())
-
-# DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-#     os.getenv('DB_USER'),
-#     os.getenv('DB_PASSWORD'),
-#     os.getenv('DB_HOST'))
-
 DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
-    database_account['username'],
-    database_account['password'],
-    database_account['ip'])
+    os.getenv('DB_USER'),
+    os.getenv('DB_PASSWORD'),
+    os.getenv('DB_HOST'))
+
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess db.String'
