@@ -13,6 +13,9 @@ import math
 from datetime import datetime, timezone
 from .. import db
 from . import main
+from ..services.stock_screener import StockScrennerServices
+from ..services.line_services import LineServices
+
 
 logger = logging.getLogger()
 BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -32,72 +35,11 @@ optionWord = {
 
 
 def showMain():
-    """
-    This is the summary defined in yaml file
-    First line is the summary
-    All following lines until the hyphens is added to description
-    the format of the first lines until 3 hyphens will be not yaml compliant
-    but everything below the 3 hyphens should be.
-    ---
-    tags:
-      - main page for test
-    responses:
-      200:
-        description: a 2330 daily information
-        schema:
-          id: Daily_information
-          type: array
-          properties:
-            stock_id:
-              default: '2330'
-              type: string
-          update_date:
-            type: string
-            default: 'Mon, 1 Jan 2013 00:00:00 GMT'
-          本日收盤價:
-            type: number
-            default: 0
-          本日漲跌:
-            type: number
-            default: 0
-          本益比:
-            type: number
-            default: 0
-          近四季每股盈餘:
-            type: number
-            default: 0
-    """
-    # try:
-    #     tagName = ['財報', '財務報表']
-    #     tags = []
-    #     for name in tagName:
-    #         print(name)
-    #         tag = db.session.query(FeedTag).filter_by(
-    #             name=name).one_or_none()
-    #         if tag == None:
-    #             tags.append(FeedTag(name=name))
-    #         else:
-    #             tags.append(tag)
-
-    #     feed = Feed()
-    #     feed.stock_id = '1101'
-    #     feed.dateTime= '2021-04-19T12:57:34'
-    #     feed.title = '我用台泥測試新的功能'
-    #     feed.link = 'https://link.lasd.com/asd/dasdsda?aaa=123'
-    #     for tag in tags:
-    #         feed.tags.append(tag)
-
-    #     db.session.add(tag, feed)
-    #     db.session.commit()
-    # except Exception as ex:
-    #     print(ex)
-    #     db.session.rollback()
-    feed = Feed.query.filter_by(
-        stock_id='1101',
-        title='本公司受邀參加「2021年元大金控線上亞洲投資創富論壇」',
-        releaseTime='2021-06-04 12:23:54').one_or_none()
-
-    return jsonify(feed)
+    data = request.args
+    stock_screener = StockScrennerServices(option=request.args.get('option'))
+    messages = stock_screener.screener()
+    print(messages)
+    return 'Hello'
 
 
 @main.route('recommended_stocks')
