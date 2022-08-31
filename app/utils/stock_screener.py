@@ -6,13 +6,12 @@ import math
 from .. import db
 
 
-class StockScrennerServices:
+class StockScrennerManager:
 
     def __init__(self, option):
         self.option = option
         self.screener_format = self.getScreenerFormat(self.option)
-        # self.now = datetime.now()
-        self.now = datetime.strptime('2021-05-21', '%Y-%m-%d')
+        self.now = datetime.now()
         self.query_condition = {
             "date": self.now.strftime('%Y-%m-%d'),
             "season": (math.ceil(self.now.month/3)-2)%4+1,
@@ -33,14 +32,16 @@ class StockScrennerServices:
     def screener(self):
         message_list = []
         message = ''
-        sqlCommand = self.screener_format['sqlSyntax'].format(**self.query_condition)
-        stocks = db.engine.execute(sqlCommand).fetchall()
+        sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
+        stocks = db.engine.execute(sql_command).fetchall()
         for idx, stock in enumerate(stocks):
             if int(idx) % 10 == 0:
                 message_list.append(message)
-                message = self.screener_format['title'].format(option=self.option, page=(idx//10)+1, **self.query_condition)
-            message += '/n{}'.format(self.screener_format['content'].format(*stock))
-
+                message = self.screener_format['title'].format(
+                    option=self.option, page=(idx//10)+1, **self.query_condition)
+            message += '\n{}'.format(self.screener_format['content'].format(*stock))
+        else:
+            message_list.append(message)
         message_list.pop(0)
         return message_list
 

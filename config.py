@@ -7,10 +7,11 @@ with open('{}/critical_file/client_secret.json'.format(
         basedir)) as clientSecretReader:
     client_secret = json.loads(clientSecretReader.read())
 
-DB_URL = """mysql+pymysql://%s:%s@%s/stocker?charset=utf8""" % (
+DB_URL = """mysql+pymysql://%s:%s@%s/%s?charset=utf8""" % (
     os.getenv('DB_USER'),
     os.getenv('DB_PASSWORD'),
-    os.getenv('DB_HOST'))
+    os.getenv('DB_HOST'),
+    os.getenv('DB_NAME'))
 
 
 class Config:
