@@ -17,7 +17,8 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 migrate = Migrate(app, db)
 
 HOST = os.environ.get('HOST', '0.0.0.0')
-PORT = os.environ.get('PORT', 9900)
+PORT = os.environ.get('PORT')
+print(HOST, PORT)
 app.config['JSON_AS_ASCII'] = False
 # Logger setup
 logger = logging.getLogger()

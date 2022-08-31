@@ -4,6 +4,10 @@ from ..database_setup import Feed, FeedTag
 from .. import db
 from . import feed
 import json
+from datetime import datetime
+import logging
+
+logger = logging.getLogger()
 
 
 class handleFeed(MethodView):

@@ -4,6 +4,11 @@ from ..database_setup import Month_Revenue
 from .. import db
 from . import month_revenue
 import json
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+import logging
+
+logger = logging.getLogger()
 
 
 class handleMonthRevenue(MethodView):

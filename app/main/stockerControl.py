@@ -14,6 +14,7 @@ from .. import db
 from . import main
 from ..utils.stock_screener import StockScrennerManager
 from ..utils.line_manager import LineManager
+from sqlalchemy.exc import IntegrityError
 
 
 logger = logging.getLogger()

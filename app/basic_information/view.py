@@ -4,6 +4,12 @@ from ..database_setup import Basic_Information
 from .. import db
 from . import basic_information
 import json
+import logging
+from datetime import datetime, timezone
+from sqlalchemy.exc import IntegrityError
+
+
+logger = logging.getLogger()
 
 
 class handleBasicInfo(MethodView):
