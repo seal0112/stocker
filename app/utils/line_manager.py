@@ -1,7 +1,7 @@
 import requests
 
 
-class LineServices:
+class LineManager:
 
     def __init__(self, webhookToken):
         self.notifyUrl = 'https://notify-api.line.me/api/notify'
@@ -10,7 +10,7 @@ class LineServices:
             'Content-Type': 'application/x-www-form-urlencoded'
         }
 
-    def push_notify(self, messages):
+    def push_notification(self, messages):
         for message in messages:
             try:
                 requests.post(

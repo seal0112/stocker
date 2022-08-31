@@ -1,9 +1,8 @@
 from flask import request, jsonify, make_response
 from flask.views import MethodView
 from ..database_setup import (
-    Basic_Information, Month_Revenue, Income_Sheet,
-    Balance_Sheet, Cash_Flow, Daily_Information,
-    Stock_Commodity, Feed, FeedTag
+    Basic_Information, Income_Sheet, Balance_Sheet,
+    Cash_Flow, Daily_Information, Stock_Commodity
 )
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -13,8 +12,8 @@ import math
 from datetime import datetime, timezone
 from .. import db
 from . import main
-from ..services.stock_screener import StockScrennerServices
-from ..services.line_services import LineServices
+from ..utils.stock_screener import StockScrennerManager
+from ..utils.line_manager import LineManager
 
 
 logger = logging.getLogger()
@@ -35,11 +34,22 @@ optionWord = {
 
 
 def showMain():
-    data = request.args
-    stock_screener = StockScrennerServices(option=request.args.get('option'))
+    stock_screener = StockScrennerManager(option=request.args.get('option'))
     messages = stock_screener.screener()
     print(messages)
     return 'Hello'
+
+
+@main.route('screener')
+def use_screener():
+    option = request.args.get('option')
+    webhook = request.args.get('webhook')
+    stock_screener = StockScrennerManager(option)
+    messages = stock_screener.screener()
+    line_manager = LineManager(webhook)
+    line_manager.push_notification(messages)
+
+    return make_response('', 204)
 
 
 @main.route('recommended_stocks')
