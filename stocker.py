@@ -11,14 +11,12 @@ from flask_swagger import swagger
 from flask_swagger_ui import get_swaggerui_blueprint
 from app import create_app, db
 
-
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
 migrate = Migrate(app, db)
 
 HOST = os.environ.get('HOST', '0.0.0.0')
 PORT = os.environ.get('PORT')
-print(HOST, PORT)
 app.config['JSON_AS_ASCII'] = False
 # Logger setup
 logger = logging.getLogger()

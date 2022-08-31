@@ -1,6 +1,8 @@
 import os
 import json
+from dotenv import load_dotenv
 
+load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 with open('{}/critical_file/client_secret.json'.format(
