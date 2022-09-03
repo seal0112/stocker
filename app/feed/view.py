@@ -1,13 +1,17 @@
 from flask import request, jsonify, make_response
 from flask.views import MethodView
-from ..database_setup import Feed, FeedTag
+from ..database_setup import (
+    Feed, FeedTag, basicInformationAndFeed
+)
 from .. import db
 from . import feed
+from .feed_services import FeedServices
 import json
 from datetime import datetime
 import logging
 
 logger = logging.getLogger()
+feed_services = FeedServices()
 
 
 class handleFeed(MethodView):
@@ -33,13 +37,12 @@ class handleFeed(MethodView):
     """
 
     def get(self, stock_id):
-        page = int(request.args.get('page', default=1))
-        page_size = 20
-        feeds = Feed.query.filter_by(
-            stock_id=stock_id).limit(
-                page_size).offset((page-1)*page_size)
-        res = [feed.serialize for feed in feeds]
-        return jsonify(res)
+        time = request.args.get(
+            'time', default=None)
+        time = time if time else datetime.now()
+        feeds = feed_services.get_feeds(stock_id, time)
+        return jsonify(feeds)
+
 
     def post(self, stock_id):
         feedData = json.loads(request.data)
@@ -76,6 +79,12 @@ class handleFeed(MethodView):
             return make_response(json.dumps(str(ex)), 500)
         else:
             return make_response(json.dumps('Create'), 201)
+
+
+@feed.route('', methods=['POST'])
+def create_feed():
+    feed_data = json.loads(request.data)
+    return feed_services.create_feed(feed_data)
 
 
 feed.add_url_rule('/<stock_id>',
