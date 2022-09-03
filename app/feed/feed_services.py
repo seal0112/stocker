@@ -45,7 +45,8 @@ class FeedServices:
 
             for stock_id in feed_data['stocks']:
                 stock = basic_info_services.get_basic_information(stock_id)
-                feed.stocks.append(stock)
+                if stock:
+                    feed.stocks.append(stock)
 
             db.session.add(feed)
             db.session.commit()
