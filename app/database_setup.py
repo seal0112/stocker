@@ -10,6 +10,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 def getCurrentDate():
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
+
+basicInformationAndFeed = db.Table('basicInformation_feed',
+                             db.Column(
+                                'basic_information_id',
+                                db.String(6),
+                                db.ForeignKey('basic_information.id'),
+                                primary_key=True),
+                             db.Column(
+                                'feed_id',
+                                db.Integer,
+                                db.ForeignKey('feed.id'),
+                                primary_key=True)
+                          )
+
+
 # done
 class Basic_Information(db.Model):
     __tablename__ = 'basic_information'
@@ -58,6 +73,10 @@ class Basic_Information(db.Model):
     投資人關係聯絡電話 = db.Column(db.String(30))
     投資人關係聯絡電子郵件 = db.Column(db.Text)
     公司網站內利害關係人專區網址 = db.Column(db.Text)
+    feeds = db.relationship(
+        'Feed',
+        secondary=basicInformationAndFeed,
+        lazy='dynamic')
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property
@@ -384,19 +403,25 @@ class Feed(db.Model):
     tags = db.relationship(
         'FeedTag', secondary=feedsAndfeedsTags,
         lazy='joined', backref=db.backref('feed'))
+    stocks = db.relationship(
+        'Basic_Information', secondary=basicInformationAndFeed)
 
     @property
     def serialize(self):
-        tags = []
-        if self.tags:
-            tags = tags + [tag.name for tag in self.tags]
         res = {}
+        tags = []
+        stocks = []
         for attr, val in self.__dict__.items():
             if attr == '_sa_instance_state':
                 continue
             else:
                 res[attr] = val
+        if self.tags:
+            tags = [tag.name for tag in self.tags]
         res['tags'] = tags
+        if self.stocks:
+            stocks = [stock.id for stock in self.stocks]
+        res['stocks'] = stocks
         return res
 
     def __getitem__(self, key):
