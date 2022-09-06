@@ -7,7 +7,7 @@ from .. import db
 from . import feed
 from .feed_services import FeedServices
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger()
@@ -36,43 +36,24 @@ class handleFeed(MethodView):
         Exception: An error occurred then return 400.
     """
 
-    def get(self, stock_id):
-        time = request.args.get(
-            'time', default=None)
-        time = time if time else datetime.now()
-        feeds = feed_services.get_feeds(stock_id, time)
+    def get(self):
+        start_time = request.args.get(
+            'starttime', default=None)
+        end_time = request.args.get(
+            'endtime', default=None)
+        start_time = datetime.strptime(
+            start_time, '%Y-%m-%d') if start_time else datetime.now().replace(
+                hour=0, minute=0, microsecond=0) - timedelta(days=1)
+        end_time = datetime.strptime(
+            start_time, '%Y-%m-%d') if start_time else datetime.now()
+        print(start_time, end_time)
+        feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
         return jsonify(feeds)
 
-
-    def post(self, stock_id):
-        feedData = json.loads(request.data)
-        releaseTime = datetime.fromisoformat(feedData['releaseTime'])
-        feed = Feed.query.filter_by(
-            stock_id=stock_id,
-            title=feedData['title'],
-            releaseTime=releaseTime).one_or_none()
-
-        if feed != None:
-            return make_response(json.dumps('OK'), 200)
-
+    def post(self):
         try:
-            feed = Feed()
-            feed.stock_id = stock_id
-            feed.releaseTime = releaseTime
-            feed.title = feedData['title']
-            feed.link = feedData['link']
-            feed.description = feedData.get('description', None)
-            feed.feedType = feedData['feedType']
-            for tagName in feedData['tags']:
-                tag = FeedTag.query.filter_by(
-                    name=tagName).one_or_none()
-                if tag == None:
-                    feed.tags.append(FeedTag(name=tagName))
-                else:
-                    feed.tags.append(tag)
-
-            db.session.add(feed)
-            db.session.commit()
+            feed_data = json.loads(request.data)
+            return feed_services.create_feed(feed_data)
         except Exception as ex:
             logging.exception(ex)
             db.session.rollback()
@@ -81,13 +62,15 @@ class handleFeed(MethodView):
             return make_response(json.dumps('Create'), 201)
 
 
-@feed.route('', methods=['POST'])
-def create_feed():
-    feed_data = json.loads(request.data)
-    return feed_services.create_feed(feed_data)
+@feed.route('/<stock_id>', methods=['GET'])
+def get_stock_feed(stock_id):
+    time = request.args.get('time', default=None)
+    time = time if time else datetime.now()
+    feeds = feed_services.get_feeds(stock_id, time)
+    return jsonify(feeds)
 
 
-feed.add_url_rule('/<stock_id>',
+feed.add_url_rule('',
                   view_func=handleFeed.as_view(
                       'handleFeed'),
                   methods=['GET', 'POST'])

@@ -22,6 +22,13 @@ class FeedServices:
         res = [feed.serialize for feed in feeds]
         return res
 
+    def get_feeds_by_time_range(self, start_time, end_time):
+        feeds = Feed.query.filter(
+            Feed.releaseTime.between(start_time, end_time)).order_by(
+                Feed.releaseTime.desc()).all()
+        res = [feed.serialize for feed in feeds]
+        return res
+
     def create_feed(self, feed_data):
         releaseTime = datetime.fromisoformat(feed_data['releaseTime'])
         feed = Feed.query.filter_by(
