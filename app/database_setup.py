@@ -389,13 +389,12 @@ class Feed(db.Model):
     __tablename__ = 'feed'
 
     id = db.Column(db.Integer, primary_key=True)
-    stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     update_date = db.Column(
         db.Date, nullable=False, default=getCurrentDate)
     releaseTime = db.Column(db.DateTime, nullable=False, index=True)
     title = db.Column(db.String(100), nullable=False)
     link = db.Column(db.Text, nullable=False)
+    source = db.Column(db.String(20), default='mops')
     description = db.Column(db.Text)
     feedType = db.Column(
         db.Enum('announcement', 'news'),
