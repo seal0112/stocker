@@ -40,7 +40,6 @@ class FeedServices:
 
         try:
             feed = Feed()
-            feed.stock_id = "1101"
             feed.releaseTime = releaseTime
             feed.title = feed_data['title']
             feed.link = feed_data['link']
