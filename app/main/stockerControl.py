@@ -14,6 +14,7 @@ from .. import db
 from . import main
 from ..utils.stock_screener import StockScrennerManager
 from ..utils.line_manager import LineManager
+from ..utils.announcement_handler import AnnounceHandler
 from sqlalchemy.exc import IntegrityError
 
 
@@ -53,147 +54,15 @@ def use_screener():
     return make_response('', 204)
 
 
-@main.route('recommended_stocks')
-def getRecommendedStocks():
-    """
-    Discription:
-        this api is used to get recommended stocks.
-    Detail:
-        According to the received query string option and webhook,
-        use option to detemine which SQL syntax should be executed,
-        and used webhook to send line notify message.
-    Return:
-        send message to line notify via webhook.
-    Raises:
-        Exception: An error occurred.
-    """
-    option = request.args.get('option')
-    webhook = request.args.get('webhook')
-    from string import Template
-    with open('./critical_file/sqlSyntax.json') as sqlReader:
-        sqlSyntax = json.loads(sqlReader.read())
+@main.route('incomesheet_announce', methods=['POST'])
+def get_incomesheet_announcement():
+    payload = json.loads(request.data)
 
-    now = datetime.now()
-    season = (math.ceil(now.month/3)-2) % 4 + 1
-    year = now.year-1 if season == 4 else now.year
-    date = now.strftime('%Y-%m-%d')
-
-    template = Template(sqlSyntax[option])
-    sqlCommand = template.substitute(year=year, season=season, date=date)
-    results = db.engine.execute(sqlCommand).fetchall()
-
-    if len(results) <= 0:
-        return f'No recommended {option} stocks'
-    else:
-        payload = {
-            "message": "{} {}年Q{}{}".format(
-                date, year, season, optionWord[option])
-        }
-
-        notifyUrl = 'https://notify-api.line.me/api/notify'
-        headers = {
-            'Authorization': f'Bearer {webhook}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-
-        count = 0
-        page = 2
-        for result in results:
-            payload['message'] += '\n{} EPS:{} YOY:{}% 本益比:{}'.format(
-                result[0], result[1], result[2], result[3])
-            count += 1
-
-            if count == 10:
-                requests.post(notifyUrl, headers=headers, data=payload)
-                count = 0
-                payload['message'] = "{} {} 第{}頁".format(
-                    date, optionWord[option], page) + payload
-                page += 1
-
-        try:
-            if len(payload) > 0:
-                requests.post(notifyUrl, headers=headers, data=payload)
-            return 'OK'
-        except Exception as ex:
-            return make_response(
-                json.dumps(str(ex)), 500)
-
-
-@main.route('revenue_notify')
-def sendRevenueNotify():
-    """
-    This is the summary defined in yaml file
-    First line is the summary
-    All following lines until the hyphens is added to description
-    the format of the first lines until 3 hyphens will be not yaml compliant
-    but everything below the 3 hyphens should be.
-    """
-    option = request.args.get('option')
-    webhook = request.args.get('webhook')
-    monthList = [
-        (1, 2, 3),
-        (4, 5, 6),
-        (7, 8, 9),
-        (10, 11, 12)
-    ]
-    from string import Template
-    with open('./critical_file/sqlSyntax.json') as sqlReader:
-        sqlSyntax = json.loads(sqlReader.read())
-
-    now = datetime.now()
-
-    if now.month == 1:
-        month = 12
-        year = now.year - 1
-        season = 4
-    else:
-        month = now.month - 1
-        year = now.year
-        season = math.ceil(month/4)
-    date = now.strftime('%Y-%m-%d')
-
-    template = Template(sqlSyntax[option])
-    sqlCommand = template.substitute(
-        year=year, month=month, season=season,
-        monthList=monthList[season-1], date=date)
-    results = db.engine.execute(sqlCommand).fetchall()
-
-    if len(results) <= 0:
-        return f'No recommended {option} stocks'
-    else:
-        payload = {
-            "message": "{} {}年{}月 {}".format(
-                date, year, month, optionWord[option])
-        }
-
-        notifyUrl = 'https://notify-api.line.me/api/notify'
-        headers = {
-            'Authorization': f'Bearer {webhook}',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        }
-
-        count = 0
-        page = 2
-        for result in results:
-            payload['message'] += '\n{} YOY:{}% 本益比:{}%'.format(
-                result[0], result[1], result[2])
-            count += 1
-
-            if count == 10:
-                requests.post(notifyUrl, headers=headers, data=payload)
-                count = 0
-                payload['message'] = (
-                    "{} {} 第{}頁".format(date, optionWord[option], page)
-                )
-                page += 1
-
-        try:
-            if len(payload) > 0:
-                requests.post(notifyUrl, headers=headers, data=payload)
-            return 'OK'
-        except Exception as ex:
-            return make_response(
-                json.dumps(str(ex)), 500)
+    announce_handler = AnnounceHandler(payload['link'])
+    income_sheet = announce_handler.get_incomesheet_announce()
+    single_season_incomesheet = announce_handler.get_single_season_incomesheet(
+        income_sheet, payload['year'], payload['season'])
+    return make_response(single_season_incomesheet)
 
 
 class getStockNumber(MethodView):
