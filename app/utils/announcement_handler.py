@@ -33,7 +33,6 @@ class AnnounceHandler:
             data = re.sub(r'[\u4e00-\u9fa5]', '', re.sub(r'[\,\$]', '', re.sub(r'\(\D*\)', '', result[i]))).split(':')[1].strip()
             data = float('-' + re.sub(r'[\(\)]', '', data)) if re.search(r'\(\d+\.*\d*\)', data) else float(data)
             income_sheet[self.data_key[i-4]] = data
-
         return income_sheet
 
     def get_single_season_incomesheet(self, income_sheet, year, season):
@@ -41,11 +40,12 @@ class AnnounceHandler:
         income_sheet['stock_id'] = stock_id
         data = Income_Sheet.query.filter_by(stock_id=stock_id, year=year).all()
         for d in data:
+            if int(d.season) >= season:
+                continue
             past_income_sheet = d.serialize
             for key in self.data_key:
                 income_sheet[key] = income_sheet[key] - past_income_sheet[key]
         # 下面計算各種比率，除Q1,Q3, 要先撈前幾季的資料剪掉數字後再算
-
         for key in self.ratio_key:
             income_sheet[key+'率'] = str(round(income_sheet[key] / income_sheet['營業收入合計'], 4)*100) + '%'
 
