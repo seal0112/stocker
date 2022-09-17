@@ -43,6 +43,7 @@ class FeedServices:
             feed.releaseTime = releaseTime
             feed.title = feed_data['title']
             feed.link = feed_data['link']
+            feed.source = feed_data['source']
             feed.description = feed_data.get('description', None)
             feed.feedType = feed_data['feedType']
             for tag_name in feed_data['tags']:
