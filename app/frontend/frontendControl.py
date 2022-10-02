@@ -1,14 +1,14 @@
-from flask import jsonify, make_response
+from flask import request, jsonify, make_response
 from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
     Balance_Sheet, Cash_Flow, Daily_Information,
-    Stock_Commodity
+    Stock_Commodity, Feed
 )
 from flask_login import login_required, current_user
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
-import datetime
+from datetime import datetime, timedelta
 from . import frontend
 from .. import db
 from sqlalchemy.sql import func
@@ -209,3 +209,22 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
         .limit(20).all()
     data = [row._asdict() for row in operationExpense][::-1]
     return jsonify(data)
+
+
+@frontend.route('/feed')
+@login_required
+def getMarketFeed():
+    target_date = request.args.get('targetDate')
+    feed_type = request.args.get('feedType')
+    start_time = datetime.strptime(target_date, '%Y-%m-%d')
+    end_time = datetime.strptime(target_date, '%Y-%m-%d') + timedelta(days=1)
+    feed_query = Feed.query.filter(Feed.releaseTime.between(start_time, end_time))
+
+    if feed_type == 'all':
+        feeds = feed_query.all()
+    else:
+        feeds = feed_query.filter_by(feedType=feed_type).all()
+
+    result = [feed.serialize for feed in feeds]
+    return jsonify(result)
+
