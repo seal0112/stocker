@@ -131,7 +131,7 @@ def checkAuthenticated():
         response = make_response(jsonify({'isAuth': True}), 200)
         response.headers['Content-Type'] = 'application/json'
     else:
-        response = make_response(jsonify({'isAuth': False}), 200)
+        response = make_response(jsonify({'isAuth': False}), 403)
         response.headers['Content-Type'] = 'application/json'
     return response
 
