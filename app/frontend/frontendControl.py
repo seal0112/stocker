@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
+import pytz
 from datetime import datetime, timedelta
 from . import frontend
 from .. import db
@@ -216,7 +217,7 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
 def getMarketFeed():
     target_date = request.args.get('targetDate')
     feed_type = request.args.get('feedType')
-    start_time = datetime.strptime(target_date, '%Y-%m-%d')
+    start_time = datetime.strptime(target_date, '%Y-%m-%d').astimezone(tz=pytz.UTC)
     end_time = datetime.strptime(target_date, '%Y-%m-%d') + timedelta(days=1)
     feed_query = Feed.query.filter(Feed.releaseTime.between(start_time, end_time))
 
