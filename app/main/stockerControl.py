@@ -153,8 +153,6 @@ class handleDailyInfo(MethodView):
                 for key in payload:
                     dailyInfo[key] = payload[key]
 
-            dailyInfo.updatePE()
-
             db.session.add(dailyInfo)
             db.session.commit()
         except IntegrityError as ie:

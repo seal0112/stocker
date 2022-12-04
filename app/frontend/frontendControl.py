@@ -94,7 +94,9 @@ def getFrontEndDailyInfo(stock_id):
             Daily_Information.本日收盤價,
             Daily_Information.本日漲跌,
             Daily_Information.本益比,
-            Daily_Information.近四季每股盈餘)\
+            Daily_Information.近四季每股盈餘,
+            Daily_Information.殖利率,
+            Daily_Information.股價淨值比)\
         .filter_by(stock_id=stock_id)\
         .one_or_none()
     if dailyInfo == None:
