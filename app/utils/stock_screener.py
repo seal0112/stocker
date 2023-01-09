@@ -12,17 +12,13 @@ class StockScrennerManager:
         self.option = option
         self.screener_format = self.getScreenerFormat(self.option)
         self.now = datetime.now()
+        month_list = [(10, 11, 12), (1, 2, 3), (4, 5, 6), (7, 8, 9)][math.floor(self.now.month/3)]
         self.query_condition = {
             "date": self.now.strftime('%Y-%m-%d'),
             "season": (math.ceil(self.now.month/3)-2)%4+1,
             "year": self.now.year-1 if (math.ceil(self.now.month/3)-2)%4+1 == 4 else self.now.year,
             "month": (self.now.month-2)%12+1,
-            "monthList": [
-                (1, 2, 3),
-                (4, 5, 6),
-                (7, 8, 9),
-                (10, 11, 12)
-            ]
+            "monthList": month_list
         }
 
     def getScreenerFormat(self, option):
@@ -33,6 +29,7 @@ class StockScrennerManager:
         message_list = []
         message = ''
         sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
+        print(sql_command)
         stocks = db.engine.execute(sql_command).fetchall()
         for idx, stock in enumerate(stocks):
             if int(idx) % 10 == 0:
