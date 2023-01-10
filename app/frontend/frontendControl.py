@@ -221,7 +221,9 @@ def getMarketFeed():
     feed_type = request.args.get('feedType')
     start_time = datetime.strptime(target_date, '%Y-%m-%d').astimezone(tz=pytz.UTC)
     end_time = datetime.strptime(target_date, '%Y-%m-%d') + timedelta(days=1)
-    feed_query = Feed.query.filter(Feed.releaseTime.between(start_time, end_time))
+    feed_query = Feed.query.filter(
+        Feed.releaseTime.between(start_time, end_time)).order_by(
+            Feed.releaseTime.desc())
 
     if feed_type == 'all':
         feeds = feed_query.all()
