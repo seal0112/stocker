@@ -4,7 +4,8 @@ from ..database_setup import (
     Balance_Sheet, Cash_Flow, Daily_Information,
     Stock_Commodity, Feed
 )
-from flask_login import login_required, current_user
+from flask_jwt_extended import jwt_required
+
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import json
@@ -26,7 +27,7 @@ from sqlalchemy.sql import func
 
 
 @frontend.route('/stock_info_commodity/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndStockInfoAndCommodity(stock_id):
     resData = {}
 
@@ -69,7 +70,7 @@ def getFrontEndStockInfoAndCommodity(stock_id):
 
 
 @frontend.route('/check_stock_exist/<stock_id>')
-@login_required
+@jwt_required()
 def checkStockExist(stock_id):
     stockInfo = db.session\
         .query(Basic_Information)\
@@ -86,7 +87,7 @@ def checkStockExist(stock_id):
 
 
 @frontend.route('/daily_info/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndDailyInfo(stock_id):
     dailyInfo = db.session\
         .query()\
@@ -109,7 +110,7 @@ def getFrontEndDailyInfo(stock_id):
 
 
 @frontend.route('/month_revenue/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndMonthRevenue(stock_id):
     monthlyReve = db.session\
         .query()\
@@ -128,7 +129,7 @@ def getFrontEndMonthRevenue(stock_id):
 
 
 @frontend.route('/eps/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndEPS(stock_id):
     EPS = db.session\
         .query()\
@@ -146,7 +147,7 @@ def getFrontEndEPS(stock_id):
 
 
 @frontend.route('/income_sheet/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndIncomeSheet(stock_id):
     incomeSheet = db.session\
         .query()\
@@ -169,7 +170,7 @@ def getFrontEndIncomeSheet(stock_id):
 
 
 @frontend.route('/profit_analysis/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndProfitAnalysis(stock_id):
     profit = db.session\
         .query()\
@@ -190,7 +191,7 @@ def getFrontEndProfitAnalysis(stock_id):
 
 
 @frontend.route('/op_expense_analysis/<stock_id>')
-@login_required
+@jwt_required()
 def getFrontEndOperationExpenseAnalysis(stock_id):
     operationExpense = db.session\
         .query()\
@@ -215,21 +216,26 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
 
 
 @frontend.route('/feed')
-@login_required
+@jwt_required()
 def getMarketFeed():
     target_date = request.args.get('targetDate')
     feed_type = request.args.get('feedType')
+    page = request.args.get('page', 0)
+    page_size = request.args.get('page_size', 5)
     start_time = datetime.strptime(target_date, '%Y-%m-%d').astimezone(tz=pytz.UTC)
     end_time = datetime.strptime(target_date, '%Y-%m-%d') + timedelta(days=1)
     feed_query = Feed.query.filter(
         Feed.releaseTime.between(start_time, end_time)).order_by(
             Feed.releaseTime.desc())
 
-    if feed_type == 'all':
-        feeds = feed_query.all()
-    else:
-        feeds = feed_query.filter_by(feedType=feed_type).all()
+    if feed_type != 'all':
+        feed_query = feed_query.filter_by(feedType=feed_type)
 
-    result = [feed.serialize for feed in feeds]
-    return jsonify(result)
+    feeds = feed_query.paginate(
+        page=int(page), per_page=int(page_size), error_out=False)
 
+    return jsonify({
+        'feeds': [feed.serialize for feed in feeds],
+        'next_page': feeds.next_num,
+        'has_next': feeds.has_next
+    })

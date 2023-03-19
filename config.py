@@ -1,6 +1,8 @@
 import os
 import json
+import datetime
 from dotenv import load_dotenv
+
 
 load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -9,11 +11,11 @@ with open('{}/critical_file/client_secret.json'.format(
         basedir)) as clientSecretReader:
     client_secret = json.loads(clientSecretReader.read())
 
-DB_URL = """mysql+pymysql://%s:%s@%s/%s?charset=utf8""" % (
-    os.getenv('DB_USER'),
-    os.getenv('DB_PASSWORD'),
-    os.getenv('DB_HOST'),
-    os.getenv('DB_NAME'))
+DB_URL = (
+    'mysql+pymysql://'
+    + f'{os.getenv("DB_USER")}:{os.getenv("DB_PASSWORD")}'
+    + f'@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}?charset=utf8'
+)
 
 
 class Config:
@@ -27,7 +29,8 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 1800
     }
-    JWT_SECRET_KEY = 'tmp-secret'
+    JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
     CLIENT_SECRET = client_secret
 
     @staticmethod
@@ -43,7 +46,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'sqlite://'
+        DB_URL
     WTF_CSRF_ENABLED = False
 
 

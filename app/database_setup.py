@@ -1,6 +1,6 @@
 import datetime
 import json
-from . import db, login_manager
+from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -76,6 +76,7 @@ class Basic_Information(db.Model):
     feeds = db.relationship(
         'Feed',
         secondary=basicInformationAndFeed,
+        backref=db.backref('basic_information', lazy=True),
         lazy='dynamic')
 
     # Add add a decorator property to serialize data from the datadb.Model
@@ -396,7 +397,8 @@ class Feed(db.Model):
         'FeedTag', secondary=feedsAndfeedsTags,
         lazy='joined', backref=db.backref('feed'))
     stocks = db.relationship(
-        'Basic_Information', secondary=basicInformationAndFeed)
+        'Basic_Information',
+        secondary=basicInformationAndFeed)
 
     @property
     def serialize(self):
@@ -443,7 +445,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(40), unique=True, index=True)
     password_hash = db.Column(db.String(128))
     email = db.Column(db.String(128), unique=True, index=True)
-    profile_pic = db.Column(db.String(128))
+    profile_pic = db.Column(db.String(512))
     external_type = db.Column(db.String(16))
     external_id = db.Column(db.String(64))
     authenticate = db.Column(db.Boolean, nullable=False, default=False)
@@ -454,6 +456,7 @@ class User(UserMixin, db.Model):
 
     def set_password(self, password):
         """Create hashed password."""
+        print(password)
         self.password_hash = generate_password_hash(password, method='sha256')
 
     def check_password(self, password):
@@ -483,8 +486,3 @@ class User(UserMixin, db.Model):
             return self.id
         except AttributeError:
             raise NotImplementedError('No `id` attribute - override `get_id`')
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))

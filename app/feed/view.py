@@ -46,7 +46,6 @@ class handleFeed(MethodView):
                 hour=0, minute=0, microsecond=0) - timedelta(days=1)
         end_time = datetime.strptime(
             end_time, '%Y-%m-%d') if end_time else datetime.now()
-        print(start_time, end_time)
         feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
         return jsonify(feeds)
 

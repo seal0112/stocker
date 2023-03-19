@@ -67,7 +67,6 @@ class FeedServices:
     def get_feed_tag(self, tag_name):
         tag = FeedTag.query.filter_by(name=tag_name).one_or_none()
         if tag == None:
-            return FeedTag(name=tagName)
+            return FeedTag(name=tag_name)
         else:
             return tag
-
