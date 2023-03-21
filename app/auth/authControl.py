@@ -51,7 +51,7 @@ def login():
         user_info['external_type']
     )
     if userId is None:
-        if user_info['external_type'] != 'internal':
+        if user_info['external_type'] == 'internal':
             res = make_response(
                 jsonify(
                     'Account is not exist'), 401)
