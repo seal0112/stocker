@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 import math
 
+from sqlalchemy import text
+
 from .. import db
 
 
@@ -29,8 +31,10 @@ class StockScrennerManager:
         message_list = []
         message = ''
         sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
-        print(sql_command)
-        stocks = db.engine.execute(sql_command).fetchall()
+
+        with db.engine.connect() as conn:
+            stocks = conn.execute(text(sql_command)).fetchall()
+
         for idx, stock in enumerate(stocks):
             if int(idx) % 10 == 0:
                 message_list.append(message)
