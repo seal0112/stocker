@@ -1,4 +1,4 @@
-from ..database_setup import User
+from .models import User
 from .. import db
 
 

@@ -1,6 +1,4 @@
-from datetime import timedelta
 import json
-import requests
 
 from flask import (
     request, make_response, jsonify,
@@ -13,7 +11,6 @@ from flask_jwt_extended import (
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from ..database_setup import User
 from . import auth
 from . import user_service
 from . import login_service

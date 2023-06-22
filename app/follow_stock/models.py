@@ -1,8 +1,9 @@
 import uuid
 from datetime import datetime
 
-from .. import db
-from ..database_setup import User, Basic_Information
+from ..auth.models import db
+from ..database_setup import Basic_Information
+from ..auth.models import User
 
 
 def getCurrentDate():
