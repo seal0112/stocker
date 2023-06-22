@@ -1,6 +1,6 @@
 from ..database_setup import Data_Update_Date
 import logging
-from datetime import datetime
+from datetime import date
 from .. import db
 
 logger = logging.getLogger()
@@ -24,11 +24,11 @@ class DataUpdateDateService:
         db.session.commit()
         return data_update_date
 
-    def update_news_update_date(self, stock_id):
+    def update_feed_update_date(self, stock_id):
         data_update_date = self.get_data_update_date(stock_id)
 
         try:
-            data_update_date.news_last_update = datetime.now()
+            data_update_date.feed_last_update = date.today()
             db.session.commit()
             return True
         except Exception as ex:
@@ -40,7 +40,7 @@ class DataUpdateDateService:
         data_update_date = self.get_data_update_date(stock_id)
 
         try:
-            data_update_date.month_revenue_last_update = datetime.now()
+            data_update_date.month_revenue_last_update = date.today()
             db.session.commit()
             return True
         except Exception as ex:
@@ -52,7 +52,7 @@ class DataUpdateDateService:
         data_update_date = self.get_data_update_date(stock_id)
 
         try:
-            data_update_date.income_sheet_last_update = datetime.now()
+            data_update_date.income_sheet_last_update = date.today()
             db.session.commit()
             return True
         except Exception as ex:

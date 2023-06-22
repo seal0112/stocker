@@ -1,16 +1,21 @@
+import logging
+import json
+from datetime import datetime
+
 from flask import request, jsonify, make_response
 from flask.views import MethodView
+from sqlalchemy.exc import IntegrityError
+
+from ..utils.data_update_date_service import DataUpdateDateService
 from ..database_setup import (
     Basic_Information, Income_Sheet, Daily_Information
 )
 from .. import db
 from . import income_sheet
-import json
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime
-import logging
+
 
 logger = logging.getLogger()
+data_update_date_service = DataUpdateDateService()
 
 
 class handleIncomeSheet(MethodView):
@@ -104,6 +109,7 @@ class handleIncomeSheet(MethodView):
                 for key in payload:
                     incomeSheet[key] = payload[key]
 
+            data_update_date_service.update_income_sheet_update_date(stock_id)
             db.session.add(incomeSheet)
             db.session.commit()
         except IntegrityError as ie:
@@ -160,8 +166,6 @@ def checkFourSeasonEPS(stock_id):
                 dailyInfo = Daily_Information()
                 dailyInfo['stock_id'] = stock_id
                 dailyInfo['近四季每股盈餘'] = round(fourSeasonEps, 2)
-
-            dailyInfo.updatePE()
 
             db.session.add(dailyInfo)
             db.session.commit()

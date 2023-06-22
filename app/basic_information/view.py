@@ -57,7 +57,6 @@ class handleBasicInfo(MethodView):
         try:
             payload = json.loads(request.data)
             if basicInfo is not None:
-
                 # typeConversSet is used to converse datatype from user input.
                 typeConversSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
                                       "私募普通股", "特別股"))
@@ -86,7 +85,6 @@ class handleBasicInfo(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Basic Info. Reason: %s"
                 % (stock_id, ie))
@@ -95,7 +93,6 @@ class handleBasicInfo(MethodView):
                     'Failed to update %s Basic Info.' % (stock_id)), 400)
             return res
         except Exception as ex:
-            print(ex)
             logger.warning(
                 "400 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))

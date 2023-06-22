@@ -1,14 +1,21 @@
+import logging
+import json
+from datetime import datetime
+
 from flask import request, jsonify, make_response
 from flask.views import MethodView
+from sqlalchemy.exc import IntegrityError
+
+from ..utils.data_update_date_service import DataUpdateDateService
 from ..database_setup import Month_Revenue
 from .. import db
 from . import month_revenue
-import json
-from sqlalchemy.exc import IntegrityError
-from datetime import datetime
-import logging
+
+
+
 
 logger = logging.getLogger()
+data_update_date_service = DataUpdateDateService()
 
 
 class handleMonthRevenue(MethodView):
@@ -81,6 +88,7 @@ class handleMonthRevenue(MethodView):
                 for key in payload:
                     monthReve[key] = payload[key]
 
+            data_update_date_service.update_month_revenue_update_date(stock_id)
             db.session.add(monthReve)
             db.session.commit()
         except IntegrityError as ie:

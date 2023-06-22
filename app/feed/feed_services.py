@@ -1,13 +1,18 @@
-from flask import jsonify, make_response
-from ..database_setup import Feed, FeedTag
-from ..basic_information.basic_information_services import BasicInformationServices
-from .. import db
-from datetime import datetime
 import logging
 import json
 
+from flask import jsonify, make_response
+from datetime import datetime
+
+from ..database_setup import Feed, FeedTag
+from ..basic_information.basic_information_services import BasicInformationServices
+from ..utils.data_update_date_service import DataUpdateDateService
+from .. import db
+
+
 logger = logging.getLogger()
 basic_info_services = BasicInformationServices()
+data_update_date_service = DataUpdateDateService()
 
 
 class FeedServices:
@@ -53,6 +58,7 @@ class FeedServices:
             for stock_id in feed_data['stocks']:
                 stock = basic_info_services.get_basic_information(stock_id)
                 if stock:
+                    data_update_date_service.update_feed_update_date(stock_id)
                     feed.stocks.append(stock)
 
             db.session.add(feed)
