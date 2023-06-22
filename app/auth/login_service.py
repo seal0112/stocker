@@ -16,25 +16,25 @@ class LoginService():
         }
 
     def verify_google(self, login_data):
-        # Specify the CLIENT_ID of the app that accesses the backend:
-        CLIENT_ID = current_app.config[
+        # Specify the client_id of the app that accesses the backend:
+        client_id = current_app.config[
             'CLIENT_SECRET']['google']['CLIENT_ID']
         social_media_info = id_token.verify_oauth2_token(
             login_data['token'],
             grequests.Request(),
-            CLIENT_ID
+            client_id
         )
 
         # Or, if multiple clients access the backend server:
         # idinfo = id_token.verify_oauth2_token(token, requests.Request())
-        # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
+        # if idinfo['aud'] not in [client_id_1, client_id_2, client_id_3]:
         #     raise ValueError('Could not verify audience.')
         if social_media_info['iss'] not in [
             'accounts.google.com', 'https://accounts.google.com'
         ]:
             raise ValueError('Wrong issuer.')
 
-        if social_media_info['aud'] != CLIENT_ID:
+        if social_media_info['aud'] != client_id:
             raise Exception('Could not verify audience.')
 
         user_info = {
@@ -61,25 +61,25 @@ class LoginService():
             "redirect_uri": "http://localhost:5000",
             "grant_type": "fb_exchange_token"
         }
-        payload = requests.post(url, data=user_data)
+        payload = requests.post(url, data=user_data, timeout=10)
         if payload.status_code != 200:
             raise Exception('Could not get facebook user data.')
 
         token = payload.json()['access_token']
 
-        personalUrl = (
+        personal_url = (
             'https://graph.facebook.com/v7.0/me?'
             + f'access_token={token}&fields=name,id,email'
         )
 
-        picUrl = (
+        pic_url = (
             'https://graph.facebook.com/v7.0/me/picture?'
             f'access_token={token}&redirect=0&height=200&width=200'
         )
 
-        social_media_info = requests.get(personalUrl).json()
-        pictureData = requests.get(picUrl).json()
-        social_media_info['profile_pic'] = pictureData['data']['url']
+        social_media_info = requests.get(personal_url, timeout=10).json()
+        picture_data = requests.get(pic_url, timeout=10).json()
+        social_media_info['profile_pic'] = picture_data['data']['url']
 
         user_info = {
             'external_type': 'facebook',

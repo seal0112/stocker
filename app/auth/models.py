@@ -1,6 +1,7 @@
-from .. import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from .. import db
 
 
 class User(UserMixin, db.Model):
@@ -17,7 +18,7 @@ class User(UserMixin, db.Model):
     active = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
-        return '<{} User {}>'.format(self.id, self.username)
+        return f'<{self.id} User {self.username}>'
 
     def set_password(self, password):
         """Create hashed password."""
@@ -49,5 +50,6 @@ class User(UserMixin, db.Model):
     def get_id(self):
         try:
             return self.id
-        except AttributeError:
-            raise NotImplementedError('No `id` attribute - override `get_id`')
+        except AttributeError as ex:
+            raise NotImplementedError(
+                'No `id` attribute - override `get_id`') from ex
