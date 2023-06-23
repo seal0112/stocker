@@ -1,14 +1,11 @@
-import datetime
-import json
+from datetime import datetime, time
 from . import db
-from flask_login import UserMixin
-from werkzeug.security import generate_password_hash, check_password_hash
 
 
 # db.Index('revenue_idx_stock', Month_Revenue.stock_id)
 
 def getCurrentDate():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+    return datetime.now().strftime("%Y-%m-%d")
 
 
 basicInformationAndFeed = db.Table('basicInformation_feed',
@@ -228,24 +225,24 @@ class Income_Sheet(db.Model):
     營業收入合計 = db.Column(db.BigInteger)
     營業成本合計 = db.Column(db.BigInteger)
     營業毛利 = db.Column(db.BigInteger)
-    營業毛利率 = db.Column(db.Float)
+    營業毛利率 = db.Column(db.Numeric(13, 2))
     推銷費用 = db.Column(db.BigInteger)
-    推銷費用率 = db.Column(db.Float)
+    推銷費用率 = db.Column(db.Numeric(13, 2))
     管理費用 = db.Column(db.BigInteger)
-    管理費用率 = db.Column(db.Float)
+    管理費用率 = db.Column(db.Numeric(13, 2))
     研究發展費用 = db.Column(db.BigInteger)
-    研究發展費用率 = db.Column(db.Float)
+    研究發展費用率 = db.Column(db.Numeric(13, 2))
     營業費用 = db.Column(db.BigInteger)
-    營業費用率 = db.Column(db.Float)
+    營業費用率 = db.Column(db.Numeric(13, 2))
     營業利益 = db.Column(db.BigInteger)
-    營業利益率 = db.Column(db.Float)
+    營業利益率 = db.Column(db.Numeric(13, 2))
     營業外收入及支出合計 = db.Column(db.BigInteger)
     稅前淨利 = db.Column(db.BigInteger)
-    稅前淨利率 = db.Column(db.Float)
+    稅前淨利率 = db.Column(db.Numeric(13, 2))
     所得稅費用 = db.Column(db.BigInteger)
-    所得稅費用率 = db.Column(db.Float)
+    所得稅費用率 = db.Column(db.Numeric(13, 2))
     本期淨利 = db.Column(db.BigInteger)
-    本期淨利率 = db.Column(db.Float)
+    本期淨利率 = db.Column(db.Numeric(13, 2))
     母公司業主淨利 = db.Column(db.BigInteger)
     基本每股盈餘 = db.Column(db.Float)
     稀釋每股盈餘 = db.Column(db.Float)
@@ -324,7 +321,7 @@ class Daily_Information(db.Model):
     本日收盤價 = db.Column(db.Float)
     本日漲跌 = db.Column(db.Float)
     近四季每股盈餘 = db.Column(db.Float)
-    本益比 = db.Column(db.Float)
+    本益比 = db.Column(db.Numeric(13, 2))
     殖利率 = db.Column(db.Float)
     股價淨值比 = db.Column(db.Float)
 
@@ -369,6 +366,17 @@ class Stock_Commodity(db.Model):
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+
+class Data_Update_Date(db.Model):
+    __tablename__ = 'data_update_date'
+
+    stock_id = db.Column(
+        db.String(6), db.ForeignKey('basic_information.id'),
+        primary_key=True, nullable=False)
+    month_revenue_last_update = db.Column(db.Date, nullable=True)
+    feed_last_update = db.Column(db.Date, nullable=True)
+    income_sheet_last_update = db.Column(db.Date, nullable=True)
 
 
 feedsAndfeedsTags = db.Table('feed_feedTag',
@@ -438,51 +446,15 @@ class FeedTag(db.Model):
         }
 
 
-class User(UserMixin, db.Model):
-    __tablename__ = 'user'
+class PushNotification(db.Model):
+    __tablename__ = 'push_notification'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(40), unique=True, index=True)
-    password_hash = db.Column(db.String(128))
-    email = db.Column(db.String(128), unique=True, index=True)
-    profile_pic = db.Column(db.String(512))
-    external_type = db.Column(db.String(16))
-    external_id = db.Column(db.String(64))
-    authenticate = db.Column(db.Boolean, nullable=False, default=False)
-    active = db.Column(db.Boolean, nullable=False, default=False)
-
-    def __repr__(self):
-        return '<{} User {}>'.format(self.id, self.username)
-
-    def set_password(self, password):
-        """Create hashed password."""
-        print(password)
-        self.password_hash = generate_password_hash(password, method='sha256')
-
-    def check_password(self, password):
-        """Check hashed password."""
-        return check_password_hash(self.password, password)
-
-    def __getitem__(self, key):
-        return getattr(self, key)
-
-    def __setitem__(self, key, value):
-        setattr(self, key, value)
-
-    @property
-    def is_active(self):
-        return self.active
-
-    @property
-    def is_authenticated(self):
-        return self.authenticate
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        try:
-            return self.id
-        except AttributeError:
-            raise NotImplementedError('No `id` attribute - override `get_id`')
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id'),
+        primary_key=True, nullable=False)
+    notify_enabled = db.Column(db.Boolean, default=False)
+    line_notify_token = db.Column(db.String(64), nullable=True)
+    notify_time = db.Column(db.Time, default=time(hour=20, minute=0))
+    notify_feed = db.Column(db.Boolean, default=False)
+    notify_month_revenue = db.Column(db.Boolean, default=False)
+    notify_income_sheet = db.Column(db.Boolean, default=False)

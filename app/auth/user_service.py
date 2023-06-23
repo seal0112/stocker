@@ -1,5 +1,10 @@
-from ..database_setup import User
+import logging
+
+from .models import User
 from .. import db
+
+
+logger = logging.getLogger()
 
 
 class UserService():
@@ -13,7 +18,8 @@ class UserService():
                 external_id=external_id).filter_by(
                     external_type=external_type).one()
             return user.id
-        except:
+        except Exception as ex:
+            logger.exception('Failed to get user id: %s', ex)
             return None
 
     def get_user(self, user_id):
@@ -40,7 +46,7 @@ class UserService():
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
-            print(f'fail create User: {personal_data.name}')
+            print(f'fail create User: {personal_data.name}, exception: {ex}')
             return None
-        userId = self.get_user_id(new_user['external_id'], external_type)
-        return userId
+        user_id = self.get_user_id(new_user['external_id'], external_type)
+        return user_id
