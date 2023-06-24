@@ -84,11 +84,11 @@ class handleMonthRevenue(MethodView):
                 monthReve['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
+                data_update_date_service.update_month_revenue_update_date(stock_id)
                 monthReve = Month_Revenue()
                 for key in payload:
                     monthReve[key] = payload[key]
 
-            data_update_date_service.update_month_revenue_update_date(stock_id)
             db.session.add(monthReve)
             db.session.commit()
         except IntegrityError as ie:

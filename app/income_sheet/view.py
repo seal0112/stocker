@@ -104,12 +104,12 @@ class handleIncomeSheet(MethodView):
                 incomeSheet['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
+                data_update_date_service.update_income_sheet_update_date(stock_id)
                 incomeSheet = Income_Sheet()
                 incomeSheet['stock_id'] = stock_id
                 for key in payload:
                     incomeSheet[key] = payload[key]
 
-            data_update_date_service.update_income_sheet_update_date(stock_id)
             db.session.add(incomeSheet)
             db.session.commit()
         except IntegrityError as ie:
