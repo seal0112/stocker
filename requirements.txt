@@ -15,6 +15,7 @@ exceptiongroup==1.1.0
 Flask==2.2.3
 Flask-JWT-Extended==4.4.4
 Flask-Login==0.6.2
+flask-marshmallow==0.15.0
 Flask-Migrate==4.0.4
 Flask-SQLAlchemy==3.0.3
 flask-swagger==0.2.14
@@ -33,6 +34,7 @@ jsonschema==3.2.0
 lazy-object-proxy==1.9.0
 Mako==1.1.2
 MarkupSafe==2.1.2
+marshmallow==3.19.0
 mccabe==0.7.0
 mistune==0.8.4
 packaging==23.0
