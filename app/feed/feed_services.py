@@ -37,14 +37,13 @@ class FeedServices:
     def create_feed(self, feed_data):
         releaseTime = datetime.fromisoformat(feed_data['releaseTime'])
         feed = Feed.query.filter_by(
-            title=feed_data['title'],
-            releaseTime=releaseTime).one_or_none()
+            link=feed_data['link']
+        ).one_or_none()
 
         if feed != None:
-            return make_response(json.dumps('OK'), 200)
+            feed = Feed()
 
         try:
-            feed = Feed()
             feed.releaseTime = releaseTime
             feed.title = feed_data['title']
             feed.link = feed_data['link']

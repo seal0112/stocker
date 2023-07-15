@@ -395,7 +395,7 @@ class Feed(db.Model):
         db.Date, nullable=False, default=getCurrentDate)
     releaseTime = db.Column(db.DateTime, nullable=False, index=True)
     title = db.Column(db.String(100), nullable=False)
-    link = db.Column(db.Text, nullable=False)
+    link = db.Column(db.String(600), nullable=False, unique=True)
     source = db.Column(db.String(20), default='mops')
     description = db.Column(db.Text)
     feedType = db.Column(
