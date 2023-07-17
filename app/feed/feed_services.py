@@ -40,7 +40,7 @@ class FeedServices:
             link=feed_data['link']
         ).one_or_none()
 
-        if feed != None:
+        if feed == None:
             feed = Feed()
 
         try:
