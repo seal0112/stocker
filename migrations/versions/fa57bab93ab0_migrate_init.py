@@ -1,7 +1,7 @@
 """migrate init
 
 Revision ID: fa57bab93ab0
-Revises: 
+Revises:
 Create Date: 2020-09-25 19:32:12.454304
 
 """
@@ -21,7 +21,7 @@ def upgrade():
     op.create_table('basic_information',
     sa.Column('id', sa.String(length=6), autoincrement=False, nullable=False),
     sa.Column('update_date', sa.Date(), nullable=False),
-    sa.Column('exchangeType', sa.Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False),
+    sa.Column('exchange_type', sa.Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False),
     sa.Column('公司名稱', sa.Text(), nullable=False),
     sa.Column('公司簡稱', sa.String(length=10), nullable=True),
     sa.Column('產業類別', sa.String(length=10), nullable=True),

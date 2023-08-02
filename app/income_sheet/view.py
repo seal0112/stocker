@@ -145,7 +145,7 @@ def checkFourSeasonEPS(stock_id):
             stock_id=stock_id).scalar()
 
     stockType = db.session.query(
-        Basic_Information.exchangeType).filter_by(
+        Basic_Information.exchange_type).filter_by(
             id=stock_id).scalar()
 
     if stockType in ('sii', 'otc') and quantityOfIncomeSheet >= 4:
