@@ -12,7 +12,7 @@ config==0.5.0.post0
 cryptography==41.0.3
 dill==0.3.6
 exceptiongroup==1.1.0
-Flask==2.2.3
+Flask==2.2.5
 Flask-JWT-Extended==4.4.4
 Flask-Login==0.6.2
 flask-marshmallow==0.15.0
