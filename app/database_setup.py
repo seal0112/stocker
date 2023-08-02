@@ -31,11 +31,7 @@ class Basic_Information(db.Model):
         db.Date, nullable=False,
         default=getCurrentDate)
     exchange_type = db.Column(
-<<<<<<< Updated upstream
-        db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False)
-=======
         db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'))
->>>>>>> Stashed changes
     公司名稱 = db.Column(db.Text, nullable=False)
     公司簡稱 = db.Column(db.String(10))
     產業類別 = db.Column(db.String(10))
