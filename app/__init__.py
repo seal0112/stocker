@@ -1,10 +1,14 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
+from flask_marshmallow import Marshmallow
 from config import config
 
 db = SQLAlchemy()
 jwt = JWTManager()
+ma = Marshmallow()
+migrate = Migrate()
 
 
 def create_app(config_name):
@@ -13,7 +17,9 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     db.init_app(app)
+    migrate.init_app(app, db)
     jwt.init_app(app)
+    ma.init_app(app)
 
     from .basic_information import basic_information
     from .income_sheet import income_sheet

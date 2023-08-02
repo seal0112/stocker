@@ -28,7 +28,7 @@ def getFrontEndStockInfoAndCommodity(stock_id):
         .with_entities(
             Basic_Information.公司簡稱,
             Basic_Information.產業類別,
-            Basic_Information.exchangeType)\
+            Basic_Information.exchange_type)\
         .filter_by(id=stock_id)\
         .one_or_none()
     if stockInfo == None:

@@ -30,7 +30,7 @@ class Basic_Information(db.Model):
     update_date = db.Column(
         db.Date, nullable=False,
         default=getCurrentDate)
-    exchangeType = db.Column(
+    exchange_type = db.Column(
         db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'), nullable=False)
     公司名稱 = db.Column(db.Text, nullable=False)
     公司簡稱 = db.Column(db.String(10))

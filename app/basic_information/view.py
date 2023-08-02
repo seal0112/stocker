@@ -115,7 +115,7 @@ class handleBasicInfo(MethodView):
         try:
             payload = json.loads(request.data)
             if basicInfo is not None:
-                basicInfo['exchangeType'] = payload['exchangeType']
+                basicInfo['exchange_type'] = payload['exchangeType']
                 db.session.add(basicInfo)
                 db.session.commit()
                 res = make_response(json.dumps('OK'), 200)

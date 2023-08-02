@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from .follow_stock_services import FollowStockService
 from .models import Follow_Stock
-from .. import db
+from .serializer import FollowStockSchema
 from . import follow_stock
 
 follow_stock_service = FollowStockService()
@@ -20,7 +20,7 @@ class FollowStockListApi(MethodView):
         show_delete = request.args.get('show_delete', False)
         follow_stocks = follow_stock_service.get_all_follow_stock(
             current_user['id'], show_delete)
-        return jsonify([follow_data.serialize for follow_data in follow_stocks])
+        return FollowStockSchema(many=True).dumps(follow_stocks)
 
     @jwt_required()
     def post(self):

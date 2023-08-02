@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 
 from .models import Follow_Stock
+# from ..database_setup import Daily_Information
 from .. import db
 
 
@@ -11,8 +12,9 @@ class FollowStockService():
         pass
 
     def get_all_follow_stock(self, user_id, show_delete):
-        query = db.session.query(Follow_Stock).filter_by(
-            user_id=user_id)
+        query = db.session.query(Follow_Stock)
+        # query = db.session.query(Follow_Stock, Daily_Information).filter(Follow_Stock.stock_id == Daily_Information.stock_id).filter_by(
+        #     user_id=user_id)
         if not show_delete:
             query = query.filter_by(is_delete=False)
 

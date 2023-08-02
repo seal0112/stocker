@@ -69,12 +69,12 @@ class getStockNumber(MethodView):
     decorators = []
 
     def get(self):
-        companyType = request.args.get('type')
-        if companyType is None:
+        company_type = request.args.get('type')
+        if company_type is None:
             stockNum = db.session.query(Basic_Information.id).all()
         else:
             stockNum = db.session.query(
-                Basic_Information.id).filter_by(exchangeType=companyType).all()
+                Basic_Information.id).filter_by(exchange_type=company_type).all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)

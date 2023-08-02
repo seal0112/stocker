@@ -20,15 +20,16 @@ class Follow_Stock(db.Model):
     id = db.Column(db.String(32), default=getUUID, primary_key=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey(User.id), nullable=False)
-    stock_id = db.Column(
-        db.String(6), db.ForeignKey(Basic_Information.id),
-        nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
     last_update_time = db.Column(db.DateTime, default=datetime.utcnow)
     remove_time = db.Column(db.DateTime)
     comment = db.Column(db.Text)
     long_or_short = db.Column(db.String(10), nullable=False)
     is_delete = db.Column(db.Boolean, default=False)
+    stock_id = db.Column(
+        db.String(6), db.ForeignKey(Basic_Information.id),
+        nullable=False)
+    stock = db.relationship("Basic_Information", lazy="subquery")
 
     @property
     def serialize(self):

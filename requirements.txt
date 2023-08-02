@@ -3,6 +3,7 @@ aniso8601==9.0.1
 astroid==2.15.5
 attrs==19.3.0
 beautifulsoup4==4.11.2
+blinker==1.6.2
 cachetools==4.1.0
 certifi==2023.7.22
 cffi==1.15.1
@@ -12,7 +13,7 @@ config==0.5.0.post0
 cryptography==41.0.3
 dill==0.3.6
 exceptiongroup==1.1.0
-Flask==2.2.3
+Flask==2.3.2
 Flask-JWT-Extended==4.4.4
 Flask-Login==0.6.2
 flask-marshmallow==0.15.0
@@ -64,6 +65,6 @@ tomlkit==0.11.8
 typing_extensions==4.5.0
 urllib3==1.26.5
 webencodings==0.5.1
-Werkzeug==2.2.3
+Werkzeug==2.3.6
 wrapt==1.15.0
 zipp==3.1.0
