@@ -29,7 +29,7 @@ class Follow_Stock(db.Model):
     stock_id = db.Column(
         db.String(6), db.ForeignKey(Basic_Information.id),
         nullable=False)
-    stock = db.relationship("Basic_Information", lazy="subquery")
+    stock = db.relationship("Basic_Information", lazy="immediate")
 
     @property
     def serialize(self):
