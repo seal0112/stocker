@@ -57,7 +57,11 @@ class FeedServices:
             for stock_id in feed_data['stocks']:
                 stock = basic_info_services.get_basic_information(stock_id)
                 if stock:
-                    data_update_date_service.update_feed_update_date(stock_id)
+                    if feed_data['feedType'] == 'news':
+                        data_update_date_service.update_news_update_date(stock_id)
+                    else:
+                        data_update_date_service.update_announcement_update_date(stock_id)
+
                     feed.stocks.append(stock)
 
             db.session.add(feed)

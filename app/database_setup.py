@@ -375,7 +375,8 @@ class Data_Update_Date(db.Model):
         db.String(6), db.ForeignKey('basic_information.id'),
         primary_key=True, nullable=False)
     month_revenue_last_update = db.Column(db.Date, nullable=True)
-    feed_last_update = db.Column(db.Date, nullable=True)
+    announcement_last_update = db.Column(db.Date, nullable=True)
+    news_last_update = db.Column(db.Date, nullable=True)
     income_sheet_last_update = db.Column(db.Date, nullable=True)
 
 

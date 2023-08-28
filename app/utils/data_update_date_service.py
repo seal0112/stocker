@@ -24,11 +24,23 @@ class DataUpdateDateService:
         db.session.commit()
         return data_update_date
 
-    def update_feed_update_date(self, stock_id):
+    def update_announcement_update_date(self, stock_id):
         data_update_date = self.get_data_update_date(stock_id)
 
         try:
-            data_update_date.feed_last_update = date.today()
+            data_update_date.announcement_last_update = date.today()
+            db.session.commit()
+            return True
+        except Exception as ex:
+            db.session.rollback()
+            logger.exception(f'Failed to update news update date: {ex}')
+            return False
+
+    def update_news_update_date(self, stock_id):
+        data_update_date = self.get_data_update_date(stock_id)
+
+        try:
+            data_update_date.news_last_update = date.today()
             db.session.commit()
             return True
         except Exception as ex:
