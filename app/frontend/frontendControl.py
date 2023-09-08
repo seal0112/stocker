@@ -111,11 +111,13 @@ def getFrontEndMonthRevenue(stock_id):
                 Month_Revenue.year, '/', Month_Revenue.month).label(
                     "Year/Month"),
             Month_Revenue.當月營收,
-            Month_Revenue.去年同月增減)\
+            Month_Revenue.去年同月增減,
+            Month_Revenue.上月比較增減)\
         .filter_by(stock_id=stock_id)\
+        .filter(Month_Revenue.year >= datetime.now().year-5)\
         .order_by(Month_Revenue.year.desc())\
         .order_by(Month_Revenue.month.desc())\
-        .limit(60).all()
+        .all()
     data = [row._asdict() for row in monthlyReve][::-1]
     return jsonify(data)
 
