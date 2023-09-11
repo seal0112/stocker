@@ -133,9 +133,10 @@ def getFrontEndEPS(stock_id):
                     "Year/Season"),
             Income_Sheet.基本每股盈餘)\
         .filter_by(stock_id=stock_id)\
+        .filter(Income_Sheet.year >= datetime.now().year-5)\
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
-        .limit(20).all()
+        .all()
     data = [row._asdict() for row in EPS][::-1]
     return jsonify(data)
 
@@ -156,9 +157,10 @@ def getFrontEndIncomeSheet(stock_id):
             Income_Sheet.本期淨利,
             Income_Sheet.母公司業主淨利)\
         .filter_by(stock_id=stock_id)\
+        .filter(Income_Sheet.year >= datetime.now().year-5)\
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
-        .limit(20).all()
+        .all()
     data = [row._asdict() for row in incomeSheet][::-1]
     return jsonify(data)
 
@@ -177,9 +179,10 @@ def getFrontEndProfitAnalysis(stock_id):
             Income_Sheet.稅前淨利率,
             Income_Sheet.本期淨利率)\
         .filter_by(stock_id=stock_id)\
+        .filter(Income_Sheet.year >= datetime.now().year-5)\
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
-        .limit(20).all()
+        .all()
     data = [row._asdict() for row in profit][::-1]
     return jsonify(data)
 
@@ -202,9 +205,10 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
             Income_Sheet.管理費用,
             Income_Sheet.研究發展費用)\
         .filter_by(stock_id=stock_id)\
+        .filter(Income_Sheet.year >= datetime.now().year-5)\
         .order_by(Income_Sheet.year.desc())\
         .order_by(Income_Sheet.season.desc())\
-        .limit(20).all()
+        .all()
     data = [row._asdict() for row in operationExpense][::-1]
     return jsonify(data)
 
