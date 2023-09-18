@@ -5,8 +5,8 @@ from flask import (
     request, make_response, jsonify
 )
 from flask_jwt_extended import (
-    jwt_required, create_access_token,
-    get_jwt_identity
+    jwt_required, create_access_token, create_refresh_token,
+    get_jwt_identity, set_refresh_cookies
 )
 
 from . import auth
@@ -28,10 +28,16 @@ logger = logging.getLogger()
 
 #     return User.query.filter_by(id=identity['id']).one_or_none()
 
+def make_jwt_repsonse(identity):
+    access_token = create_access_token(identity=identity)
+    response = make_response(
+        jsonify(access_token=access_token), 200
+    )
+    return response
+
 
 @auth.route('/login', methods=['POST'])
 def login():
-
     try:
         login_data = request.get_json()
         user_info = login_serv.verify_service[
@@ -57,22 +63,40 @@ def login():
 
     user = user_serv.get_user(user_id)
     if user.is_active:
-        access_token = create_access_token(identity={
+        identity = {
             'id': user.id,
             'username': user.username,
             'email': user.email,
             'picture': user.profile_pic
-        })
-        return jsonify(access_token=access_token), 200
+        }
+        response = make_jwt_repsonse(identity)
+        refresh_token = create_refresh_token(identity=identity)
+        set_refresh_cookies(response, refresh_token)
+
+        return response
 
     return make_response(
         jsonify('Account is not active'), 403)
 
 
+@auth.route('/refresh')
+@jwt_required(locations=["cookies"], refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    response = make_jwt_repsonse(identity)
+
+    return response
+
+
 @auth.route("/logout")
 @jwt_required()
 def logout():
-    return jsonify({'isAuth': False})
+    response = make_response(
+        jsonify({'isAuth': False})
+    )
+    response.delete_cookie("refresh_token")
+
+    return response
 
 
 @auth.route("/user_info")

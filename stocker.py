@@ -34,17 +34,14 @@ def spec():
     swag['info']['$ref'] = 'resources.yml'
     return jsonify(swag)
 
-
-def after_request(response):
-    response.headers['Access-Control-Allow-Origin'] = 'https://localhost:3001'
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    response.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
-    response.headers['Access-Control-Allow-Headers'] =\
-        'Content-Type, Authorization'
-    return response
-
-
-app.after_request(after_request)
+# @app.after_request
+# def setup_access_conrtol(response):
+#     response.headers['Access-Control-Allow-Origin'] = 'https://localhost:3001'
+#     response.headers['Access-Control-Allow-Credentials'] = 'true'
+#     response.headers['Access-Control-Allow-Methods'] = 'PUT,GET,POST,DELETE'
+#     response.headers['Access-Control-Allow-Headers'] =\
+#         'Content-Type, Authorization'
+#     return response
 
 
 @app.errorhandler(404)

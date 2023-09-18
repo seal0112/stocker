@@ -14,7 +14,7 @@ with open('{}/critical_file/client_secret.json'.format(
 DB_URL = (
     'mysql+pymysql://'
     + f'{os.getenv("DB_USER")}:{os.getenv("DB_PASSWORD")}'
-    + f'@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}?charset=utf8'
+    + f'@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}?charset=UTF8MB4'
 )
 
 
@@ -29,8 +29,15 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 1800
     }
+
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
     JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
+    JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
+    JWT_TOKEN_LOCATION = ['cookies', 'headers']
+    JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
+    JWT_COOKIE_SECURE = True
+    JWT_CSRF_IN_COOKIES = False
+
     CLIENT_SECRET = client_secret
 
     @staticmethod
