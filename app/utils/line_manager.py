@@ -1,4 +1,8 @@
 import requests
+import logging
+
+
+logger = logging.getLogger()
 
 
 class LineManager:
@@ -18,4 +22,4 @@ class LineManager:
                     headers=self.headers,
                     data={'message': message})
             except Exception as ex:
-                print(ex)
+                logger.exception(f'Failed to push notification: {ex}')

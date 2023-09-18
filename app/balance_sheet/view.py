@@ -66,7 +66,6 @@ class handleBalanceSheet(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Balance Sheet. Reason: %s"
                 % (stock_id, ie))
@@ -76,7 +75,6 @@ class handleBalanceSheet(MethodView):
             return res
         except Exception as ex:
             db.session.rollback()
-            print(ex)
             logger.warning(
                 "400 %s is failed to update Balance Sheett. Reason: %s"
                 % (stock_id, ex))

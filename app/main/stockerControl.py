@@ -5,11 +5,8 @@ from ..database_setup import (
     Cash_Flow, Daily_Information, Stock_Commodity
 )
 import logging
-from logging.handlers import TimedRotatingFileHandler
-import requests
 import json
-import math
-from datetime import datetime, timezone
+from datetime import datetime
 from .. import db
 from . import main
 from ..utils.stock_screener import StockScrennerManager
@@ -106,7 +103,6 @@ class getStockNumber(MethodView):
                 res = make_response(
                     json.dumps('Failed to fetch stock number'), 400)
             else:
-                print(ex)
                 logger.warning(
                     "400 stock id not found. Reason: %s" % (ex))
                 res = make_response(
@@ -157,7 +153,6 @@ class handleDailyInfo(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Daily price. Reason: %s"
                 % (stock_id, ie))
@@ -167,7 +162,6 @@ class handleDailyInfo(MethodView):
             return res
         except Exception as ex:
             db.session.rollback()
-            print(ex)
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
                 % (stock_id, ex))
@@ -228,7 +222,6 @@ class handleStockCommodity(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
                 % (stock_id, ie))
@@ -238,7 +231,6 @@ class handleStockCommodity(MethodView):
             return res
         except Exception as ex:
             db.session.rollback()
-            print(ex)
             logger.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
                 % (stock_id, ex))

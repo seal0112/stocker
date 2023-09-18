@@ -125,7 +125,6 @@ class handleBasicInfo(MethodView):
             return res
         except Exception as ex:
             db.session.rollback()
-            print(ex)
             logger.warning(
                 "400 %s is failed to update Baisc information. Reason: %s"
                 % (stock_id, ex))

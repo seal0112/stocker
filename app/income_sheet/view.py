@@ -114,7 +114,6 @@ class handleIncomeSheet(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            print("%s: %s" % (stock_id, ie))
             logging.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ie))
@@ -124,7 +123,6 @@ class handleIncomeSheet(MethodView):
             return res
         except Exception as ex:
             db.session.rollback()
-            print(ex)
             logger.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ex))
