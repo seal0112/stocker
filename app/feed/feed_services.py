@@ -62,7 +62,7 @@ class FeedServices:
                     else:
                         data_update_date_service.update_announcement_update_date(stock_id)
 
-                    feed.stocks.append(stock)
+                    feed.basic_information.append(stock)
 
             db.session.add(feed)
             db.session.commit()

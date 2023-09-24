@@ -76,6 +76,7 @@ class Basic_Information(db.Model):
         backref=db.backref('basic_information', lazy=True),
         lazy='dynamic')
 
+
     # Add add a decorator property to serialize data from the datadb.Model
     @property
     def serialize(self):
@@ -405,9 +406,9 @@ class Feed(db.Model):
     tags = db.relationship(
         'FeedTag', secondary=feedsAndfeedsTags,
         lazy='joined', backref=db.backref('feed'))
-    stocks = db.relationship(
-        'Basic_Information',
-        secondary=basicInformationAndFeed)
+    # stocks = db.relationship(
+    #     'Basic_Information',
+    #     secondary=basicInformationAndFeed)
 
     @property
     def serialize(self):
@@ -456,6 +457,16 @@ class PushNotification(db.Model):
     notify_enabled = db.Column(db.Boolean, default=False)
     line_notify_token = db.Column(db.String(64), nullable=True)
     notify_time = db.Column(db.Time, default=time(hour=20, minute=0))
-    notify_feed = db.Column(db.Boolean, default=False)
+    notify_news = db.Column(db.Boolean, default=False)
+    notify_announcement = db.Column(db.Boolean, default=False)
     notify_month_revenue = db.Column(db.Boolean, default=False)
     notify_income_sheet = db.Column(db.Boolean, default=False)
+
+
+class StockSearchCounts(db.Model):
+    __tablename__ = 'stock_search_counts'
+
+    stock_id = db.Column(
+        db.String(6), db.ForeignKey('basic_information.id'),
+        primary_key=True, nullable=False)
+    search_count = db.Column(db.Integer, default=0)
