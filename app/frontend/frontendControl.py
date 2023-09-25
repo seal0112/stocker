@@ -237,3 +237,14 @@ def getMarketFeed():
         'next_page': feeds.next_num,
         'has_next': feeds.has_next
     })
+
+
+@frontend.route('/autocomplete')
+# @jwt_required()
+def getStockAutocomplete():
+    stock_name = request.args.get('stock_name')
+    print(stock_name)
+
+    return jsonify({
+        'stocks': []
+    })
