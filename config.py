@@ -32,6 +32,7 @@ class Config:
 
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
     JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
+    # JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=1)
     JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
     JWT_TOKEN_LOCATION = ['cookies', 'headers']
     JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
