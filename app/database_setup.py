@@ -406,9 +406,9 @@ class Feed(db.Model):
     tags = db.relationship(
         'FeedTag', secondary=feedsAndfeedsTags,
         lazy='joined', backref=db.backref('feed'))
-    # stocks = db.relationship(
-    #     'Basic_Information',
-    #     secondary=basicInformationAndFeed)
+    stocks = db.relationship(
+        'Basic_Information',
+        secondary=basicInformationAndFeed)
 
     @property
     def serialize(self):
