@@ -33,7 +33,7 @@ class Basic_Information(db.Model):
     exchange_type = db.Column(
         db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'))
     公司名稱 = db.Column(db.Text, nullable=False)
-    公司簡稱 = db.Column(db.String(10))
+    公司簡稱 = db.Column(db.String(10), index=True)
     產業類別 = db.Column(db.String(10))
     外國企業註冊地國 = db.Column(db.String(10))
     住址 = db.Column(db.Text)
@@ -92,6 +92,9 @@ class Basic_Information(db.Model):
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+
+# db.Index('basic_infomation_name_idx', Basic_Information.公司簡稱)
 
 
 # done
