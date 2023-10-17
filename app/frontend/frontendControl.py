@@ -1,21 +1,22 @@
+import logging
+import json
+import pytz
+import re
+
 from flask import request, jsonify, make_response
 from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
-    Balance_Sheet, Cash_Flow, Daily_Information,
-    Stock_Commodity, Feed
+    Daily_Information, Stock_Commodity, Feed, StockSearchCounts
 )
 from flask_jwt_extended import jwt_required
 
-import logging
-from logging.handlers import TimedRotatingFileHandler
-import json
-import pytz
+
 from datetime import datetime, timedelta
 from . import frontend
 from .. import db
 from sqlalchemy.sql import func
 
-# logger = logging.getLogger()
+logger = logging.getLogger()
 
 
 @frontend.route('/stock_info_commodity/<stock_id>')
@@ -240,11 +241,29 @@ def getMarketFeed():
 
 
 @frontend.route('/autocomplete')
-# @jwt_required()
+@jwt_required()
 def getStockAutocomplete():
-    stock_name = request.args.get('stock_name')
-    print(stock_name)
+    search_stock = request.args.get('search_stock')
 
-    return jsonify({
-        'stocks': []
-    })
+    if search_stock is None:
+        return jsonify({ 'stocks': [] })
+
+    if re.search("^[0-9]{1,4}$", search_stock):
+        subq = Basic_Information.query.filter(
+            Basic_Information.id.like(f'{search_stock}%'))
+    else:
+        subq = Basic_Information.query.filter(
+            Basic_Information.公司簡稱.like(f'{search_stock}%'))
+
+    subq = subq.with_entities(Basic_Information.id, Basic_Information.公司簡稱).subquery()
+
+    stock_list = StockSearchCounts.query.join(
+        subq, StockSearchCounts.stock_id == subq.c.id).order_by(
+            StockSearchCounts.search_count).with_entities(subq.c.id, subq.c.公司簡稱).limit(8).all()
+
+    return jsonify([
+        {
+            'stock': stock[0],
+            'name': stock[1]
+        } for stock in stock_list
+    ])
