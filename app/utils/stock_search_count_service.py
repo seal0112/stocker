@@ -42,15 +42,14 @@ class StockSearchCountService:
 
     def increase_stock_search_count(self, user_email, stock_id):
         redis_search_count_key = f'{user_email}:search_count'
-        if redis_client.exists(redis_search_count_key):
-            if redis_client.sismember(redis_search_count_key, stock_id):
+        if redis_client.sismember(redis_search_count_key, stock_id):
                 return None
-        else:
-            redis_client.sadd(redis_search_count_key, stock_id)
-            redis_client.expireat(
-                redis_search_count_key,
-                datetime.today().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(1)
-            )
+
+        redis_client.sadd(redis_search_count_key, stock_id)
+        redis_client.expireat(
+            redis_search_count_key,
+            datetime.today().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(1)
+        )
 
         try:
             stock_search_count = StockSearchCounts.query.with_for_update().get(stock_id)
