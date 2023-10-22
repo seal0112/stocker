@@ -1,14 +1,25 @@
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
+import redis
+
 from config import config
 
 db = SQLAlchemy()
 jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()
+
+redis_client = redis.Redis(
+    host=os.environ.get('REDIS_HOST') or 'localhost',
+    password=os.environ.get('REDIS_PASSWORD') or '',
+    port=6379,
+    db=os.environ.get('REDIS_DB_NUMBER') or '0'
+)
 
 
 def create_app(config_name):

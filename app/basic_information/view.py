@@ -1,15 +1,19 @@
-from flask import request, jsonify, make_response
-from flask.views import MethodView
-from ..database_setup import Basic_Information
-from .. import db
-from . import basic_information
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
+
+from flask import request, jsonify, make_response
+from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
+
+from ..database_setup import Basic_Information
+from ..utils.stock_search_count_service import StockSearchCountService
+from .. import db
+from . import basic_information
 
 
 logger = logging.getLogger()
+stock_search_count_service = StockSearchCountService()
 
 
 class handleBasicInfo(MethodView):
@@ -100,6 +104,8 @@ class handleBasicInfo(MethodView):
                 json.dumps(
                     'Failed to update %s Basic Info.'), 400)
             return res
+
+        stock_search_count_service.create_stock_search_count(stock_id)
 
         res = make_response(
             json.dumps('Create'), 201)

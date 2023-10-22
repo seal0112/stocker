@@ -2,26 +2,29 @@ import logging
 import json
 import pytz
 import re
+from datetime import datetime, timedelta
 
 from flask import request, jsonify, make_response
+from sqlalchemy.sql import func
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+from . import frontend
+from .. import db
 from ..database_setup import (
     Basic_Information, Month_Revenue, Income_Sheet,
     Daily_Information, Stock_Commodity, Feed, StockSearchCounts
 )
-from flask_jwt_extended import jwt_required
-
-
-from datetime import datetime, timedelta
-from . import frontend
-from .. import db
-from sqlalchemy.sql import func
+from ..utils.stock_search_count_service import StockSearchCountService
 
 logger = logging.getLogger()
+stock_search_count_service = StockSearchCountService()
 
 
 @frontend.route('/stock_info_commodity/<stock_id>')
 @jwt_required()
 def getFrontEndStockInfoAndCommodity(stock_id):
+    current_user = get_jwt_identity()
+    stock_search_count_service.increase_stock_search_count(current_user['email'], stock_id)
     resData = {}
 
     stockInfo = db.session\
