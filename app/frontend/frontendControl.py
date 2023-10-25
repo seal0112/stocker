@@ -262,7 +262,7 @@ def getStockAutocomplete():
 
     stock_list = StockSearchCounts.query.join(
         subq, StockSearchCounts.stock_id == subq.c.id).order_by(
-            StockSearchCounts.search_count).with_entities(subq.c.id, subq.c.公司簡稱).limit(8).all()
+            StockSearchCounts.search_count.desc()).with_entities(subq.c.id, subq.c.公司簡稱).limit(8).all()
 
     return jsonify([
         {
