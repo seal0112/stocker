@@ -47,7 +47,7 @@ class handleMonthRevenue(MethodView):
         """
         monthReve = db.session.query(Month_Revenue).filter_by(
             stock_id=stock_id
-        ).order_by(Month_Revenue.year.desc()).limit(60).all()
+        ).order_by(Month_Revenue.year.desc()).order_by(Month_Revenue.month.desc()).limit(60).all()
         if monthReve is None:
             return make_response(404)
         else:
