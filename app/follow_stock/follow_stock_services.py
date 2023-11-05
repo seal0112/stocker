@@ -18,7 +18,7 @@ class FollowStockService():
         if not show_delete:
             query = query.filter_by(is_delete=False)
 
-        follow_stocks = query.order_by(Follow_Stock.create_time.desc()).all()
+        follow_stocks = query.order_by(Follow_Stock.last_update_time.desc()).all()
         return follow_stocks
 
     def get_follow_stock(self, user_id, stock_id):
