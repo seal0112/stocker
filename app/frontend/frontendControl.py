@@ -99,14 +99,14 @@ def getFrontEndDailyInfo(stock_id):
     if dailyInfo == None:
         res = make_response(
             json.dumps({
-                "本日收盤價": None, 
+                "本日收盤價": None,
                 "本日漲跌": None,
                 "本益比": None,
                 "近四季每股盈餘": None,
                 "殖利率": None,
                 "股價淨值比": None
             })
-        )
+        , 404)
         return res
     else:
         data = dailyInfo._asdict()
