@@ -7,4 +7,5 @@ node_modules/
 log/*
 venv/
 .env
+env/
 critical_file
