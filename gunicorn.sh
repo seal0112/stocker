@@ -1,5 +1,5 @@
 #!/bin/bash
 cd $(dirname "$0")
 source venv/bin/activate
-gunicorn -c gunicorn.conf.py wsgi:app
+gunicorn wsgi:app
 exit 0
