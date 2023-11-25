@@ -1,0 +1,11 @@
+.env
+venv
+
+.gunicorn.sh
+
+.git
+.gitignore
+
+__pycache__
+.pytest_cache
+log
