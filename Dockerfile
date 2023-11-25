@@ -13,4 +13,4 @@ RUN addgroup -S stocker && \
     chown -R stocker:stocker /app
 USER stocker
 
-CMD ['gunicorn' '-c' 'gunicorn.conf.py' 'wsgi:app']
+CMD ["gunicorn", "wsgi:app"]
