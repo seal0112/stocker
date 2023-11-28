@@ -68,7 +68,9 @@ class getStockNumber(MethodView):
     def get(self):
         company_type = request.args.get('type')
         if company_type is None:
-            stockNum = db.session.query(Basic_Information.id).all()
+            stockNum = db.session.query(
+                Basic_Information.id).filter(
+                    Basic_Information.exchange_type.in_(['sii', 'otc', 'rotc'])).all()
         else:
             stockNum = db.session.query(
                 Basic_Information.id).filter_by(exchange_type=company_type).all()
