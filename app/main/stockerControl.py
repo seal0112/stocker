@@ -1,18 +1,23 @@
-from flask import request, jsonify, make_response
-from flask.views import MethodView
-from ..database_setup import (
-    Basic_Information, Income_Sheet, Balance_Sheet,
-    Cash_Flow, Daily_Information, Stock_Commodity
-)
 import logging
 import json
 from datetime import datetime
+
+from flask import request, jsonify, make_response
+from flask.views import MethodView
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.exc import IntegrityError
+
 from .. import db
 from . import main
 from ..utils.stock_screener import StockScrennerManager
 from ..utils.line_manager import LineManager
 from ..utils.announcement_handler import AnnounceHandler
-from sqlalchemy.exc import IntegrityError
+from ..database_setup import (
+    Basic_Information, Income_Sheet, Balance_Sheet,
+    Cash_Flow, Daily_Information, Stock_Commodity,
+    PushNotification
+)
+
 
 
 logger = logging.getLogger()
