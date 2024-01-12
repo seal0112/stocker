@@ -1,10 +1,12 @@
 .DS_Store
 __pycache__
-node_modules/
+.pytest_cache
+
 *.csv
 *.out
 *.err
 log/*
+
 venv/
 .env
 env/

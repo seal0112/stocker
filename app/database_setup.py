@@ -1,12 +1,9 @@
 from datetime import datetime, time
-from . import db
 
+from . import db
+from .utils.model_utilities import get_current_date
 
 # db.Index('revenue_idx_stock', Month_Revenue.stock_id)
-
-def getCurrentDate():
-    return datetime.now().strftime("%Y-%m-%d")
-
 
 basicInformationAndFeed = db.Table('basicInformation_feed',
                              db.Column(
@@ -29,9 +26,11 @@ class Basic_Information(db.Model):
     id = db.Column(db.String(6), primary_key=True, autoincrement=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     exchange_type = db.Column(
-        db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'))
+        db.Enum('sii', 'otc', 'rotc', 'pub', 'delist')
+    )
     公司名稱 = db.Column(db.Text, nullable=False)
     公司簡稱 = db.Column(db.String(10), index=True)
     產業類別 = db.Column(db.String(10))
@@ -104,12 +103,15 @@ class Balance_Sheet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+        db.String(6), db.ForeignKey('basic_information.id'), nullable=False
+    )
     year = db.Column(db.Integer, nullable=False)
     season = db.Column(
-        db.Enum('1', '2', '3', '4'), nullable=False)
+        db.Enum('1', '2', '3', '4'), nullable=False
+    )
     現金及約當現金 = db.Column(db.BigInteger)
     透過其他綜合損益按公允價值衡量之金融資產流動 = db.Column(db.BigInteger)
     透過損益按公允價值衡量之金融資產流動 = db.Column(db.BigInteger)
@@ -167,9 +169,11 @@ class Cash_Flow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+        db.String(6), db.ForeignKey('basic_information.id'), nullable=False
+    )
     year = db.Column(db.Integer, nullable=False)
     season = db.Column(
         db.Enum('1', '2', '3', '4'), nullable=False)
@@ -220,7 +224,8 @@ class Income_Sheet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
@@ -284,7 +289,8 @@ class Month_Revenue(db.Model):
                 '7', '8', '9', '10', '11', '12'), nullable=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     當月營收 = db.Column(db.BigInteger)
     上月營收 = db.Column(db.BigInteger)
     去年當月營收 = db.Column(db.BigInteger)
@@ -318,10 +324,12 @@ class Daily_Information(db.Model):
 
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'),
-        primary_key=True, nullable=False)
+        primary_key=True, nullable=False
+    )
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     本日收盤價 = db.Column(db.Float)
     本日漲跌 = db.Column(db.Float)
     近四季每股盈餘 = db.Column(db.Float)
@@ -397,7 +405,8 @@ class Feed(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
-        db.Date, nullable=False, default=getCurrentDate)
+        db.Date, nullable=False, default=get_current_date
+    )
     releaseTime = db.Column(db.DateTime, nullable=False, index=True)
     title = db.Column(db.String(100), nullable=False)
     link = db.Column(db.String(600), nullable=False, unique=True)
