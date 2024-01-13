@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from .. import db
-from ..database_setup import Basic_Information
+from ..database_setup import BasicInformation
 from ..auth.models import User
 from ..utils.model_utilities import get_UUID
 
@@ -19,9 +19,9 @@ class Follow_Stock(db.Model):
     long_or_short = db.Column(db.String(10), nullable=False)
     is_delete = db.Column(db.Boolean, default=False)
     stock_id = db.Column(
-        db.String(6), db.ForeignKey(Basic_Information.id),
+        db.String(6), db.ForeignKey(BasicInformation.id),
         nullable=False)
-    stock = db.relationship("Basic_Information", lazy="immediate")
+    stock = db.relationship("BasicInformation", lazy="immediate")
 
     @property
     def serialize(self):

@@ -6,7 +6,7 @@ from flask import request, jsonify, make_response
 from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
 
-from ..database_setup import Basic_Information
+from ..database_setup import BasicInformation
 from ..utils.stock_search_count_service import StockSearchCountService
 from .. import db
 from . import basic_information
@@ -43,7 +43,7 @@ class handleBasicInfo(MethodView):
         GET stock's basic information
         swagger_from_file: BasicInformation_get.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         if basicInfo is None:
             return make_response(
@@ -56,7 +56,7 @@ class handleBasicInfo(MethodView):
         Add or Update stock basic information.
         swagger_from_file: BasicInformation_post.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)
@@ -81,7 +81,7 @@ class handleBasicInfo(MethodView):
                 basicInfo['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                basicInfo = Basic_Information()
+                basicInfo = BasicInformation()
                 for key in payload:
                     basicInfo[key] = payload[key]
 
@@ -116,7 +116,7 @@ class handleBasicInfo(MethodView):
         Update stock basic information.
         swagger_from_file: BasicInformation_patch.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)

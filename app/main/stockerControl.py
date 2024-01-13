@@ -13,8 +13,8 @@ from ..utils.stock_screener import StockScrennerManager
 from ..utils.line_manager import LineManager
 from ..utils.announcement_handler import AnnounceHandler
 from ..database_setup import (
-    Basic_Information, Income_Sheet, Balance_Sheet,
-    Cash_Flow, Daily_Information, Stock_Commodity,
+    BasicInformation, IncomeSheet, BalanceSheet,
+    CashFlow, DailyInformation, Stock_Commodity,
     PushNotification
 )
 
@@ -74,11 +74,11 @@ class getStockNumber(MethodView):
         company_type = request.args.get('type')
         if company_type is None:
             stockNum = db.session.query(
-                Basic_Information.id).filter(
-                    Basic_Information.exchange_type.in_(['sii', 'otc', 'rotc'])).all()
+                BasicInformation.id).filter(
+                    BasicInformation.exchange_type.in_(['sii', 'otc', 'rotc'])).all()
         else:
             stockNum = db.session.query(
-                Basic_Information.id).filter_by(exchange_type=company_type).all()
+                BasicInformation.id).filter_by(exchange_type=company_type).all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)
@@ -91,15 +91,15 @@ class getStockNumber(MethodView):
                 raise KeyError
             reportType = payload['reportType']
             if reportType == 'balance_sheet':
-                stockNums = db.session.query(Balance_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(BalanceSheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'income_sheet':
-                stockNums = db.session.query(Income_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(IncomeSheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'cashflow':
-                stockNums = db.session.query(Cash_Flow.stock_id).filter_by(
+                stockNums = db.session.query(CashFlow.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             res = [i[0] for i in stockNums]
@@ -126,7 +126,7 @@ class handleDailyInfo(MethodView):
         GET stock's daily information
         swagger_from_file: DailyInfo_get.yml
         """
-        dailyInfo = db.session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(DailyInformation).filter_by(
             stock_id=stock_id).one_or_none()
 
         if dailyInfo is None:
@@ -142,7 +142,7 @@ class handleDailyInfo(MethodView):
         swagger_from_file: DailyInfo_post.yml
         """
         payload = json.loads(request.data)
-        dailyInfo = db.session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(DailyInformation).filter_by(
             stock_id=stock_id).one_or_none()
         try:
             if dailyInfo is not None:
@@ -151,7 +151,7 @@ class handleDailyInfo(MethodView):
                     dailyInfo['update_date'] = datetime.now(
                         ).strftime("%Y-%m-%d")
             else:
-                dailyInfo = Daily_Information()
+                dailyInfo = DailyInformation()
                 dailyInfo['stock_id'] = stock_id
                 for key in payload:
                     dailyInfo[key] = payload[key]

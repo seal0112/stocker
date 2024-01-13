@@ -1,4 +1,4 @@
-from ..database_setup import Data_Update_Date
+from ..database_setup import DataUpdateDate
 import logging
 from datetime import date
 from .. import db
@@ -11,14 +11,14 @@ class DataUpdateDateService:
         pass
 
     def get_data_update_date(self, stock_id):
-        data_update_date = db.session.query(Data_Update_Date).filter_by(
+        data_update_date = db.session.query(DataUpdateDate).filter_by(
             stock_id=stock_id).one_or_none()
         if not data_update_date:
             data_update_date = self.create_stock_data_update_date(stock_id)
         return data_update_date
 
     def create_stock_data_update_date(self, stock_id):
-        data_update_date = Data_Update_Date()
+        data_update_date = DataUpdateDate()
         data_update_date.stock_id = stock_id
         db.session.add(data_update_date)
         db.session.commit()

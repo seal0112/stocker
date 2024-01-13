@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import re
-from ..database_setup import Income_Sheet
+from ..database_setup import IncomeSheet
 
 
 class AnnounceHandler:

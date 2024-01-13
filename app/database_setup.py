@@ -3,7 +3,7 @@ from datetime import datetime, time
 from . import db
 from .utils.model_utilities import get_current_date
 
-# db.Index('revenue_idx_stock', Month_Revenue.stock_id)
+# db.Index('revenue_idx_stock', MonthRevenue.stock_id)
 
 basicInformationAndFeed = db.Table('basicInformation_feed',
                              db.Column(
@@ -20,7 +20,7 @@ basicInformationAndFeed = db.Table('basicInformation_feed',
 
 
 # done
-class Basic_Information(db.Model):
+class BasicInformation(db.Model):
     __tablename__ = 'basic_information'
 
     id = db.Column(db.String(6), primary_key=True, autoincrement=False)
@@ -93,11 +93,11 @@ class Basic_Information(db.Model):
         setattr(self, key, value)
 
 
-# db.Index('basic_infomation_name_idx', Basic_Information.公司簡稱)
+# db.Index('basic_infomation_name_idx', BasicInformation.公司簡稱)
 
 
 # done
-class Balance_Sheet(db.Model):
+class BalanceSheet(db.Model):
     __tablename__ = 'balance_sheet'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -163,7 +163,7 @@ class Balance_Sheet(db.Model):
 
 
 # prototype done
-class Cash_Flow(db.Model):
+class CashFlow(db.Model):
     __tablename__ = 'cashflow'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -218,7 +218,7 @@ class Cash_Flow(db.Model):
 
 
 # prototype done
-class Income_Sheet(db.Model):
+class IncomeSheet(db.Model):
     __tablename__ = 'income_sheet'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -277,7 +277,7 @@ class Income_Sheet(db.Model):
         setattr(self, key, value)
 
 # done
-class Month_Revenue(db.Model):
+class MonthRevenue(db.Model):
     __tablename__ = 'month_revenue'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -300,7 +300,7 @@ class Month_Revenue(db.Model):
     去年累計營收 = db.Column(db.BigInteger)
     前期比較增減 = db.Column(db.Float)
     備註 = db.Column(db.Text)
-    basic_information = db.relationship(Basic_Information)
+    basic_information = db.relationship(BasicInformation)
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property
@@ -319,7 +319,7 @@ class Month_Revenue(db.Model):
         setattr(self, key, value)
 
 
-class Daily_Information(db.Model):
+class DailyInformation(db.Model):
     __tablename__ = 'daily_information'
 
     stock_id = db.Column(
@@ -380,7 +380,7 @@ class Stock_Commodity(db.Model):
         setattr(self, key, value)
 
 
-class Data_Update_Date(db.Model):
+class DataUpdateDate(db.Model):
     __tablename__ = 'data_update_date'
 
     stock_id = db.Column(
@@ -419,7 +419,7 @@ class Feed(db.Model):
         'FeedTag', secondary=feedsAndfeedsTags,
         lazy='joined', backref=db.backref('feed'))
     stocks = db.relationship(
-        'Basic_Information',
+        'BasicInformation',
         secondary=basicInformationAndFeed)
 
     @property

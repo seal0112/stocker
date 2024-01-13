@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from ..utils.data_update_date_service import DataUpdateDateService
 from ..database_setup import (
-    Basic_Information, Income_Sheet, Daily_Information
+    BasicInformation, IncomeSheet, DailyInformation
 )
 from .. import db
 from . import income_sheet
@@ -47,24 +47,24 @@ class handleIncomeSheet(MethodView):
         """
         mode = request.args.get('mode')
         if mode is None:
-            incomeSheet = db.session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(IncomeSheet).filter_by(
                 stock_id=stock_id).order_by(
-                    Income_Sheet.year.desc()).order_by(
-                        Income_Sheet.season.desc()).first()
+                    IncomeSheet.year.desc()).order_by(
+                        IncomeSheet.season.desc()).first()
         elif mode == 'single':
             year = request.args.get('year')
             season = request.args.get('season')
-            incomeSheet = db.session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(IncomeSheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
                         season=season).one_or_none()
         elif mode == 'multiple':
             year = request.args.get('year')
             season = 4 if year is None else int(year) * 4
-            incomeSheet = db.session.query(Income_Sheet).filter_by(
+            incomeSheet = db.session.query(IncomeSheet).filter_by(
                 stock_id=stock_id).order_by(
-                    Income_Sheet.year.desc()).order_by(
-                        Income_Sheet.season.desc()).limit(season).all()
+                    IncomeSheet.year.desc()).order_by(
+                        IncomeSheet.season.desc()).limit(season).all()
         else:
             incomeSheet = None
 
@@ -85,7 +85,7 @@ class handleIncomeSheet(MethodView):
         swagger_from_file: IncomeSheet_post.yml
         """
         payload = json.loads(request.data)
-        incomeSheet = db.session.query(Income_Sheet).filter_by(
+        incomeSheet = db.session.query(IncomeSheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -105,7 +105,7 @@ class handleIncomeSheet(MethodView):
                 ).strftime("%Y-%m-%d")
             else:
                 data_update_date_service.update_income_sheet_update_date(stock_id)
-                incomeSheet = Income_Sheet()
+                incomeSheet = IncomeSheet()
                 incomeSheet['stock_id'] = stock_id
                 for key in payload:
                     incomeSheet[key] = payload[key]
@@ -139,29 +139,29 @@ class handleIncomeSheet(MethodView):
 
 def checkFourSeasonEPS(stock_id):
     quantityOfIncomeSheet = db.session.query(
-        db.func.count(Income_Sheet.id)).filter_by(
+        db.func.count(IncomeSheet.id)).filter_by(
             stock_id=stock_id).scalar()
 
     stockType = db.session.query(
-        Basic_Information.exchange_type).filter_by(
+        BasicInformation.exchange_type).filter_by(
             id=stock_id).scalar()
 
     if stockType in ('sii', 'otc') and quantityOfIncomeSheet >= 4:
         stockEps = db.session.query(
-            (Income_Sheet.基本每股盈餘).label('eps')).filter_by(
+            (IncomeSheet.基本每股盈餘).label('eps')).filter_by(
                 stock_id=stock_id).order_by(
-                    Income_Sheet.year.desc()).order_by(
-                        Income_Sheet.season.desc()).limit(4).subquery()
+                    IncomeSheet.year.desc()).order_by(
+                        IncomeSheet.season.desc()).limit(4).subquery()
         fourSeasonEps = db.session.query(db.func.sum(stockEps.c.eps)).scalar()
 
         dailyInfo = db.session.query(
-            Daily_Information).filter_by(
+            DailyInformation).filter_by(
                 stock_id=stock_id).one_or_none()
         try:
             if dailyInfo is not None:
                 dailyInfo['近四季每股盈餘'] = round(fourSeasonEps, 2)
             else:
-                dailyInfo = Daily_Information()
+                dailyInfo = DailyInformation()
                 dailyInfo['stock_id'] = stock_id
                 dailyInfo['近四季每股盈餘'] = round(fourSeasonEps, 2)
 

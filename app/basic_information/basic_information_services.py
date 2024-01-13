@@ -1,4 +1,4 @@
-from ..database_setup import Basic_Information
+from ..database_setup import BasicInformation
 from .. import db
 import logging
 
@@ -11,6 +11,6 @@ class BasicInformationServices:
         pass
 
     def get_basic_information(self, stock_id):
-        basic_information = Basic_Information.query.filter_by(
+        basic_information = BasicInformation.query.filter_by(
                 id=stock_id).one_or_none()
         return basic_information
