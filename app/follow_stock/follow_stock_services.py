@@ -80,5 +80,5 @@ class FollowStockService():
         except Exception as ex:
             db.session.rollback()
             logging.exception(
-                f'fail delete user-stock: {user_id}-{stock_id}, ex: {ex}')
+                f'fail delete user-stock: {user_id}-{follow_stock.stock_id}, ex: {ex}')
             return None
