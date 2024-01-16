@@ -1,4 +1,4 @@
-"""empty message
+"""create_stock_search_counts
 
 Revision ID: 35be0700b6d8
 Revises: f7a936a30699

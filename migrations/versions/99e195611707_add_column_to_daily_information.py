@@ -1,4 +1,4 @@
-"""empty message
+"""add_column_to_daily_information
 
 Revision ID: 99e195611707
 Revises: 564580ff7999

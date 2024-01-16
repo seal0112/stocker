@@ -1,4 +1,4 @@
-"""empty message
+"""create_earnings_call
 
 Revision ID: 115dd9b350bf
 Revises: 4ccb6793535e
