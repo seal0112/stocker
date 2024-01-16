@@ -40,6 +40,7 @@ def create_app(config_name):
     from .feed import feed
     from .follow_stock import follow_stock
     from .push_notification import push_notification
+    from .earnings_call import earnings_call
 
     app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
     app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
@@ -49,6 +50,7 @@ def create_app(config_name):
     app.register_blueprint(feed, url_prefix='/api/v0/feed')
     app.register_blueprint(follow_stock, url_prefix='/api/v0/follow_stock')
     app.register_blueprint(push_notification, url_prefix='/api/v0/push_notification')
+    app.register_blueprint(earnings_call, url_prefix='/api/v0/earnings_call')
 
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')
