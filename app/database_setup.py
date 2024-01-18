@@ -69,11 +69,6 @@ class BasicInformation(db.Model):
     投資人關係聯絡電話 = db.Column(db.String(30))
     投資人關係聯絡電子郵件 = db.Column(db.Text)
     公司網站內利害關係人專區網址 = db.Column(db.Text)
-    feeds = db.relationship(
-        'Feed',
-        secondary=basicInformationAndFeed,
-        backref=db.backref('basic_information', lazy=True),
-        lazy='dynamic')
 
 
     # Add add a decorator property to serialize data from the datadb.Model
@@ -420,7 +415,10 @@ class Feed(db.Model):
         lazy='joined', backref=db.backref('feed'))
     stocks = db.relationship(
         'BasicInformation',
-        secondary=basicInformationAndFeed)
+        secondary=basicInformationAndFeed,
+        backref=db.backref('basic_information', lazy=True),
+        lazy='dynamic'
+    )
 
     @property
     def serialize(self):
