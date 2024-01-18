@@ -31,8 +31,8 @@ class Config:
     }
 
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
-    # JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=1)
+    #JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
     JWT_TOKEN_LOCATION = ['cookies', 'headers']
     JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
@@ -53,8 +53,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        DB_URL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or DB_URL
     WTF_CSRF_ENABLED = False
 
 
@@ -64,7 +63,7 @@ class ProductionConfig(Config):
 
 config = {
     'development': DevelopmentConfig,
-    'testing': TestingConfig,
+    'test': TestingConfig,
     'production': ProductionConfig,
 
     'default': DevelopmentConfig
