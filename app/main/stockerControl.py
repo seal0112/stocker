@@ -14,10 +14,8 @@ from ..utils.line_manager import LineManager
 from ..utils.announcement_handler import AnnounceHandler
 from ..database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
-    CashFlow, DailyInformation, Stock_Commodity,
-    PushNotification
+    CashFlow, DailyInformation, Stock_Commodity
 )
-
 
 
 logger = logging.getLogger()
@@ -30,17 +28,11 @@ console.setLevel(logging.INFO)
 console.setFormatter(formatter)
 logger.addHandler(console)
 
-optionWord = {
-    'bullish': '偏多',
-    'bearish': '偏空',
-    'revenue': '營收整理'
-}
-
 
 def showMain():
-    stock_screener = StockScrennerManager(option=request.args.get('option'))
-    messages = stock_screener.screener()
-    print(messages)
+    # stock_screener = StockScrennerManager(option=request.args.get('option'))
+    # messages = stock_screener.screener()
+    # print(messages)
     return 'Hello'
 
 

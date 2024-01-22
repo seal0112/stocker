@@ -30,6 +30,7 @@ class Config:
         'pool_recycle': 1800
     }
 
+    # JWT config
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
     #JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
     JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=30)
@@ -38,6 +39,11 @@ class Config:
     JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
     JWT_COOKIE_SECURE = True
     JWT_CSRF_IN_COOKIES = False
+
+    # celery config
+    broker_url = os.environ.get('CELERY_BROKER_URL') or 'redis://localhost:6379/0'
+    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or 'redis://localhost:6379/0'
+    broker_connection_retry_on_startup = True
 
     CLIENT_SECRET = client_secret
 
@@ -63,7 +69,7 @@ class ProductionConfig(Config):
 
 config = {
     'development': DevelopmentConfig,
-    'test': TestingConfig,
+    'testing': TestingConfig,
     'production': ProductionConfig,
 
     'default': DevelopmentConfig
