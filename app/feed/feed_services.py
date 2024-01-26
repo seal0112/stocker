@@ -60,7 +60,8 @@ class FeedServices:
                     if feed_data['feedType'] == 'news':
                         data_update_date_service.update_news_update_date(stock_id)
                     else:
-                        data_update_date_service.update_announcement_update_date(stock_id)
+                        if len(feed_data['tags']):
+                            data_update_date_service.update_announcement_update_date(stock_id)
 
                     if not stock in feed.stocks:
                         feed.stocks.append(stock)
