@@ -8,18 +8,20 @@ from flask_marshmallow import Marshmallow
 from redis import Redis
 
 from config import config
+from app.tasks import celery_init_app
 
 
 db = SQLAlchemy()
 jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()
+celery = celery_init_app(__name__, os.getenv('FLASK_CONFIG'))
 
 
 redis_client = Redis(
     host=os.environ.get('REDIS_HOST') or 'localhost',
     password=os.environ.get('REDIS_PASSWORD') or '',
-    port=6379,
+    port=os.environ.get('REDIS_PORT') or 6379,
     db=os.environ.get('REDIS_DB_NUMBER') or '0'
 )
 
@@ -32,6 +34,7 @@ def create_app(config_name):
     migrate.init_app(app, db)
     jwt.init_app(app)
     ma.init_app(app)
+    celery.conf.update(app.config)
 
     from .basic_information import basic_information
     from .income_sheet import income_sheet

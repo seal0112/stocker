@@ -17,6 +17,14 @@ DB_URL = (
     + f'@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}?charset=UTF8MB4'
 )
 
+REDIS_URL = (
+    'redis://'
+    + f':{os.getenv("REDIS_PASSWORD")}'
+    + f'@{os.getenv("REDIS_HOST")}'
+    + f':{os.getenv("REDIS_PORT")}'
+    + f'/{os.getenv("REDIS_DB_NUMBER")}'
+)
+
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess db.String'
@@ -41,9 +49,10 @@ class Config:
     JWT_CSRF_IN_COOKIES = False
 
     # celery config
-    broker_url = os.environ.get('CELERY_BROKER_URL') or 'redis://localhost:6379/0'
-    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or 'redis://localhost:6379/0'
+    broker_url = os.environ.get('CELERY_BROKER_URL') or REDIS_URL
+    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or REDIS_URL
     broker_connection_retry_on_startup = True
+    result_expires = 1800
 
     CLIENT_SECRET = client_secret
 
