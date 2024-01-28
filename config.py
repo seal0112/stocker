@@ -53,6 +53,7 @@ class Config:
     result_backend = os.environ.get('CELERY_RESULT_BACKEND') or REDIS_URL
     broker_connection_retry_on_startup = True
     result_expires = 1800
+    worker_concurrency = os.environ.get('CELERY_WORKER_CONCURRENCY') or 2
 
     CLIENT_SECRET = client_secret
 

@@ -491,7 +491,7 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
         db.Integer, db.ForeignKey('feed.id'),
         primary_key=True, nullable=False)
     stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+        db.String(6), db.ForeignKey('basic_information.id'))
     update_date = db.Column(
         db.Date, nullable=False,
         default=get_current_date,
@@ -499,6 +499,7 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
     )
     year = db.Column(db.Integer, nullable=False)
     season = db.Column(db.Enum('1', '2', '3', '4'), nullable=False)
+    processing_failed = db.Column(db.Boolean, nullable=False, default=False)
     營業收入合計 = db.Column(db.BigInteger)
     營業收入合計年增率 = db.Column(db.Numeric(10, 2))
     營業毛利 = db.Column(db.BigInteger)
