@@ -10,7 +10,7 @@ logger = logging.getLogger()
 class SlackManager:
 
     def __init__(self, webhookToken):
-        self.notify_url = os.environ.get("slack-hook")
+        self.notify_url = os.environ.get("SLACK_HOOK")
         self.headers = {
             "content-type": "application/json"
         }
