@@ -7,15 +7,19 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
-from .. import db
-from . import main
-from ..utils.stock_screener import StockScrennerManager
-from ..utils.line_manager import LineManager
-from ..utils.announcement_handler import AnnounceHandler
-from ..database_setup import (
+from app import db
+from app.main import main
+from app.utils.stock_screener import StockScrennerManager
+from app.utils.line_manager import LineManager
+from app.utils.announcement_handler import AnnounceHandler
+from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
-    CashFlow, DailyInformation, Stock_Commodity
+    CashFlow, DailyInformation, Stock_Commodity, Feed
 )
+from app.feed.serializer import FeedSchema
+from app.tasks.test_task.tasks import add
+from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
+
 
 
 logger = logging.getLogger()
@@ -33,6 +37,16 @@ def showMain():
     # stock_screener = StockScrennerManager(option=request.args.get('option'))
     # messages = stock_screener.screener()
     # print(messages)
+
+    import math
+    season = math.ceil((datetime.now().month)/3)-1
+    season = 4 if season == 0 else season
+    year = datetime.now().year if season == 4 else datetime.now().year-1
+
+    feed = Feed.query.filter_by(id=244759).one_or_none()
+    task_id = analyze_announcement_incomesheet.delay(
+        feed.id, feed.link, 2023, 2
+    )
     return 'Hello'
 
 
@@ -63,14 +77,15 @@ class getStockNumber(MethodView):
     decorators = []
 
     def get(self):
-        company_type = request.args.get('type')
-        if company_type is None:
-            stockNum = db.session.query(
-                BasicInformation.id).filter(
-                    BasicInformation.exchange_type.in_(['sii', 'otc', 'rotc'])).all()
-        else:
-            stockNum = db.session.query(
-                BasicInformation.id).filter_by(exchange_type=company_type).all()
+        query = db.session.query(BasicInformation.id)
+
+        exchange_type = request.args.getlist('exchange_type')
+        stock_number_start_with = request.args.get('stock_number_start_with')
+        query = query.filter(BasicInformation.exchange_type.in_(exchange_type if exchange_type else ['sii', 'otc', 'rotc']))
+        if stock_number_start_with:
+            query = query.filter(BasicInformation.id.like(stock_number_start_with + '%'))
+
+        stockNum = query.all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)
