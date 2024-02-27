@@ -48,14 +48,14 @@ def spec():
 @app.errorhandler(404)
 def pageNotfound(error):
     logging.info('Page not found: %s', (request.path))
-    return make_response(json.dumps('404 not foundss'), 404)
+    return make_response(json.dumps('404 not found'), 404)
 
 
 @app.errorhandler(500)
 def internalServerError(error):
     error_log = f'Server Error: {error}'
     SlackManager().push_notification('Stocker', error_log)
-    logging.error(error_log)
+    logger.error(error_log)
     return make_response(json.dumps('500 server error'), 500)
 
 
