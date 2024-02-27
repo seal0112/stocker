@@ -116,6 +116,7 @@ def getFrontEndDailyInfo(stock_id):
 @frontend.route('/month_revenue/<stock_id>')
 @jwt_required()
 def getFrontEndMonthRevenue(stock_id):
+    year = request.args.get('year', default=5)
     monthlyReve = db.session\
         .query()\
         .with_entities(
@@ -124,9 +125,10 @@ def getFrontEndMonthRevenue(stock_id):
                     "Year/Month"),
             MonthRevenue.當月營收,
             MonthRevenue.去年同月增減,
-            MonthRevenue.上月比較增減)\
+            MonthRevenue.上月比較增減,
+            MonthRevenue.備註)\
         .filter_by(stock_id=stock_id)\
-        .filter(MonthRevenue.year >= datetime.now().year-5)\
+        .filter(MonthRevenue.year >= datetime.now().year-year)\
         .order_by(MonthRevenue.year.desc())\
         .order_by(MonthRevenue.month.desc())\
         .all()
