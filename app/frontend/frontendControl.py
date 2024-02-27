@@ -230,8 +230,9 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
 @frontend.route('/feed')
 @jwt_required()
 def getMarketFeed():
-    target_date = request.args.get('targetDate')
-    feed_type = request.args.get('feedType')
+    target_date = request.args.get('targetDate', default=datetime.now().strftime('%Y-%m-%d'))
+    feed_type = request.args.get('feedType', default='all')
+    feed_source = request.args.getlist('source')
     page = request.args.get('page', 0)
     page_size = request.args.get('page_size', 5)
     start_time = datetime.strptime(target_date, '%Y-%m-%d').astimezone(tz=pytz.UTC)
@@ -242,6 +243,9 @@ def getMarketFeed():
 
     if feed_type != 'all':
         feed_query = feed_query.filter_by(feedType=feed_type)
+
+    if feed_source:
+        feed_query = feed_query.filter(Feed.source.in_(feed_source))
 
     feeds = feed_query.paginate(
         page=int(page), per_page=int(page_size), error_out=False)
