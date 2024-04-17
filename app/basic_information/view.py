@@ -1,15 +1,19 @@
-from flask import request, jsonify, make_response
-from flask.views import MethodView
-from ..database_setup import Basic_Information
-from .. import db
-from . import basic_information
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
+
+from flask import request, jsonify, make_response
+from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
+
+from ..database_setup import BasicInformation
+from ..utils.stock_search_count_service import StockSearchCountService
+from .. import db
+from . import basic_information
 
 
 logger = logging.getLogger()
+stock_search_count_service = StockSearchCountService()
 
 
 class handleBasicInfo(MethodView):
@@ -39,7 +43,7 @@ class handleBasicInfo(MethodView):
         GET stock's basic information
         swagger_from_file: BasicInformation_get.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         if basicInfo is None:
             return make_response(
@@ -52,7 +56,7 @@ class handleBasicInfo(MethodView):
         Add or Update stock basic information.
         swagger_from_file: BasicInformation_post.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)
@@ -77,7 +81,7 @@ class handleBasicInfo(MethodView):
                 basicInfo['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                basicInfo = Basic_Information()
+                basicInfo = BasicInformation()
                 for key in payload:
                     basicInfo[key] = payload[key]
 
@@ -101,6 +105,8 @@ class handleBasicInfo(MethodView):
                     'Failed to update %s Basic Info.'), 400)
             return res
 
+        stock_search_count_service.create_stock_search_count(stock_id)
+
         res = make_response(
             json.dumps('Create'), 201)
         return res
@@ -110,7 +116,7 @@ class handleBasicInfo(MethodView):
         Update stock basic information.
         swagger_from_file: BasicInformation_patch.yml
         """
-        basicInfo = db.session.query(Basic_Information).filter_by(
+        basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         try:
             payload = json.loads(request.data)

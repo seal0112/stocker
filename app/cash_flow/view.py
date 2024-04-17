@@ -1,6 +1,6 @@
 from flask import request, jsonify, make_response
 from flask.views import MethodView
-from ..database_setup import Cash_Flow
+from ..database_setup import CashFlow
 from .. import db
 from . import cash_flow
 import json
@@ -38,7 +38,7 @@ class handleCashFlow(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        cashFlow = db.session.query(Cash_Flow).filter_by(
+        cashFlow = db.session.query(CashFlow).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -57,7 +57,7 @@ class handleCashFlow(MethodView):
                 cashFlow['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                cashFlow = Cash_Flow()
+                cashFlow = CashFlow()
                 cashFlow['stock_id'] = stock_id
                 for key in payload:
                     cashFlow[key] = payload[key]

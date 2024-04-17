@@ -7,7 +7,7 @@ from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
 
 from ..utils.data_update_date_service import DataUpdateDateService
-from ..database_setup import Month_Revenue
+from ..database_setup import MonthRevenue
 from .. import db
 from . import month_revenue
 
@@ -45,9 +45,9 @@ class handleMonthRevenue(MethodView):
         return stock's monthly revenue data for the last five years
         swagger_from_file: MonthRevenue_get.yml
         """
-        monthReve = db.session.query(Month_Revenue).filter_by(
+        monthReve = db.session.query(MonthRevenue).filter_by(
             stock_id=stock_id
-        ).order_by(Month_Revenue.year.desc()).limit(60).all()
+        ).order_by(MonthRevenue.year.desc()).order_by(MonthRevenue.month.desc()).limit(60).all()
         if monthReve is None:
             return make_response(404)
         else:
@@ -60,7 +60,7 @@ class handleMonthRevenue(MethodView):
         swagger_from_file: MonthRevenue_post.yml
         """
         payload = json.loads(request.data)
-        monthReve = db.session.query(Month_Revenue).filter_by(
+        monthReve = db.session.query(MonthRevenue).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     month=payload['month']).one_or_none()
@@ -85,7 +85,7 @@ class handleMonthRevenue(MethodView):
                 ).strftime("%Y-%m-%d")
             else:
                 data_update_date_service.update_month_revenue_update_date(stock_id)
-                monthReve = Month_Revenue()
+                monthReve = MonthRevenue()
                 for key in payload:
                     monthReve[key] = payload[key]
 

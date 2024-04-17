@@ -17,6 +17,14 @@ DB_URL = (
     + f'@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}?charset=UTF8MB4'
 )
 
+REDIS_URL = (
+    'redis://'
+    + f':{os.getenv("REDIS_PASSWORD")}'
+    + f'@{os.getenv("REDIS_HOST")}'
+    + f':{os.getenv("REDIS_PORT")}'
+    + f'/{os.getenv("REDIS_DB_NUMBER")}'
+)
+
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess db.String'
@@ -30,14 +38,22 @@ class Config:
         'pool_recycle': 1800
     }
 
+    # JWT config
     JWT_SECRET_KEY = os.environ.get('SECRET_KEY') or 'tmp-secret'
-    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
-    # JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=1)
+    #JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=180)
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)
     JWT_TOKEN_LOCATION = ['cookies', 'headers']
     JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
     JWT_COOKIE_SECURE = True
     JWT_CSRF_IN_COOKIES = False
+
+    # celery config
+    broker_url = os.environ.get('CELERY_BROKER_URL') or REDIS_URL
+    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or REDIS_URL
+    broker_connection_retry_on_startup = True
+    result_expires = 1800
+    worker_concurrency = os.environ.get('CELERY_WORKER_CONCURRENCY') or 2
 
     CLIENT_SECRET = client_secret
 
@@ -53,8 +69,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        DB_URL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or DB_URL
     WTF_CSRF_ENABLED = False
 
 

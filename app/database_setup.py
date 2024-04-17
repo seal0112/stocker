@@ -1,12 +1,9 @@
 from datetime import datetime, time
+
 from . import db
+from .utils.model_utilities import get_current_date
 
-
-# db.Index('revenue_idx_stock', Month_Revenue.stock_id)
-
-def getCurrentDate():
-    return datetime.now().strftime("%Y-%m-%d")
-
+# db.Index('revenue_idx_stock', MonthRevenue.stock_id)
 
 basicInformationAndFeed = db.Table('basicInformation_feed',
                              db.Column(
@@ -23,15 +20,17 @@ basicInformationAndFeed = db.Table('basicInformation_feed',
 
 
 # done
-class Basic_Information(db.Model):
+class BasicInformation(db.Model):
     __tablename__ = 'basic_information'
 
     id = db.Column(db.String(6), primary_key=True, autoincrement=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     exchange_type = db.Column(
-        db.Enum('sii', 'otc', 'rotc', 'pub', 'delist'))
+        db.Enum('sii', 'otc', 'rotc', 'pub', 'delist')
+    )
     公司名稱 = db.Column(db.Text, nullable=False)
     公司簡稱 = db.Column(db.String(10), index=True)
     產業類別 = db.Column(db.String(10))
@@ -70,11 +69,6 @@ class Basic_Information(db.Model):
     投資人關係聯絡電話 = db.Column(db.String(30))
     投資人關係聯絡電子郵件 = db.Column(db.Text)
     公司網站內利害關係人專區網址 = db.Column(db.Text)
-    feeds = db.relationship(
-        'Feed',
-        secondary=basicInformationAndFeed,
-        backref=db.backref('basic_information', lazy=True),
-        lazy='dynamic')
 
 
     # Add add a decorator property to serialize data from the datadb.Model
@@ -94,22 +88,25 @@ class Basic_Information(db.Model):
         setattr(self, key, value)
 
 
-# db.Index('basic_infomation_name_idx', Basic_Information.公司簡稱)
+# db.Index('basic_infomation_name_idx', BasicInformation.公司簡稱)
 
 
 # done
-class Balance_Sheet(db.Model):
+class BalanceSheet(db.Model):
     __tablename__ = 'balance_sheet'
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+        db.String(6), db.ForeignKey('basic_information.id'), nullable=False
+    )
     year = db.Column(db.Integer, nullable=False)
     season = db.Column(
-        db.Enum('1', '2', '3', '4'), nullable=False)
+        db.Enum('1', '2', '3', '4'), nullable=False
+    )
     現金及約當現金 = db.Column(db.BigInteger)
     透過其他綜合損益按公允價值衡量之金融資產流動 = db.Column(db.BigInteger)
     透過損益按公允價值衡量之金融資產流動 = db.Column(db.BigInteger)
@@ -161,15 +158,17 @@ class Balance_Sheet(db.Model):
 
 
 # prototype done
-class Cash_Flow(db.Model):
+class CashFlow(db.Model):
     __tablename__ = 'cashflow'
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
-        db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
+        db.String(6), db.ForeignKey('basic_information.id'), nullable=False
+    )
     year = db.Column(db.Integer, nullable=False)
     season = db.Column(
         db.Enum('1', '2', '3', '4'), nullable=False)
@@ -214,13 +213,14 @@ class Cash_Flow(db.Model):
 
 
 # prototype done
-class Income_Sheet(db.Model):
+class IncomeSheet(db.Model):
     __tablename__ = 'income_sheet'
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
@@ -272,7 +272,7 @@ class Income_Sheet(db.Model):
         setattr(self, key, value)
 
 # done
-class Month_Revenue(db.Model):
+class MonthRevenue(db.Model):
     __tablename__ = 'month_revenue'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -284,7 +284,8 @@ class Month_Revenue(db.Model):
                 '7', '8', '9', '10', '11', '12'), nullable=False)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     當月營收 = db.Column(db.BigInteger)
     上月營收 = db.Column(db.BigInteger)
     去年當月營收 = db.Column(db.BigInteger)
@@ -294,7 +295,7 @@ class Month_Revenue(db.Model):
     去年累計營收 = db.Column(db.BigInteger)
     前期比較增減 = db.Column(db.Float)
     備註 = db.Column(db.Text)
-    basic_information = db.relationship(Basic_Information)
+    basic_information = db.relationship(BasicInformation)
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property
@@ -313,15 +314,17 @@ class Month_Revenue(db.Model):
         setattr(self, key, value)
 
 
-class Daily_Information(db.Model):
+class DailyInformation(db.Model):
     __tablename__ = 'daily_information'
 
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'),
-        primary_key=True, nullable=False)
+        primary_key=True, nullable=False
+    )
     update_date = db.Column(
         db.Date, nullable=False,
-        default=getCurrentDate)
+        default=get_current_date
+    )
     本日收盤價 = db.Column(db.Float)
     本日漲跌 = db.Column(db.Float)
     近四季每股盈餘 = db.Column(db.Float)
@@ -372,7 +375,7 @@ class Stock_Commodity(db.Model):
         setattr(self, key, value)
 
 
-class Data_Update_Date(db.Model):
+class DataUpdateDate(db.Model):
     __tablename__ = 'data_update_date'
 
     stock_id = db.Column(
@@ -397,7 +400,8 @@ class Feed(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
-        db.Date, nullable=False, default=getCurrentDate)
+        db.Date, nullable=False, default=get_current_date
+    )
     releaseTime = db.Column(db.DateTime, nullable=False, index=True)
     title = db.Column(db.String(100), nullable=False)
     link = db.Column(db.String(600), nullable=False, unique=True)
@@ -408,10 +412,15 @@ class Feed(db.Model):
         nullable=False, default='announcement')
     tags = db.relationship(
         'FeedTag', secondary=feedsAndfeedsTags,
-        lazy='joined', backref=db.backref('feed'))
+        backref=db.backref('feeds', lazy='dynamic'),
+        lazy='joined'
+    )
     stocks = db.relationship(
-        'Basic_Information',
-        secondary=basicInformationAndFeed)
+        'BasicInformation',
+        secondary=basicInformationAndFeed,
+        backref=db.backref('feeds', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     @property
     def serialize(self):
@@ -458,7 +467,7 @@ class PushNotification(db.Model):
         db.Integer, db.ForeignKey('user.id'),
         primary_key=True, nullable=False)
     notify_enabled = db.Column(db.Boolean, default=False)
-    line_notify_token = db.Column(db.String(64), nullable=True)
+    line_notify_token = db.Column(db.String(64), default=False)
     notify_time = db.Column(db.Time, default=time(hour=20, minute=0))
     notify_news = db.Column(db.Boolean, default=False)
     notify_announcement = db.Column(db.Boolean, default=False)
@@ -473,3 +482,45 @@ class StockSearchCounts(db.Model):
         db.String(6), db.ForeignKey('basic_information.id'),
         primary_key=True, nullable=False)
     search_count = db.Column(db.Integer, default=0)
+
+
+class AnnouncementIncomeSheetAnalysis(db.Model):
+    __tablename__ = 'announcement_income_sheet_analysis'
+
+    feed_id = db.Column(
+        db.Integer, db.ForeignKey('feed.id'),
+        primary_key=True, nullable=False)
+    stock_id = db.Column(
+        db.String(6), db.ForeignKey('basic_information.id'))
+    update_date = db.Column(
+        db.Date, nullable=False,
+        default=get_current_date,
+        index=True
+    )
+    year = db.Column(db.Integer, nullable=False)
+    season = db.Column(db.Enum('1', '2', '3', '4'), nullable=False)
+    processing_failed = db.Column(db.Boolean, nullable=False, default=False)
+    營業收入合計 = db.Column(db.BigInteger)
+    營業收入合計年增率 = db.Column(db.Numeric(10, 2))
+    營業毛利 = db.Column(db.BigInteger)
+    營業毛利率 = db.Column(db.Numeric(10, 2))
+    營業毛利率年增率 = db.Column(db.Numeric(10, 2))
+    營業利益 = db.Column(db.BigInteger)
+    營業利益率 = db.Column(db.Numeric(10, 2))
+    營業利益率年增率 = db.Column(db.Numeric(10, 2))
+    稅前淨利 = db.Column(db.BigInteger)
+    稅前淨利率 = db.Column(db.Numeric(10, 2))
+    稅前淨利率年增率 = db.Column(db.Numeric(10, 2))
+    本期淨利 = db.Column(db.BigInteger)
+    本期淨利率 = db.Column(db.Numeric(10, 2))
+    本期淨利率年增率 = db.Column(db.Numeric(10, 2))
+    母公司業主淨利 = db.Column(db.BigInteger)
+    基本每股盈餘 = db.Column(db.Numeric(10, 2))
+    基本每股盈餘年增率 = db.Column(db.Numeric(10, 2))
+    # feed = db.relationship('Feed', uselist=False)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)

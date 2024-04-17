@@ -1,18 +1,25 @@
-from flask import request, jsonify, make_response
-from flask.views import MethodView
-from ..database_setup import (
-    Basic_Information, Income_Sheet, Balance_Sheet,
-    Cash_Flow, Daily_Information, Stock_Commodity
-)
 import logging
 import json
 from datetime import datetime
-from .. import db
-from . import main
-from ..utils.stock_screener import StockScrennerManager
-from ..utils.line_manager import LineManager
-from ..utils.announcement_handler import AnnounceHandler
+
+from flask import request, jsonify, make_response
+from flask.views import MethodView
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
+
+from app import db
+from app.main import main
+from app.utils.stock_screener import StockScrennerManager
+from app.utils.line_manager import LineManager
+from app.utils.announcement_handler import AnnounceHandler
+from app.database_setup import (
+    BasicInformation, IncomeSheet, BalanceSheet,
+    CashFlow, DailyInformation, Stock_Commodity, Feed
+)
+from app.feed.serializer import FeedSchema
+from app.tasks.test_task.tasks import add
+from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
+
 
 
 logger = logging.getLogger()
@@ -25,17 +32,21 @@ console.setLevel(logging.INFO)
 console.setFormatter(formatter)
 logger.addHandler(console)
 
-optionWord = {
-    'bullish': '偏多',
-    'bearish': '偏空',
-    'revenue': '營收整理'
-}
-
 
 def showMain():
-    stock_screener = StockScrennerManager(option=request.args.get('option'))
-    messages = stock_screener.screener()
-    print(messages)
+    # stock_screener = StockScrennerManager(option=request.args.get('option'))
+    # messages = stock_screener.screener()
+    # print(messages)
+
+    import math
+    season = math.ceil((datetime.now().month)/3)-1
+    season = 4 if season == 0 else season
+    year = datetime.now().year if season == 4 else datetime.now().year-1
+
+    feed = Feed.query.filter_by(id=244759).one_or_none()
+    task_id = analyze_announcement_incomesheet.delay(
+        feed.id, feed.link, 2023, 2
+    )
     return 'Hello'
 
 
@@ -66,12 +77,15 @@ class getStockNumber(MethodView):
     decorators = []
 
     def get(self):
-        company_type = request.args.get('type')
-        if company_type is None:
-            stockNum = db.session.query(Basic_Information.id).all()
-        else:
-            stockNum = db.session.query(
-                Basic_Information.id).filter_by(exchange_type=company_type).all()
+        query = db.session.query(BasicInformation.id)
+
+        exchange_type = request.args.getlist('exchange_type')
+        stock_number_start_with = request.args.get('stock_number_start_with')
+        query = query.filter(BasicInformation.exchange_type.in_(exchange_type if exchange_type else ['sii', 'otc', 'rotc']))
+        if stock_number_start_with:
+            query = query.filter(BasicInformation.id.like(stock_number_start_with + '%'))
+
+        stockNum = query.all()
         res = [i[0] for i in stockNum]
 
         return jsonify(res)
@@ -84,15 +98,15 @@ class getStockNumber(MethodView):
                 raise KeyError
             reportType = payload['reportType']
             if reportType == 'balance_sheet':
-                stockNums = db.session.query(Balance_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(BalanceSheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'income_sheet':
-                stockNums = db.session.query(Income_Sheet.stock_id).filter_by(
+                stockNums = db.session.query(IncomeSheet.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             elif reportType == 'cashflow':
-                stockNums = db.session.query(Cash_Flow.stock_id).filter_by(
+                stockNums = db.session.query(CashFlow.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
             res = [i[0] for i in stockNums]
@@ -119,7 +133,7 @@ class handleDailyInfo(MethodView):
         GET stock's daily information
         swagger_from_file: DailyInfo_get.yml
         """
-        dailyInfo = db.session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(DailyInformation).filter_by(
             stock_id=stock_id).one_or_none()
 
         if dailyInfo is None:
@@ -135,7 +149,7 @@ class handleDailyInfo(MethodView):
         swagger_from_file: DailyInfo_post.yml
         """
         payload = json.loads(request.data)
-        dailyInfo = db.session.query(Daily_Information).filter_by(
+        dailyInfo = db.session.query(DailyInformation).filter_by(
             stock_id=stock_id).one_or_none()
         try:
             if dailyInfo is not None:
@@ -144,7 +158,7 @@ class handleDailyInfo(MethodView):
                     dailyInfo['update_date'] = datetime.now(
                         ).strftime("%Y-%m-%d")
             else:
-                dailyInfo = Daily_Information()
+                dailyInfo = DailyInformation()
                 dailyInfo['stock_id'] = stock_id
                 for key in payload:
                     dailyInfo[key] = payload[key]

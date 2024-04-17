@@ -1,4 +1,4 @@
-"""empty message
+"""create_stock_search_counts
 
 Revision ID: 35be0700b6d8
 Revises: f7a936a30699
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 from app import db
 
-from app.database_setup import Basic_Information, StockSearchCounts
+from app.database_setup import BasicInformation, StockSearchCounts
 
 # revision identifiers, used by Alembic.
 revision = '35be0700b6d8'
@@ -32,7 +32,7 @@ def upgrade():
         batch_op.add_column(sa.Column('notify_announcement', sa.Boolean(), nullable=True))
         batch_op.drop_column('notify_feed')
 
-    basic_informations = db.session.query(Basic_Information).all()
+    basic_informations = db.session.query(BasicInformation).all()
 
     for basic_information in basic_informations:
         stock_search_count = StockSearchCounts()

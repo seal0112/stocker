@@ -9,6 +9,7 @@ from flask_swagger import swagger
 from flask_swagger_ui import get_swaggerui_blueprint
 
 from app import create_app, db
+from app.utils.slack_manager import SlackManager
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -47,12 +48,14 @@ def spec():
 @app.errorhandler(404)
 def pageNotfound(error):
     logging.info('Page not found: %s', (request.path))
-    return make_response(json.dumps('404 not foundss'), 404)
+    return make_response(json.dumps('404 not found'), 404)
 
 
 @app.errorhandler(500)
 def internalServerError(error):
-    logging.error('Server Error: %s', (error))
+    error_log = f'Server Error: {error}'
+    SlackManager().push_notification('Stocker', error_log)
+    logger.error(error_log)
     return make_response(json.dumps('500 server error'), 500)
 
 

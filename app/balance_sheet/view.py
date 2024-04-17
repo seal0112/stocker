@@ -1,6 +1,6 @@
 from flask import request, jsonify, make_response
 from flask.views import MethodView
-from ..database_setup import Balance_Sheet
+from ..database_setup import BalanceSheet
 from .. import db
 from . import balance_sheet
 import json
@@ -38,7 +38,7 @@ class handleBalanceSheet(MethodView):
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        balanceSheet = db.session.query(Balance_Sheet).filter_by(
+        balanceSheet = db.session.query(BalanceSheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(
                     season=payload['season']).one_or_none()
@@ -57,7 +57,7 @@ class handleBalanceSheet(MethodView):
                 balanceSheet['update_date'] = datetime.now(
                 ).strftime("%Y-%m-%d")
             else:
-                balanceSheet = Balance_Sheet()
+                balanceSheet = BalanceSheet()
                 balanceSheet['stock_id'] = stock_id
                 for key in payload:
                     balanceSheet[key] = payload[key]

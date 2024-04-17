@@ -1,4 +1,4 @@
-"""empty message
+"""create_follow_stock
 
 Revision ID: 756006c8e016
 Revises: 59077070093f

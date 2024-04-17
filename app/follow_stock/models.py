@@ -1,23 +1,15 @@
-import uuid
 from datetime import datetime
 
-from ..auth.models import db
-from ..database_setup import Basic_Information
+from .. import db
+from ..database_setup import BasicInformation
 from ..auth.models import User
-
-
-def getCurrentDate():
-    return datetime.now().strftime("%Y-%m-%d")
-
-
-def getUUID():
-    return uuid.uuid4().hex
+from ..utils.model_utilities import get_UUID
 
 
 class Follow_Stock(db.Model):
     __tablename__ = 'follow_stock'
 
-    id = db.Column(db.String(32), default=getUUID, primary_key=True)
+    id = db.Column(db.String(32), default=get_UUID, primary_key=True)
     user_id = db.Column(
         db.Integer, db.ForeignKey(User.id), nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
@@ -27,9 +19,9 @@ class Follow_Stock(db.Model):
     long_or_short = db.Column(db.String(10), nullable=False)
     is_delete = db.Column(db.Boolean, default=False)
     stock_id = db.Column(
-        db.String(6), db.ForeignKey(Basic_Information.id),
+        db.String(6), db.ForeignKey(BasicInformation.id),
         nullable=False)
-    stock = db.relationship("Basic_Information", lazy="immediate")
+    stock = db.relationship("BasicInformation", lazy="immediate")
 
     @property
     def serialize(self):
