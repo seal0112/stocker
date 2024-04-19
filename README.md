@@ -63,28 +63,25 @@ $ gunicorn --reload wsgi:app
 ```
 
 ## Configuration
-因個人電腦設定的不同, 請自行在Stocker資料夾下建立一個```critical_flie```資料夾
-並放上兩個檔案
-- databaseAccount.json
-- serverConfig.json
+因個人電腦設定的不同, 請自行在Stocker資料夾下建立一個```.env```檔案
+並將個人電腦的設定資訊填入
 
 格式如下
-databaseAccount.json
-```js
-{
-    "username": $USERNAME,
-    "password": $PASSWORD,
-    "ip": $DATABASE_IP
-}
+.env
+```sh
+DB_USER=database_account
+DB_PASSWORD=database_password
+DB_HOST=database_host
+DB_NAME=database_name
+
+REDIS_HOST=redis_host
+REDIS_PASSWORD=redis_password
+REDIS_PORT=redis_port
+REDIS_DB_NUMBER='1'
+CELERY_WORKER_CONCURRENCY='2'
+
+JWT_SECRET_KEY=your_jwt_secret_key
 ```
-serverConfig.json
-```js
-{
-    "ip": $IP,
-    "port": $PORT
-}
-```
-**$** 請自行填上個人電腦上的設定
 
 ## License
-MIT
+GPL-3.0
