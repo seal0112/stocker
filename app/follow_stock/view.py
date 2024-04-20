@@ -67,7 +67,7 @@ class FollowStockDetailApi(MethodView):
     @jwt_required()
     def delete(self, follow_stock_id):
         current_user = get_jwt_identity()
-        follow_data = follow_stock_service.delete_follow_stock(
+        follow_stock_service.delete_follow_stock(
             current_user['id'],
             follow_stock_id
         )

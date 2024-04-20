@@ -1,8 +1,6 @@
 from flask import request, jsonify, make_response
 from flask.views import MethodView
-from ..database_setup import (
-    Feed, FeedTag, basicInformationAndFeed
-)
+
 from .. import db
 from . import feed
 from .feed_services import FeedServices
