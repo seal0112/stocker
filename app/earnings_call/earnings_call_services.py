@@ -2,8 +2,10 @@ import logging
 
 from .models import EarningsCall
 from .. import db
+from ..utils.data_update_date_service import DataUpdateDateService
 
 
+data_update_date_service = DataUpdateDateService()
 logger = logging.getLogger()
 
 
@@ -39,6 +41,7 @@ class EarningsCallService():
             logger.error(ex)
             raise ex
         else:
+            data_update_date_service.update_earnings_call_update_date(earnings_call.stock_id)
             return earnings_call
 
     def get_earnings_call(self, earnings_call_id=None):

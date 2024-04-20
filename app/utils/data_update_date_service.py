@@ -71,3 +71,15 @@ class DataUpdateDateService:
             db.session.rollback()
             logger.exception(f'Failed to update news update date: {ex}')
             return False
+
+    def update_earnings_call_update_date(self, stock_id):
+        data_update_date = self.get_data_update_date(stock_id)
+
+        try:
+            data_update_date.earnings_call_last_update = date.today()
+            db.session.commit()
+            return True
+        except Exception as ex:
+            db.session.rollback()
+            logger.exception(f'Failed to update news update date: {ex}')
+            return False

@@ -219,7 +219,8 @@ class IncomeSheet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
         db.Date, nullable=False,
-        default=get_current_date
+        default=get_current_date,
+        index=True
     )
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
@@ -385,6 +386,7 @@ class DataUpdateDate(db.Model):
     announcement_last_update = db.Column(db.Date, nullable=True)
     news_last_update = db.Column(db.Date, nullable=True)
     income_sheet_last_update = db.Column(db.Date, nullable=True)
+    earnings_call_last_update = db.Column(db.Date, nullable=True)
 
 
 feedsAndfeedsTags = db.Table('feed_feedTag',
