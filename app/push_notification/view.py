@@ -37,6 +37,7 @@ class PushNotificationApi(MethodView):
         push_notification.notify_income_sheet = payload.get('notify_income_sheet', False)
         push_notification.notify_news = payload.get('notify_news', False)
         push_notification.notify_announcement = payload.get('notify_announcement', False)
+        push_notification.notify_earnings_call = payload.get('notify_earnings_call', False)
 
         try:
             db.session.add(push_notification)

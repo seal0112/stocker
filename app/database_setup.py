@@ -475,6 +475,7 @@ class PushNotification(db.Model):
     notify_announcement = db.Column(db.Boolean, default=False)
     notify_month_revenue = db.Column(db.Boolean, default=False)
     notify_income_sheet = db.Column(db.Boolean, default=False)
+    notify_earnings_call = db.Column(db.Boolean, default=False)
 
 
 class StockSearchCounts(db.Model):
