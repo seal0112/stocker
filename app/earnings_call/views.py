@@ -25,6 +25,14 @@ class EarningsCallListApi(MethodView):
     # @jwt_required()
     def post(self):
         earnings_call_data = json.loads(request.data)
+        earnings_calls = earnings_call_service.get_stock_all_earnings_call(
+            earnings_call_data['stock_id'],
+            earnings_call_data['meeting_date']
+        )
+
+        if earnings_calls:
+            return jsonify({"status": "資料已存在"}), 200
+
         try:
             earnings_call = earnings_call_service.create_earnings_call(earnings_call_data)
         except Exception:
