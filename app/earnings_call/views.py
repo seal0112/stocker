@@ -1,8 +1,9 @@
 import json
+from datetime import datetime
 
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 from .models import EarningsCall
 from . import earnings_call
@@ -14,14 +15,14 @@ earnings_call_service = EarningsCallService()
 
 class EarningsCallListApi(MethodView):
 
-    # @jwt_required()
+    @jwt_required()
     def get(self):
         stock = request.args.get('stock', None)
-        meeting_date = request.args.get('meeting_date', None)
+        meeting_date = request.args.get('meeting_date', datetime.now())
         earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
         return EarningsCallchema(many=True).dumps(earnings_calls)
 
-    # @jwt_required()
+    @jwt_required()
     def post(self):
         earnings_call_data = json.loads(request.data)
         try:

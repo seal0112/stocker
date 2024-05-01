@@ -30,8 +30,10 @@ class EarningsCallService():
         earnings_call = EarningsCall()
         earnings_call.stock_id = earnings_call_data['stock_id']
         earnings_call.meeting_date = earnings_call_data['meeting_date']
+        earnings_call.meeting_date = earnings_call_data['meeting_end_date']
         earnings_call.location = earnings_call_data['location']
         earnings_call.description = earnings_call_data['description']
+        earnings_call.file_name_chinese = earnings_call_data['file_name_chinese']
 
         try:
             db.session.add(earnings_call)
