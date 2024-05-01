@@ -25,7 +25,7 @@ class EarningsCallListApi(MethodView):
     # @jwt_required()
     def post(self):
         earnings_call_data = json.loads(request.data)
-        earnings_calls = earnings_call_service.get_stock_all_earnings_call(
+        earnings_calls = earnings_call_service.get_stock_earnings_call_by_date(
             earnings_call_data['stock_id'],
             earnings_call_data['meeting_date']
         )

@@ -26,6 +26,17 @@ class EarningsCallService():
         return earning_call_query.order_by(
                     EarningsCall.meeting_date.desc()).limit(self.earnings_call_data_size).all()
 
+    def get_stock_earnings_call_by_date(self, stock_id, meeting_date):
+        earning_call_query = EarningsCall.query
+        if stock_id:
+            earning_call_query = earning_call_query.filter_by(stock_id=stock_id)
+
+        if meeting_date:
+            earning_call_query = earning_call_query.filter(
+                EarningsCall.meeting_date==meeting_date)
+
+        return earning_call_query.all()
+
     def create_earnings_call(self, earnings_call_data):
         earnings_call = EarningsCall()
         earnings_call.stock_id = earnings_call_data['stock_id']
