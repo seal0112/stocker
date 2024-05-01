@@ -22,7 +22,7 @@ class EarningsCallListApi(MethodView):
         earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
         return EarningsCallchema(many=True).dumps(earnings_calls)
 
-    @jwt_required()
+    # @jwt_required()
     def post(self):
         earnings_call_data = json.loads(request.data)
         try:
