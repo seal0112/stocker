@@ -47,7 +47,7 @@ MarkupSafe==2.1.2
 marshmallow==3.19.0
 marshmallow-sqlalchemy==0.29.0
 mccabe==0.7.0
-mistune==0.8.4
+mistune==3.0.2
 packaging==23.0
 platformdirs==3.7.0
 pluggy==1.0.0
