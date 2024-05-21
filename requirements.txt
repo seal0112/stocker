@@ -69,7 +69,7 @@ python-editor==1.0.4
 pytz==2020.1
 PyYAML==6.0.1
 redis==5.0.1
-requests==2.31.0
+requests==2.32.0
 rsa==4.7.2
 setuptools==69.5.1
 six==1.16.0
