@@ -43,7 +43,7 @@ class AnnounceHandler:
         announcement_income_sheet['stock_id'] = self.announce_link.split('&')[6].split('=')[1]
         data = IncomeSheet.query.filter_by(stock_id=announcement_income_sheet["stock_id"], year=year).all()
         for d in data:
-            if int(d.season) >= season:
+            if int(d.season) >= int(season):
                 continue
             past_income_sheet = d.serialize
             for key in self.data_key:
