@@ -9,12 +9,13 @@ from sqlalchemy.sql import func
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from . import frontend
-from .. import db
-from ..database_setup import (
+from app import db
+from app.database_setup import (
     BasicInformation, MonthRevenue, IncomeSheet,
-    DailyInformation, Stock_Commodity, Feed, StockSearchCounts
+    DailyInformation, Stock_Commodity, StockSearchCounts
 )
-from ..utils.stock_search_count_service import StockSearchCountService
+from app.feed.models import Feed
+from app.utils.stock_search_count_service import StockSearchCountService
 
 logger = logging.getLogger()
 stock_search_count_service = StockSearchCountService()
