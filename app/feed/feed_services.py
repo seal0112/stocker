@@ -4,10 +4,10 @@ import json
 from flask import jsonify, make_response
 from datetime import datetime
 
-from ..database_setup import Feed, FeedTag
-from ..basic_information.basic_information_services import BasicInformationServices
-from ..utils.data_update_date_service import DataUpdateDateService
-from .. import db
+from app.feed.models import Feed, FeedTag
+from app.basic_information.basic_information_services import BasicInformationServices
+from app.utils.data_update_date_service import DataUpdateDateService
+from app import db
 
 
 logger = logging.getLogger()
@@ -15,7 +15,7 @@ basic_info_services = BasicInformationServices()
 data_update_date_service = DataUpdateDateService()
 
 
-class FeedServices:
+class FeedServices():
     def __init__(self):
         self.feed_size = 15
 
