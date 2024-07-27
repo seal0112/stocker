@@ -1,6 +1,6 @@
-from .. import ma
+from app import ma
 from app.utils.model_utilities import get_current_date
-from app.database_setup import AnnouncementIncomeSheetAnalysis
+from .models import Feed, AnnouncementIncomeSheetAnalysis
 
 
 class FeedSchema(ma.Schema):

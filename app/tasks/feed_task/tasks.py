@@ -1,7 +1,7 @@
 from app import celery, db
 from app.utils.announcement_handler import AnnounceHandler
-from app.database_setup import AnnouncementIncomeSheetAnalysis
 from app.utils.model_utilities import get_current_date
+from app.feed.models import AnnouncementIncomeSheetAnalysis
 
 import logging
 

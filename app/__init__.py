@@ -36,16 +36,16 @@ def create_app(config_name):
     ma.init_app(app)
     celery.conf.update(app.config)
 
-    from .basic_information import basic_information
-    from .income_sheet import income_sheet
-    from .balance_sheet import balance_sheet
-    from .cash_flow import cash_flow
-    from .month_revenue import month_revenue
-    from .feed import feed
-    from .follow_stock import follow_stock
-    from .push_notification import push_notification
-    from .earnings_call import earnings_call
-    from .monthly_valuation import monthly_valuation
+    from app.basic_information import basic_information
+    from app.income_sheet import income_sheet
+    from app.balance_sheet import balance_sheet
+    from app.cash_flow import cash_flow
+    from app.month_revenue import month_revenue
+    from app.feed import feed
+    from app.follow_stock import follow_stock
+    from app.push_notification import push_notification
+    from app.earnings_call import earnings_call
+    from app.monthly_valuation import monthly_valuation
 
     app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
     app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
@@ -58,13 +58,13 @@ def create_app(config_name):
     app.register_blueprint(earnings_call, url_prefix='/api/v0/earnings_call')
     app.register_blueprint(monthly_valuation, url_prefix='/api/v0/monthly_valuation')
 
-    from .main import main as main_blueprint
+    from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')
 
-    from .frontend import frontend as frontend_blueprint
+    from app.frontend import frontend as frontend_blueprint
     app.register_blueprint(frontend_blueprint, url_prefix='/api/v0/f')
 
-    from .auth import auth as auth_blueprint
+    from app.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/api/auth')
 
     return app
