@@ -57,6 +57,8 @@ class Config:
 
     CLIENT_SECRET = client_secret
 
+    AWS_SQS_URL = os.environ.get('AWS_SQS_URL')
+
     @staticmethod
     def init_app(app):
         pass
