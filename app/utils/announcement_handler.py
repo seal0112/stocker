@@ -9,7 +9,7 @@ from ..database_setup import IncomeSheet
 
 class AnnounceHandler:
 
-    def __init__(self, announce_link):
+    def __init__(self, announce_link=None):
         self.announce_link = announce_link
         self.data_key = ['營業收入合計', '營業毛利', '營業利益', '稅前淨利', '本期淨利', '母公司業主淨利', '基本每股盈餘']
         self.ratio_key = ['營業毛利', '營業利益', '稅前淨利', '本期淨利']

@@ -1,6 +1,10 @@
+import math
+import json
+
 from .. import db
 from ..utils.model_utilities import get_current_date
 from app.database_setup import basicInformationAndFeed
+from app.utils.aws_service import AWSService
 
 
 feedsAndfeedsTags = db.Table('feed_feedTag',
@@ -37,6 +41,11 @@ class Feed(db.Model):
         backref=db.backref('feeds', lazy='dynamic'),
         lazy='dynamic'
     )
+    announcement_income_sheet_analysis = db.relationship(
+        'AnnouncementIncomeSheetAnalysis',
+        uselist=False,
+        backref='feed'
+    )
 
     @property
     def serialize(self):
@@ -61,6 +70,21 @@ class Feed(db.Model):
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+
+    def create_default_announcement_income_sheet_analysis(self):
+        if self.announcement_income_sheet_analysis is None:
+            self.announcement_income_sheet_analysis = AnnouncementIncomeSheetAnalysis(
+                feed_id=self.id
+            )
+            try:
+                db.session.add(self.announcement_income_sheet_analysis)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(e)
+
+        return self.announcement_income_sheet_analysis
 
 
 class FeedTag(db.Model):
@@ -89,8 +113,8 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
         default=get_current_date,
         index=True
     )
-    year = db.Column(db.Integer, nullable=False)
-    season = db.Column(db.Enum('1', '2', '3', '4'), nullable=False)
+    year = db.Column(db.Integer)
+    season = db.Column(db.Enum('1', '2', '3', '4'))
     processing_failed = db.Column(db.Boolean, nullable=False, default=False)
     營業收入合計 = db.Column(db.BigInteger)
     營業收入合計年增率 = db.Column(db.Numeric(10, 2))
@@ -117,3 +141,16 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
+
+    def analysis_announcement_income_sheet(self):
+        release_time = self.feed.releaseTime
+        season = math.ceil((release_time.month + 1) / 3) - 1
+        season = 4 if season == 0 else season
+        feed_data = {
+            'feed_id': self.id,
+            'link': self.feed.link,
+            'year': release_time.year,
+            'season': season
+        }
+        aws_service = AWSService()
+        aws_service.send_message_to_sqs(json.dumps(feed_data))
