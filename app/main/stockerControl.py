@@ -14,7 +14,7 @@ from app.utils.line_manager import LineManager
 from app.utils.announcement_handler import AnnounceHandler
 from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
-    CashFlow, DailyInformation, Stock_Commodity, Feed
+    CashFlow, DailyInformation, Stock_Commodity
 )
 from app.feed.serializer import FeedSchema
 from app.tasks.test_task.tasks import add
@@ -34,19 +34,6 @@ logger.addHandler(console)
 
 
 def showMain():
-    # stock_screener = StockScrennerManager(option=request.args.get('option'))
-    # messages = stock_screener.screener()
-    # print(messages)
-
-    import math
-    season = math.ceil((datetime.now().month)/3)-1
-    season = 4 if season == 0 else season
-    year = datetime.now().year if season == 4 else datetime.now().year-1
-
-    feed = Feed.query.filter_by(id=244759).one_or_none()
-    task_id = analyze_announcement_incomesheet.delay(
-        feed.id, feed.link, 2023, 2
-    )
     return 'Hello'
 
 
