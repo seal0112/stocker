@@ -78,9 +78,9 @@ class FeedServices():
         except Exception as ex:
             logging.exception(ex)
             db.session.rollback()
-            return make_response(json.dumps(str(ex)), 500)
+            return None
         else:
-            return make_response(json.dumps('Create'), 201)
+            return feed
 
     def get_feed_tag(self, tag_name):
         tag = FeedTag.query.filter_by(name=tag_name).one_or_none()

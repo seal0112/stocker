@@ -75,7 +75,7 @@ class handleFeed(MethodView):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
 
-            return feed
+            return make_response('Created', 201)
         except Exception as ex:
             logging.exception(ex)
             db.session.rollback()
