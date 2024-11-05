@@ -4,7 +4,7 @@ from flask import current_app
 
 class AWSService:
     def __init__(self):
-        self.sqs = boto3.client('sqs')
+        self.sqs = boto3.client('sqs', current_app.config['AWS_REGION'])
 
     def send_message_to_sqs(self, message):
         response = self.sqs.send_message(

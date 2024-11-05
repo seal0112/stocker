@@ -58,6 +58,7 @@ class Config:
     CLIENT_SECRET = client_secret
 
     AWS_SQS_URL = os.environ.get('AWS_SQS_URL')
+    AWS_REGION = os.environ.get('AWS_REGION')
 
     @staticmethod
     def init_app(app):

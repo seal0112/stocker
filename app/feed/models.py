@@ -143,7 +143,6 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
         setattr(self, key, value)
 
     def analysis_announcement_income_sheet(self):
-        print(self)
         release_time = self.feed.releaseTime
         season = math.ceil((release_time.month + 1) / 3) - 1
         season = 4 if season == 0 else season
