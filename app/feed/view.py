@@ -71,7 +71,7 @@ class handleFeed(MethodView):
             feed_data = json.loads(request.data)
             feed = feed_services.create_feed(feed_data)
 
-            if re.search(r'財報|財務報', feed.title) and (not '日期' in feed.title):
+            if re.search(r'財報|財務報', feed.title) and (not '日期' in feed.title) and (not '子公司' in feed.title):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
 
