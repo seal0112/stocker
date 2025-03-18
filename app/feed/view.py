@@ -71,7 +71,7 @@ class handleFeed(MethodView):
             feed_data = json.loads(request.data)
             feed = feed_services.create_feed(feed_data)
 
-            if feed.feedType == 'announcement' and re.search(r'財報|財務報', feed.title) and (not '日期' in feed.title) and (not '子公司' in feed.title):
+            if feed.feedType == 'announcement' and re.search(r'財報|財務報', feed.title) and not re.search(r'日期|子公司|附註揭露|淨值百分|iXBRL', feed.title):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
 
@@ -96,7 +96,6 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
     def put(self, feed_id):
         anouncement_income_sheet_data = json.loads(request.data)
-        print(f'request.data: {anouncement_income_sheet_data}')
         feed = feed_services.get_feed(feed_id)
         income_sheet = anouncement_income_sheet_data['income_sheet']
         year = anouncement_income_sheet_data['year']
