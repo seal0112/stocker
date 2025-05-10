@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.main import main
 from app.utils.stock_screener import StockScrennerManager
-from app.utils.line_manager import LineManager
+from app.utils.discord_bot import DiscordBot
 from app.utils.announcement_handler import AnnounceHandler
 from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
@@ -43,8 +43,8 @@ def use_screener():
     webhook = request.args.get('webhook')
     stock_screener = StockScrennerManager(option)
     messages = stock_screener.screener()
-    line_manager = LineManager(webhook)
-    line_manager.push_notification(messages)
+    discord_bot = DiscordBot()
+    discord_bot.push_message(option, messages)
 
     return make_response('', 204)
 
