@@ -40,7 +40,6 @@ def showMain():
 @main.route('screener')
 def use_screener():
     option = request.args.get('option')
-    webhook = request.args.get('webhook')
     stock_screener = StockScrennerManager(option)
     messages = stock_screener.screener()
     discord_bot = DiscordBot()
