@@ -16,6 +16,7 @@ from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
     CashFlow, DailyInformation, Stock_Commodity
 )
+from app.monthly_valuation.models import MonthlyValuation
 from app.feed.serializer import FeedSchema
 from app.tasks.test_task.tasks import add
 from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
@@ -78,7 +79,7 @@ class getStockNumber(MethodView):
 
     def post(self):
         payload = json.loads(request.data)
-        reportTypeSet = set(["balance_sheet", "income_sheet", "cashflow"])
+        reportTypeSet = set(["balance_sheet", "income_sheet", "cashflow", "monthly_valuation"])
         try:
             if payload['reportType'] not in reportTypeSet:
                 raise KeyError
@@ -95,6 +96,10 @@ class getStockNumber(MethodView):
                 stockNums = db.session.query(CashFlow.stock_id).filter_by(
                     year=payload['year']).filter_by(
                         season=payload['season']).all()
+            elif reportType == 'monthly_valuation':
+                stockNums = db.session.query(MonthlyValuation.stock_id).filter_by(
+                    year=payload['year']).filter_by(
+                        month=payload['month']).all()
             res = [i[0] for i in stockNums]
         except Exception as ex:
             if ex == KeyError:
