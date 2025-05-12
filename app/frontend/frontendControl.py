@@ -262,11 +262,13 @@ def getStockAutocomplete():
     if search_stock is None:
         return jsonify({ 'stocks': [] })
 
+    subq = BasicInformation.query.filter(BasicInformation.exchange_type.in_(['sii', 'otc']))
+
     if re.search("^[0-9]{1,4}$", search_stock):
-        subq = BasicInformation.query.filter(
+        subq = subq.filter(
             BasicInformation.id.like(f'{search_stock}%'))
     else:
-        subq = BasicInformation.query.filter(
+        subq = subq.filter(
             BasicInformation.公司簡稱.like(f'{search_stock}%'))
 
     subq = subq.with_entities(BasicInformation.id, BasicInformation.公司簡稱).subquery()
