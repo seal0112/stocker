@@ -16,7 +16,7 @@ from . import login_service
 
 user_serv = user_service.UserService()
 login_serv = login_service.LoginService()
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 # @jwt.user_lookup_loader

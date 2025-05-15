@@ -8,15 +8,14 @@ from flask_marshmallow import Marshmallow
 from redis import Redis
 
 from config import config
+from app.log_config import setup_logging
 from app.tasks import celery_init_app
-
 
 db = SQLAlchemy()
 jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()
 celery = celery_init_app(__name__, os.getenv('FLASK_CONFIG'))
-
 
 redis_client = Redis(
     host=os.environ.get('REDIS_HOST') or 'localhost',
@@ -26,6 +25,8 @@ redis_client = Redis(
 )
 
 def create_app(config_name):
+    setup_logging()
+
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)

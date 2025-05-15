@@ -6,7 +6,7 @@ from flask import make_response, request
 from . import auth
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @auth.errorhandler(404)

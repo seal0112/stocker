@@ -12,9 +12,7 @@ from .. import db
 from . import month_revenue
 
 
-
-
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 data_update_date_service = DataUpdateDateService()
 
 

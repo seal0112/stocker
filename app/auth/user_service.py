@@ -4,7 +4,7 @@ from .models import User
 from .. import db
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class UserService():

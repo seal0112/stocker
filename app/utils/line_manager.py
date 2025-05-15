@@ -2,7 +2,7 @@ import requests
 import logging
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class LineManager:

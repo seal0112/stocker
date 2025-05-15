@@ -22,8 +22,7 @@ from app.tasks.test_task.tasks import add
 from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
 
 
-
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 DATE_FORMAT = '%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
@@ -59,6 +58,24 @@ def get_incomesheet_announcement():
         income_sheet, payload['year'], payload['season'])
     return make_response(single_season_incomesheet)
 
+
+def store_incomesheet_announcement():
+    payload = json.loads(request.data)
+    announce_handler = AnnounceHandler(payload['link'])
+    income_sheet = payload['income_sheet']
+    single_season_incomesheet = announce_handler.get_single_season_incomesheet(
+        income_sheet, payload['year'], payload['season'])
+    print(single_season_incomesheet)
+    # announcement_income_sheet_analysis = AnnouncementIncomeSheetAnalysis(
+    #     stock_id=payload['stock_id'],
+    #     year=payload['year'],
+    #     season=payload['season'],
+    #     analysis=single_season_incomesheet
+    # )
+    # db.session.add(announcement_income_sheet_analysis)
+    # db.session.commit()
+
+    return make_response('', 204)
 
 class getStockNumber(MethodView):
     decorators = []

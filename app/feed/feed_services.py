@@ -10,7 +10,7 @@ from app.utils.data_update_date_service import DataUpdateDateService
 from app import db
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 basic_info_services = BasicInformationServices()
 data_update_date_service = DataUpdateDateService()
 

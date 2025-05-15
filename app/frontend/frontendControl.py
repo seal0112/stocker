@@ -17,7 +17,8 @@ from app.database_setup import (
 from app.feed.models import Feed
 from app.utils.stock_search_count_service import StockSearchCountService
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 

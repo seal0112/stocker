@@ -5,7 +5,8 @@ from ..database_setup import StockSearchCounts
 from .. import db
 from .. import redis_client
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 
 
 class StockSearchCountService:

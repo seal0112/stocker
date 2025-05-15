@@ -3,7 +3,8 @@ import logging
 from datetime import date
 from .. import db
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 
 
 class DataUpdateDateService:

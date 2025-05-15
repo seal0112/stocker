@@ -3,7 +3,9 @@ import json
 import logging
 from . import frontend
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
+
 
 @frontend.errorhandler(404)
 def pageNotfound(error):

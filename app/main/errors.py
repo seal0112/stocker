@@ -5,7 +5,7 @@ from flask import make_response
 from . import main
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 # @main.errorhandler(404)

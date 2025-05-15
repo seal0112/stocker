@@ -86,6 +86,19 @@ class Feed(db.Model):
 
         return self.announcement_income_sheet_analysis
 
+    def create_announcement_income_sheet_analysis(self, announcement_income_sheet_analysis: dict):
+        if self.announcement_income_sheet_analysis is None:
+            self.announcement_income_sheet_analysis = self.create_default_announcement_income_sheet_analysis()
+
+        try:
+            db.session.add(self.announcement_income_sheet_analysis)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+
+        return self.announcement_income_sheet_analysis
+
 
 class FeedTag(db.Model):
     __tablename__ = 'feed_tag'

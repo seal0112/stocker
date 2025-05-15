@@ -6,7 +6,7 @@ from ..utils.data_update_date_service import DataUpdateDateService
 
 
 data_update_date_service = DataUpdateDateService()
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class EarningsCallService():

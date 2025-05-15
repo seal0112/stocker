@@ -12,7 +12,7 @@ from .. import db
 from . import basic_information
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 

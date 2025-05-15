@@ -2,8 +2,8 @@ from ..database_setup import BasicInformation
 from .. import db
 import logging
 
-logger = logging.getLogger()
 
+logger = logging.getLogger(__name__)
 
 
 class BasicInformationServices:

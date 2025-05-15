@@ -5,7 +5,8 @@ from app.feed.models import AnnouncementIncomeSheetAnalysis
 
 import logging
 
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
 
 
 # rate_limit='10/m' means 10 tasks per minute

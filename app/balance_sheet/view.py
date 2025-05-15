@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import logging
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class handleBalanceSheet(MethodView):
