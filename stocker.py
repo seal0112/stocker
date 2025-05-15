@@ -19,7 +19,7 @@ PORT = os.environ.get('PORT')
 app.config['JSON_AS_ASCII'] = False
 
 # Logger setup
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
 DATE_FORMAT = '%Y-%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
@@ -67,19 +67,6 @@ def make_shell_context():
 if __name__ == '__main__':
     app.debug = True
 
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    logdir = os.path.join(basedir, 'log')
-    if os.path.exists(logdir) is False:
-        os.mkdir(logdir)
-    log_filename = datetime.now().strftime("log/app %Y-%m-%d.log")
-    fileHandler = TimedRotatingFileHandler(
-        log_filename, when='D', interval=1,
-        backupCount=30, encoding='UTF-8', delay=False, utc=False)
-    fileHandler.setFormatter(formatter)
-
-    fileHandler.setLevel(logging.WARNING)
-
-    logger.addHandler(fileHandler)
     app.run(
         host=HOST,
         port=PORT,

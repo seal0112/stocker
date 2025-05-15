@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from redis import Redis
+from flask_log_request_id import RequestID
 
 from config import config
 from app.log_config import setup_logging
@@ -36,6 +37,7 @@ def create_app(config_name):
     jwt.init_app(app)
     ma.init_app(app)
     celery.conf.update(app.config)
+    RequestID(app)
 
     from app.basic_information import basic_information
     from app.income_sheet import income_sheet

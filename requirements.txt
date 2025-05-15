@@ -26,6 +26,7 @@ dill==0.3.6
 exceptiongroup==1.1.0
 Flask==2.3.2
 Flask-JWT-Extended==4.4.4
+Flask-Log-Request-ID==0.10.1
 Flask-Login==0.6.3
 flask-marshmallow==0.15.0
 Flask-Migrate==4.0.4
@@ -34,6 +35,7 @@ flask-swagger==0.2.14
 flask-swagger-ui==4.11.1
 google==2.0.3
 google-auth==1.30.1
+greenlet==3.2.1
 gunicorn==22.0.0
 html5lib==1.1
 idna==3.7
