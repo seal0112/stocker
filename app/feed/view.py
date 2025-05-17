@@ -74,7 +74,7 @@ class handleFeed(MethodView):
             if (
                 feed.feedType == 'announcement' and
                 re.search(r'財報|財務報', feed.title) and
-                not re.search(r'日期|子公司|附註|淨值百分|iXBRL|比率', feed.title)
+                not re.search(r'日期|子公司|附註|淨值百分|iXBRL|比率|說明會', feed.title)
             ):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
