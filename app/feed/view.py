@@ -106,7 +106,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
         season = anouncement_income_sheet_data['season']
 
         try:
-            announce_handler = AnnounceHandler()
+            announce_handler = AnnounceHandler(anouncement_income_sheet_data['link'])
             single_season_incomesheet = announce_handler.get_single_season_incomesheet(
                 income_sheet, year, season)
             single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
