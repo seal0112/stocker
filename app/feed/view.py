@@ -107,8 +107,10 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
 
         try:
             announce_handler = AnnounceHandler()
+            single_season_incomesheet = announce_handler.get_single_season_incomesheet(
+                income_sheet, year, season)
             single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
-                income_sheet, year, season
+                single_season_incomesheet, year, season
             )
         except Exception as e:
             single_season_incomesheet = {}
