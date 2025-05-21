@@ -16,6 +16,7 @@ from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
     CashFlow, DailyInformation, Stock_Commodity
 )
+from app.feed.models import Feed
 from app.monthly_valuation.models import MonthlyValuation
 from app.feed.serializer import FeedSchema
 from app.tasks.test_task.tasks import add
@@ -61,8 +62,15 @@ def get_incomesheet_announcement():
 
 def store_incomesheet_announcement():
     payload = json.loads(request.data)
-    announce_handler = AnnounceHandler(payload['link'])
+    feed = Feed.query.filter_by(id=payload['feed_id']).one_or_none()
+    if feed is None:
+        res = make_response(json.dumps(
+            'Failed to get %s Daily information.' % (payload['feed_id'])), 404)
+        return res
+
+
     income_sheet = payload['income_sheet']
+    announce_handler = AnnounceHandler(payload['link'])
     single_season_incomesheet = announce_handler.get_single_season_incomesheet(
         income_sheet, payload['year'], payload['season'])
     print(single_season_incomesheet)

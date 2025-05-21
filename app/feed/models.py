@@ -87,17 +87,17 @@ class Feed(db.Model):
         return self.announcement_income_sheet_analysis
 
     def create_announcement_income_sheet_analysis(self, announcement_income_sheet_analysis: dict):
-        if self.announcement_income_sheet_analysis is None:
-            self.announcement_income_sheet_analysis = self.create_default_announcement_income_sheet_analysis()
+        announcement_income_sheet = self.create_default_announcement_income_sheet_analysis()
+
+        for key, value in announcement_income_sheet_analysis.items():
+            if hasattr(announcement_income_sheet, key):
+                setattr(announcement_income_sheet, key, value)
 
         try:
-            db.session.add(self.announcement_income_sheet_analysis)
+            db.session.add(announcement_income_sheet)
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            print(e)
-
-        return self.announcement_income_sheet_analysis
 
 
 class FeedTag(db.Model):
@@ -167,3 +167,17 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
         }
         aws_service = AWSService()
         aws_service.send_message_to_sqs(json.dumps(feed_data))
+
+    def calculate_ratio(self):
+        RATIO_KEYS = ['營業毛利', '營業利益', '稅前淨利', '本期淨利']
+
+        for ratio_key in RATIO_KEYS:
+            if self.營業收入合計 == 0:
+                setattr(self, ratio_key + '率', None)
+            else:
+                setattr(self, ratio_key + '率', round(
+                    getattr(self, ratio_key) / self.營業收入合計 * 100, 2))
+
+        setattr(self, '本業佔比', 0 if self.稅前淨利率 == 0 else round(
+            self.營業利益率 / self.稅前淨利率 * 100, 2)
+        )

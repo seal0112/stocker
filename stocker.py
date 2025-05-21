@@ -10,6 +10,7 @@ from flask_swagger_ui import get_swaggerui_blueprint
 
 from app import create_app, db
 from app.utils.slack_manager import SlackManager
+import traceback
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
@@ -56,6 +57,7 @@ def internalServerError(error):
     error_log = f'Server Error: {error}'
     SlackManager().push_notification('Stocker', error_log)
     logger.error(error_log)
+    logger.error(traceback.format_exc())
     return make_response(json.dumps('500 server error'), 500)
 
 

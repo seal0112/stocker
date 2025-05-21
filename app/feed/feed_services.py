@@ -20,11 +20,7 @@ class FeedServices():
         self.feed_size = 15
 
     def get_feed(self, feed_id):
-        feed = Feed.query.filter_by(id=feed_id).one_or_none()
-        if feed:
-            return feed.serialize
-        else:
-            return None
+        return Feed.query.filter_by(id=feed_id).one_or_none()
 
     def get_feeds(self, stock_id, time):
         stock = basic_info_services.get_basic_information(stock_id)

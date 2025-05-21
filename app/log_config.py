@@ -1,8 +1,24 @@
 import os
 import logging
+import gzip
+import shutil
 
 from logging.handlers import TimedRotatingFileHandler
 from flask_log_request_id import RequestIDLogFilter
+
+
+class GZipTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def rotate(self, source, dest):
+        # 原本的 rotate 行為（移動檔案）
+        super().rotate(source, dest)
+
+        # 壓縮 dest 成 .gz
+        with open(dest, 'rb') as f_in:
+            with gzip.open(dest + '.gz', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+
+        # 刪除未壓縮的舊檔
+        os.remove(dest)
 
 
 def setup_logging(log_dir='log', log_filename='app.log'):
@@ -12,7 +28,7 @@ def setup_logging(log_dir='log', log_filename='app.log'):
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, log_filename)
 
-    handler = TimedRotatingFileHandler(
+    handler = GZipTimedRotatingFileHandler(
         log_path,
         when='midnight',
         interval=1,
