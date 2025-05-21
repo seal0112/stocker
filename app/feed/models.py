@@ -164,7 +164,8 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
             'feed_id': self.feed_id,
             'link': self.feed.link,
             'year': release_time.year,
-            'season': season
+            'season': season,
+            'stock_id': self.stocks[0].id
         }
         aws_service = AWSService()
         aws_service.send_message_to_sqs(json.dumps(feed_data))
