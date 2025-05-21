@@ -60,7 +60,7 @@ class AnnounceHandler:
             stock_id=announcement_income_sheet["stock_id"], year=last_year, season=season).one_or_none()
 
         for key in self.annual_growth_rate_key:
-            if announcement_income_sheet[key] < 0 or last_year_income_sheet is None:
+            if last_year_income_sheet is None or announcement_income_sheet[key] < 0:
                 announcement_income_sheet[key+'年增率'] = None
             else:
                 announcement_income_sheet[key+'年增率'] = round(
