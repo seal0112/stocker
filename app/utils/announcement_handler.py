@@ -52,6 +52,10 @@ class AnnounceHandler:
         for key in self.ratio_key:
             announcement_income_sheet[key+'率'] = round((announcement_income_sheet[key] / announcement_income_sheet['營業收入合計'])*100 , 2)
 
+        # 營業利益率/稅前利益率
+        if announcement_income_sheet['稅前淨利率'] not in [0, None]:
+            announcement_income_sheet['本業佔比'] = announcement_income_sheet['營業利益率'] / announcement_income_sheet['稅前淨利率'] * 100
+
         return announcement_income_sheet
 
     def calculate_income_sheet_annual_growth_rate(self, announcement_income_sheet, year, season):
