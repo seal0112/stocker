@@ -119,16 +119,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
             single_season_incomesheet['season'] = str(season)
             single_season_incomesheet['update_date'] = get_current_date()
 
-        announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
-        for key in single_season_incomesheet:
-            announcement_income_sheet_analysis[key] = single_season_incomesheet[key]
-
-        try:
-            db.session.add(announcement_income_sheet_analysis)
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            logger.error(e)
+        announcement_income_sheet_analysis = feed.create_announcement_income_sheet_analysis(single_season_incomesheet)
 
         return AnnouncementIncomeSheetAnalysisSchema().dumps(announcement_income_sheet_analysis), 200
 

@@ -75,7 +75,8 @@ class Feed(db.Model):
     def create_default_announcement_income_sheet_analysis(self):
         if self.announcement_income_sheet_analysis is None:
             self.announcement_income_sheet_analysis = AnnouncementIncomeSheetAnalysis(
-                feed_id=self.id
+                feed_id=self.id,
+                stock_id=self.stocks[0].id if self.stocks else None,
             )
             try:
                 db.session.add(self.announcement_income_sheet_analysis)
