@@ -16,6 +16,18 @@ class FeedSchema(ma.Schema):
 class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
     update_date = fields.DateTime(format='%Y-%m-%d')
     feed = fields.Nested(FeedSchema, only=('title', 'link'))
+    營業收入合計年增率 = fields.Decimal(as_string=True, allow_none=True)
+    營業毛利率年增率 = fields.Decimal(as_string=True, allow_none=True)
+    營業利益率年增率 = fields.Decimal(as_string=True, allow_none=True)
+    稅前淨利率年增率 = fields.Decimal(as_string=True, allow_none=True)
+    本期淨利率年增率 = fields.Decimal(as_string=True, allow_none=True)
+    基本每股盈餘年增率 = fields.Decimal(as_string=True, allow_none=True)
+    營業毛利率 = fields.Decimal(as_string=True, allow_none=True)
+    營業利益率 = fields.Decimal(as_string=True, allow_none=True)
+    稅前淨利率 = fields.Decimal(as_string=True, allow_none=True)
+    本期淨利率 = fields.Decimal(as_string=True, allow_none=True)
+    本業佔比 = fields.Decimal(as_string=True, allow_none=True)
+
     class Meta:
         model = AnnouncementIncomeSheetAnalysis
         fields = (
