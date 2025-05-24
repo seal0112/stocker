@@ -44,7 +44,7 @@ class StockSearchCountService:
     def increase_stock_search_count(self, user_email, stock_id):
         redis_search_count_key = f'{user_email}:search_count'
         if redis_client.sismember(redis_search_count_key, stock_id):
-                return None
+            return None
 
         redis_client.sadd(redis_search_count_key, stock_id)
         redis_client.expireat(
