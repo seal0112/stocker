@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from flask import request, jsonify, make_response
 from flask.views import MethodView
@@ -95,7 +95,7 @@ feed.add_url_rule('',
 class AnnouncementIncomeSheetAnalysisListApi(MethodView):
     def get(self):
         update_date = request.args.get('update_date', default=None)
-        update_date = datetime.strptime(update_date, '%Y-%m-%d').date() if update_date else datetime.date()
+        update_date = datetime.strptime(update_date, '%Y-%m-%d').date() if update_date else date.today()
         processing_failed = request.args.get('processing_failed', default=None)
         announcement_income_sheet_analysis_schema = AnnouncementIncomeSheetAnalysisSchema(many=True)
 
