@@ -94,7 +94,18 @@ feed.add_url_rule('',
 
 class AnnouncementIncomeSheetAnalysisListApi(MethodView):
     def get(self):
-        return 'announcement_income_sheet_analysis'
+        update_date = request.args.get('update_date', default=None)
+        update_date = datetime.strptime(update_date, '%Y-%m-%d').date() if update_date else datetime.date()
+        processing_failed = request.args.get('processing_failed', default=None)
+        announcement_income_sheet_analysis_schema = AnnouncementIncomeSheetAnalysisSchema(many=True)
+
+        queries = AnnouncementIncomeSheetAnalysis.query.filter_by(update_date=update_date)
+        if processing_failed is not None:
+            processing_failed = processing_failed.lower() == 'false'
+            queries = queries.filter_by(processing_failed=processing_failed)
+
+        announcement_income_sheet_analysis = queries.all()
+        return announcement_income_sheet_analysis_schema.dumps(announcement_income_sheet_analysis), 200
 
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):

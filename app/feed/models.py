@@ -148,7 +148,6 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
     基本每股盈餘 = db.Column(db.Numeric(10, 2))
     基本每股盈餘年增率 = db.Column(db.Numeric(10, 2))
     本業佔比 = db.Column(db.Numeric(5, 2))
-    # feed = db.relationship('Feed', uselist=False)
 
     def __getitem__(self, key):
         return getattr(self, key)

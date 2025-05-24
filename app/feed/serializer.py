@@ -15,6 +15,7 @@ class FeedSchema(ma.Schema):
 
 class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
     update_date = fields.DateTime(format='%Y-%m-%d')
+    feed = fields.Nested(FeedSchema, only=('title', 'link'))
     class Meta:
         model = AnnouncementIncomeSheetAnalysis
         fields = (
@@ -24,5 +25,6 @@ class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
             "營業利益", "營業利益率", "營業毛利率年增率",
             "稅前淨利", "稅前淨利率", "稅前淨利率年增率",
             "本期淨利", "本期淨利率", "本期淨利率年增率",
-            "母公司業主淨利", "基本每股盈餘", "基本每股盈餘年增率"
+            "母公司業主淨利", "基本每股盈餘", "基本每股盈餘年增率",
+            '本業佔比', 'feed'
         )
