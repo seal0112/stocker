@@ -105,7 +105,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
             queries = queries.filter_by(processing_failed=processing_failed)
 
         announcement_income_sheet_analysis = queries.all()
-        return announcement_income_sheet_analysis_schema.dumps(announcement_income_sheet_analysis), 200
+        return jsonify(announcement_income_sheet_analysis_schema.dump(announcement_income_sheet_analysis)), 200
 
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
@@ -134,7 +134,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
 
         announcement_income_sheet_analysis = feed.create_announcement_income_sheet_analysis(single_season_incomesheet)
 
-        return jsonify(AnnouncementIncomeSheetAnalysisSchema().dump(announcement_income_sheet_analysis)), 200
+        return AnnouncementIncomeSheetAnalysisSchema().dumps(announcement_income_sheet_analysis), 200
 
 
 def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
