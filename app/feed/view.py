@@ -134,7 +134,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
 
         announcement_income_sheet_analysis = feed.create_announcement_income_sheet_analysis(single_season_incomesheet)
 
-        return AnnouncementIncomeSheetAnalysisSchema().dumps(announcement_income_sheet_analysis), 200
+        return jsonify(AnnouncementIncomeSheetAnalysisSchema().dump(announcement_income_sheet_analysis)), 200
 
 
 def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
