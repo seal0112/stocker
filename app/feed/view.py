@@ -101,7 +101,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
 
         queries = AnnouncementIncomeSheetAnalysis.query.filter_by(update_date=update_date)
         if processing_failed is not None:
-            processing_failed = processing_failed.lower() == 'false'
+            processing_failed = not (processing_failed.lower() == 'false')
             queries = queries.filter_by(processing_failed=processing_failed)
 
         announcement_income_sheet_analysis = queries.all()
