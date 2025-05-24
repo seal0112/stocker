@@ -87,6 +87,36 @@ class BasicInformation(db.Model):
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
+    def get_newest_season_eps(self):
+        """Get the newest income sheet for this stock."""
+        from .income_sheet import IncomeSheet
+        return IncomeSheet.query.filter_by(stock_id=self.id).order_by(
+            IncomeSheet.year.desc(),
+            IncomeSheet.season.desc()
+        ).first()['基本每股盈餘']
+
+    def get_pe_quantile(self, quantile: float = 0.5, years: int = 5) -> float:
+        """Get the P/E ratio for this stock."""
+        from app.monthly_valuation.models import MonthlyValuation
+
+        monthly_valuation = MonthlyValuation.query.filter_by(stock_id=self.id).order_by(
+            MonthlyValuation.year.desc(),
+            MonthlyValuation.month.desc()
+        ).limit(years * 12).all()
+        pe_list = [float(row.本益比) for row in monthly_valuation if row.本益比 is not None]
+
+        if not pe_list:
+            return None
+
+        pe_list.sort()
+        n = len(pe_list)
+        idx = quantile * (n - 1)
+        lower = int(idx)
+        upper = min(lower + 1, n - 1)
+        weight = idx - lower
+        quantile_value = pe_list[lower] * (1 - weight) + pe_list[upper] * weight
+        return round(quantile_value, 2)
+
 
 # db.Index('basic_infomation_name_idx', BasicInformation.公司簡稱)
 
