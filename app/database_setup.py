@@ -5,18 +5,18 @@ from .utils.model_utilities import get_current_date
 
 # db.Index('revenue_idx_stock', MonthRevenue.stock_id)
 
-basicInformationAndFeed = db.Table('basicInformation_feed',
-                             db.Column(
-                                'basic_information_id',
-                                db.String(6),
-                                db.ForeignKey('basic_information.id'),
-                                primary_key=True),
-                             db.Column(
-                                'feed_id',
-                                db.Integer,
-                                db.ForeignKey('feed.id'),
-                                primary_key=True)
-                          )
+# basicInformationAndFeed = db.Table('basicInformation_feed',
+#                              db.Column(
+#                                 'basic_information_id',
+#                                 db.String(6),
+#                                 db.ForeignKey('basic_information.id'),
+#                                 primary_key=True),
+#                              db.Column(
+#                                 'feed_id',
+#                                 db.Integer,
+#                                 db.ForeignKey('feed.id'),
+#                                 primary_key=True)
+#                           )
 
 
 # done

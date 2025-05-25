@@ -19,6 +19,7 @@ class Feed(db.Model):
     __tablename__ = 'feed'
 
     id = db.Column(db.Integer, primary_key=True)
+    stock_id = db.Column(db.String(6), db.ForeignKey('basic_information.id'), nullable=True)
     update_date = db.Column(
         db.Date, nullable=False, default=get_current_date
     )
@@ -35,23 +36,17 @@ class Feed(db.Model):
         backref=db.backref('feeds', lazy='dynamic'),
         lazy='joined'
     )
-    stocks = db.relationship(
-        'BasicInformation',
-        secondary=basicInformationAndFeed,
-        backref=db.backref('feeds', lazy='dynamic'),
-        lazy='dynamic'
-    )
     announcement_income_sheet_analysis = db.relationship(
         'AnnouncementIncomeSheetAnalysis',
         uselist=False,
         backref='feed'
     )
+    stock = db.relationship('BasicInformation', backref='feeds', lazy='joined')
 
     @property
     def serialize(self):
         res = {}
         tags = []
-        stocks = []
         for attr, val in self.__dict__.items():
             if attr == '_sa_instance_state':
                 continue
@@ -60,9 +55,6 @@ class Feed(db.Model):
         if self.tags:
             tags = [tag.name for tag in self.tags]
         res['tags'] = tags
-        if self.stocks:
-            stocks = [stock.id for stock in self.stocks]
-        res['stocks'] = stocks
         return res
 
     def __getitem__(self, key):

@@ -57,17 +57,21 @@ class FeedServices():
                 tag = self.get_feed_tag(tag_name)
                 feed.tags.append(tag)
 
-            for stock_id in feed_data['stocks']:
-                stock = basic_info_services.get_basic_information(stock_id)
-                if stock:
-                    if feed_data['feedType'] == 'news':
-                        data_update_date_service.update_news_update_date(stock_id)
-                    else:
-                        if len(feed_data['tags']):
-                            data_update_date_service.update_announcement_update_date(stock_id)
+            stocks = feed_data.get('stocks')
+            if isinstance(stocks, list) and stocks:
+                stock_id = stocks[0]
+            else:
+                stock_id = feed_data.get('stock_id', None)
 
-                    if not stock in feed.stocks:
-                        feed.stocks.append(stock)
+            stock = basic_info_services.get_basic_information(stock_id)
+            feed.stock = stock
+
+            if stock:
+                if feed_data['feedType'] == 'news':
+                    data_update_date_service.update_news_update_date(stock_id)
+                else:
+                    if len(feed_data['tags']):
+                        data_update_date_service.update_announcement_update_date(stock_id)
 
             db.session.add(feed)
             db.session.commit()
