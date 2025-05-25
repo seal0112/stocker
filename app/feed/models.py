@@ -3,7 +3,6 @@ import json
 
 from .. import db
 from ..utils.model_utilities import get_current_date
-from app.database_setup import basicInformationAndFeed
 from app.utils.aws_service import AWSService
 
 
