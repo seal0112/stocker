@@ -4,6 +4,7 @@ import json
 import math
 
 from sqlalchemy import text
+from app.database_setup import BasicInformation
 
 from .. import db
 
@@ -27,14 +28,22 @@ class StockScrennerManager:
         with open('./critical_file/screener_format.json') as reader:
             return json.loads(reader.read())[option]
 
-    def screener(self):
-        message_list = []
-        message = ''
+    def screener(self) -> list:
         sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
 
         with db.engine.connect() as conn:
             stocks = conn.execute(text(sql_command)).fetchall()
 
+        filter_stocks = [stock for stock in stocks if self.check_stock_valuation(stock[0])]
+
+        if not filter_stocks:
+            return []
+        else:
+            return self.format_screener_message(filter_stocks)
+
+    def format_screener_message(self, stocks) -> list:
+        message_list = []
+        message = ''
         for idx, stock in enumerate(stocks):
             if int(idx) % 10 == 0:
                 message_list.append(message)
@@ -46,3 +55,28 @@ class StockScrennerManager:
         message_list.pop(0)
         return message_list
 
+    def check_stock_valuation(self, stock_id: str) -> bool:
+        """
+        Check if the stock valuation is within the acceptable range.
+        """
+        stock = BasicInformation.query.filter_by(id=stock_id).one_or_none()
+        if not stock:
+            return False
+
+        last_income_sheet_eps = stock.get_newest_season_eps()
+        pe_average = stock.get_pe_quantile(0.5, 5)
+
+        if (
+            last_income_sheet_eps is None or
+            pe_average is None or
+            not stock.daily_information or
+            stock.daily_information.本日收盤價 is None
+        ):
+            return False
+
+        try:
+            stock_price = float(stock.daily_information.本日收盤價)
+        except Exception:
+            return False
+
+        return last_income_sheet_eps > 0.3 and (stock_price / last_income_sheet_eps * 4) < pe_average
