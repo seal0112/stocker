@@ -30,12 +30,9 @@ class StockScrennerManager:
 
     def screener(self) -> list:
         sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
-
         with db.engine.connect() as conn:
             stocks = conn.execute(text(sql_command)).fetchall()
-
         filter_stocks = [stock for stock in stocks if self.check_stock_valuation(stock[0])]
-
         if not filter_stocks:
             return []
         else:
@@ -78,5 +75,4 @@ class StockScrennerManager:
             stock_price = float(stock.daily_information.本日收盤價)
         except Exception:
             return False
-
-        return last_income_sheet_eps > 0.3 and (stock_price / last_income_sheet_eps * 4) < pe_average
+        return last_income_sheet_eps > 0.3 and (stock_price / (last_income_sheet_eps * 4)) < pe_average

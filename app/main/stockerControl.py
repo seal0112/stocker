@@ -44,7 +44,8 @@ def use_screener():
     stock_screener = StockScrennerManager(option)
     messages = stock_screener.screener()
     discord_bot = DiscordBot()
-    discord_bot.push_message(option, messages)
+    for message in messages:
+        discord_bot.push_message(option, message)
 
     return make_response('', 204)
 
