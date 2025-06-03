@@ -7,7 +7,7 @@ from flask.views import MethodView
 from sqlalchemy.exc import IntegrityError
 
 from ..utils.data_update_date_service import DataUpdateDateService
-from ..database_setup import (
+from app.database_setup import (
     BasicInformation, IncomeSheet, DailyInformation
 )
 from .. import db
