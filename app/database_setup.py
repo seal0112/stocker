@@ -93,13 +93,28 @@ class BasicInformation(db.Model):
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
-    def get_newest_season_eps(self):
+    def get_newest_season_income_sheet(self):
         """Get the newest income sheet for this stock."""
         from app.database_setup import IncomeSheet
         return IncomeSheet.query.filter_by(stock_id=self.id).order_by(
             IncomeSheet.year.desc(),
             IncomeSheet.season.desc()
-        ).first()['基本每股盈餘']
+        ).first()
+
+    def get_average_monthly_price(self, months: int = 6) -> float:
+        """Get the average monthly price for this stock."""
+        from app.monthly_valuation.models import MonthlyValuation
+
+        monthly_valuations = MonthlyValuation.query.filter_by(stock_id=self.id).order_by(
+            MonthlyValuation.year.desc(),
+            MonthlyValuation.month.desc()
+        ).limit(months).all()
+        price_list = [float(row.均價) for row in monthly_valuations if row.均價 is not None]
+
+        if not price_list:
+            return None
+
+        return round(sum(price_list) / len(price_list), 2)
 
     def get_pe_quantile(self, quantile: float = 0.5, years: int = 5) -> float:
         """Get the P/E ratio for this stock."""

@@ -60,12 +60,25 @@ class StockScrennerManager:
         if not stock:
             return False
 
-        last_income_sheet_eps = stock.get_newest_season_eps()
+        last_income_sheet = stock.get_newest_season_income_sheet()
+        average_monthly_price = stock.get_average_monthly_price(3)
+        last_income_sheet_eps = last_income_sheet['基本每股盈餘']
+
+        if (
+            last_income_sheet.營業利益率 is not None and
+            last_income_sheet.稅前利益率 and
+            last_income_sheet.稅前利益率 != 0
+        ):
+            core_business_ratio = last_income_sheet.營業利益率 / last_income_sheet.稅前利益率
+        else:
+            core_business_ratio = None
         pe_average = stock.get_pe_quantile(0.5, 5)
 
         if (
             last_income_sheet_eps is None or
             pe_average is None or
+            core_business_ratio is None or
+            average_monthly_price is None or
             not stock.daily_information or
             stock.daily_information.本日收盤價 is None
         ):
@@ -75,4 +88,10 @@ class StockScrennerManager:
             stock_price = float(stock.daily_information.本日收盤價)
         except Exception:
             return False
-        return last_income_sheet_eps > 0.3 and (stock_price / (last_income_sheet_eps * 4)) < pe_average
+
+        return (
+            last_income_sheet_eps > 0.3 and
+            core_business_ratio > 0.7 and
+            stock_price < (average_monthly_price * 1.3) and
+            (stock_price / (last_income_sheet_eps * 4)) < pe_average
+        )
