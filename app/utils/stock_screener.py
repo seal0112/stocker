@@ -92,6 +92,6 @@ class StockScrennerManager:
         return (
             last_income_sheet_eps > 0.3 and
             core_business_ratio > 0.7 and
-            stock_price < (average_monthly_price * 1.2) and
+            stock_price < (average_monthly_price * 1.25) and
             (stock_price / (last_income_sheet_eps * 4)) < pe_average
         )
