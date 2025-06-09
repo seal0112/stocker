@@ -66,10 +66,10 @@ class StockScrennerManager:
 
         if (
             last_income_sheet.營業利益率 is not None and
-            last_income_sheet.稅前利益率 and
-            last_income_sheet.稅前利益率 != 0
+            last_income_sheet.稅前淨利率 and
+            last_income_sheet.稅前淨利率 != 0
         ):
-            core_business_ratio = last_income_sheet.營業利益率 / last_income_sheet.稅前利益率
+            core_business_ratio = last_income_sheet.營業利益率 / last_income_sheet.稅前淨利率
         else:
             core_business_ratio = None
         pe_average = stock.get_pe_quantile(0.5, 5)
