@@ -447,7 +447,8 @@ class PushNotification(db.Model):
         db.Integer, db.ForeignKey('user.id'),
         primary_key=True, nullable=False)
     notify_enabled = db.Column(db.Boolean, default=False)
-    line_notify_token = db.Column(db.String(64), default=False)
+    gmail = db.Column(db.String(128), default=False)
+    gmail_token = db.Column(db.String(64), default=False)
     notify_time = db.Column(db.Time, default=time(hour=20, minute=0))
     notify_news = db.Column(db.Boolean, default=False)
     notify_announcement = db.Column(db.Boolean, default=False)
