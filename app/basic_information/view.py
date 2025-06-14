@@ -82,6 +82,7 @@ class handleBasicInfo(MethodView):
                 ).strftime("%Y-%m-%d")
             else:
                 basicInfo = BasicInformation()
+                basicInfo.id = stock_id
                 for key in payload:
                     basicInfo[key] = payload[key]
 
