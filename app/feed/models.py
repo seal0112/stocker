@@ -67,7 +67,7 @@ class Feed(db.Model):
         if self.announcement_income_sheet_analysis is None:
             self.announcement_income_sheet_analysis = AnnouncementIncomeSheetAnalysis(
                 feed_id=self.id,
-                stock_id=self.stocks[0].id if self.stocks else None,
+                stock_id=self.stock_id,
             )
             try:
                 db.session.add(self.announcement_income_sheet_analysis)
@@ -155,7 +155,7 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
             'link': self.feed.link,
             'year': release_time.year,
             'season': season,
-            'stock_id': self.stocks[0].id
+            'stock_id': self.stock_id
         }
         aws_service = AWSService()
         aws_service.send_message_to_sqs(json.dumps(feed_data))
