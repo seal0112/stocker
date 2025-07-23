@@ -15,8 +15,8 @@ from app.database_setup import (
     DailyInformation, Stock_Commodity, StockSearchCounts
 )
 from app.feed.models import Feed
+from app.feed.serializer import FeedSchema
 from app.utils.stock_search_count_service import StockSearchCountService
-
 
 logger = logging.getLogger(__name__)
 stock_search_count_service = StockSearchCountService()
@@ -249,7 +249,7 @@ def getMarketFeed():
         page=int(page), per_page=int(page_size), error_out=False)
 
     return jsonify({
-        'feeds': [feed.serialize for feed in feeds],
+        'feeds': FeedSchema(many=True).dump(feeds.items),
         'next_page': feeds.next_num,
         'has_next': feeds.has_next
     })
