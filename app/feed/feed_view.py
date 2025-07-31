@@ -3,16 +3,16 @@ import logging
 import re
 from datetime import datetime, timedelta, date
 
-from flask import request, jsonify, make_response
+from flask import request, jsonify, Response
 from flask.views import MethodView
 
 
 from .. import db
 from . import feed
 
-from app.feed.feed_services import FeedServices
-from app.feed.models import AnnouncementIncomeSheetAnalysis
-from app.feed.serializer import AnnouncementIncomeSheetAnalysisSchema
+from app.services.feed_services import FeedServices
+from app.models import AnnouncementIncomeSheetAnalysis
+from app.schemas.announcement_income_sheet_analysis_schema import AnnouncementIncomeSheetAnalysisSchema
 
 from app.utils.model_utilities import get_current_date
 from app.utils.aws_service import AWSService
@@ -24,14 +24,14 @@ feed_services = FeedServices()
 
 
 @feed.route('/<stock_id>', methods=['GET'])
-def get_stock_feed(stock_id):
+def get_stock_feed(stock_id) -> Response:
     time = request.args.get('time', default=None)
     time = time if time else datetime.now()
     feeds = feed_services.get_feeds(stock_id, time)
     return jsonify(feeds)
 
 
-class handleFeed(MethodView):
+class HandleFeed(MethodView):
     """
     Description:
         this api is used to handle Stock Feed request.
@@ -53,7 +53,7 @@ class handleFeed(MethodView):
         Exception: An error occurred then return 400.
     """
 
-    def get(self):
+    def get(self) -> Response:
         start_time = request.args.get(
             'starttime', default=None)
         end_time = request.args.get(
@@ -66,7 +66,7 @@ class handleFeed(MethodView):
         feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
         return jsonify(feeds)
 
-    def post(self):
+    def post(self) -> Response:
         try:
             feed_data = json.loads(request.data)
             feed = feed_services.create_feed(feed_data)
@@ -79,29 +79,32 @@ class handleFeed(MethodView):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
 
-            return make_response('Created', 201)
+            return jsonify({'message': 'Created'}), 201
         except Exception as ex:
             logging.exception(ex)
             db.session.rollback()
-            return make_response(json.dumps(str(ex)), 500)
+            return jsonify({'error': str(ex)}), 500
 
 
 feed.add_url_rule('',
-                  view_func=handleFeed.as_view(
+                  view_func=HandleFeed.as_view(
                       'handleFeed'),
                   methods=['GET', 'POST'])
 
 
 class AnnouncementIncomeSheetAnalysisListApi(MethodView):
-    def get(self):
-        update_date = request.args.get('update_date', default=None)
-        update_date = datetime.strptime(update_date, '%Y-%m-%d').date() if update_date else date.today()
-        processing_failed = request.args.get('processing_failed', default=None)
+    def get(self) -> Response:
+        update_date = request.args.get('update_date')
+        if update_date:
+            update_date = datetime.strptime(update_date, '%Y-%m-%d').date()
+        else:
+            update_date = date.today()
+        processing_failed = request.args.get('processing_failed')
         announcement_income_sheet_analysis_schema = AnnouncementIncomeSheetAnalysisSchema(many=True)
 
         queries = AnnouncementIncomeSheetAnalysis.query.filter_by(update_date=update_date)
         if processing_failed is not None:
-            processing_failed = not (processing_failed.lower() == 'false')
+            processing_failed = processing_failed.lower() == 'true'
             queries = queries.filter_by(processing_failed=processing_failed)
 
         announcement_income_sheet_analysis = queries.all()
@@ -109,7 +112,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
 
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
-    def put(self, feed_id):
+    def put(self, feed_id) -> Response:
         anouncement_income_sheet_data = json.loads(request.data)
         feed = feed_services.get_feed(feed_id)
         income_sheet = anouncement_income_sheet_data['income_sheet']

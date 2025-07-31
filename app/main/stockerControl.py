@@ -16,9 +16,9 @@ from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
     CashFlow, DailyInformation, Stock_Commodity
 )
-from app.feed.models import Feed
+from app.models import Feed
 from app.monthly_valuation.models import MonthlyValuation
-from app.feed.serializer import FeedSchema
+from app.schemas.feed_schema import FeedSchema
 from app.tasks.test_task.tasks import add
 from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
 

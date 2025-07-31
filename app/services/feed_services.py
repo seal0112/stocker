@@ -1,10 +1,8 @@
 import logging
 import json
-
-from flask import jsonify, make_response
 from datetime import datetime
 
-from app.feed.models import Feed, FeedTag
+from app.models import Feed, FeedTag
 from app.basic_information.basic_information_services import BasicInformationServices
 from app.utils.data_update_date_service import DataUpdateDateService
 from app import db

@@ -14,8 +14,8 @@ from app.database_setup import (
     BasicInformation, MonthRevenue, IncomeSheet,
     DailyInformation, Stock_Commodity, StockSearchCounts
 )
-from app.feed.models import Feed
-from app.feed.serializer import FeedSchema
+from app.models import Feed
+from app.schemas.feed_schema import FeedSchema
 from app.utils.stock_search_count_service import StockSearchCountService
 
 logger = logging.getLogger(__name__)
