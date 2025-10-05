@@ -57,7 +57,6 @@ def internalServerError(error):
     error_log = f'Server Error: {error}'
     SlackManager().push_notification('Stocker', error_log)
     logger.error(error_log)
-    logger.error(traceback.format_exc())
     return make_response(json.dumps('500 server error'), 500)
 
 
