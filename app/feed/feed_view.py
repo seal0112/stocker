@@ -13,6 +13,7 @@ from . import feed
 from app.services.feed_services import FeedServices
 from app.models import AnnouncementIncomeSheetAnalysis
 from app.schemas.announcement_income_sheet_analysis_schema import AnnouncementIncomeSheetAnalysisSchema
+from app.schemas.feed_schema import FeedSchema
 
 from app.utils.model_utilities import get_current_date
 from app.utils.aws_service import AWSService
@@ -28,7 +29,7 @@ def get_stock_feed(stock_id) -> Response:
     time = request.args.get('time', default=None)
     time = time if time else datetime.now()
     feeds = feed_services.get_feeds(stock_id, time)
-    return jsonify(feeds)
+    return FeedSchema(many=True).jsonify(feeds), 200
 
 
 class HandleFeed(MethodView):
@@ -64,7 +65,7 @@ class HandleFeed(MethodView):
         end_time = datetime.strptime(
             end_time, '%Y-%m-%d') if end_time else datetime.now()
         feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
-        return jsonify(feeds)
+        return FeedSchema(many=True).jsonify(feeds), 200
 
     def post(self) -> Response:
         try:

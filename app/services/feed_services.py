@@ -1,5 +1,4 @@
 import logging
-import json
 from datetime import datetime
 
 from app.models import Feed, FeedTag
@@ -25,15 +24,13 @@ class FeedServices():
         feeds = stock.feeds.filter(
             Feed.releaseTime<time).order_by(
                 Feed.releaseTime.desc()).limit(self.feed_size).all()
-        res = [feed.serialize for feed in feeds]
-        return res
+        return feeds
 
     def get_feeds_by_time_range(self, start_time, end_time):
         feeds = Feed.query.filter(
             Feed.releaseTime.between(start_time, end_time)).order_by(
                 Feed.releaseTime.desc()).all()
-        res = [feed.serialize for feed in feeds]
-        return res
+        return feeds
 
     def create_feed(self, feed_data):
         releaseTime = datetime.fromisoformat(feed_data['releaseTime'])
