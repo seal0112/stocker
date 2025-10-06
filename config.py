@@ -81,7 +81,7 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or DB_URL
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
 
 
 config = {
