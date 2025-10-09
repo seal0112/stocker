@@ -5,16 +5,17 @@ import math
 
 from sqlalchemy import text
 from app.database_setup import BasicInformation
+from app.models.recommended_stock import RecommendedStock
 
 from .. import db
 
 
 class StockScrennerManager:
 
-    def __init__(self, option):
+    def __init__(self, option, date=datetime.now()):
         self.option = option
         self.screener_format = self.getScreenerFormat(self.option)
-        self.now = datetime.now()
+        self.now = date
         month_list = [(10, 11, 12), (1, 2, 3), (4, 5, 6), (7, 8, 9)][math.floor((self.now.month-1)/3)]
         self.query_condition = {
             "date": self.now.strftime('%Y-%m-%d'),
@@ -51,6 +52,29 @@ class StockScrennerManager:
             message_list.append(message)
         message_list.pop(0)
         return message_list
+
+    def save_recommended_stock(self, stocks, today=None):
+        today = today or self.query_condition['date']
+        try:
+            for stock in stocks:
+                recommended_stock = db.session.query(db.exists().where(
+                    db.and_(
+                        RecommendedStock.stock_id == stock[0],
+                        RecommendedStock.update_date == self.query_condition['date'],
+                        RecommendedStock.filter_model == self.option
+                    )
+                )).scalar()
+                if not recommended_stock:
+                    new_recommended_stock = RecommendedStock(
+                        stock_id=stock[0],
+                        update_date=self.query_condition['date'],
+                        filter_model=self.option
+                    )
+                    db.session.add(new_recommended_stock)
+            db.session.commit()
+        except Exception as ex:
+            db.session.rollback()
+            raise ex
 
     def check_stock_valuation(self, stock_id: str) -> bool:
         """

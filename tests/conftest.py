@@ -6,8 +6,17 @@ from sqlalchemy import create_engine, text
 from app import create_app, db
 
 
+@pytest.fixture(scope='module')
+def dev_app():
+    """development environment app fixture"""
+    app = create_app('development')
+
+    with app.app_context():
+        yield app
+
+
 @pytest.fixture(scope='session')
-def app():
+def test_app():
     app = create_app('testing')
 
     test_db_url = app.config['SQLALCHEMY_DATABASE_URI']
@@ -38,12 +47,36 @@ def app():
                 db.drop_all()
 
 
+@pytest.fixture
+def dev_client(dev_app):
+    """test environment app fixture"""
+    with dev_app.test_client() as client:
+        yield client
+
+
 @pytest.fixture()
-def client(app):
-    with app.test_client() as client:
+def client(test_app):
+    with test_app.test_client() as client:
         yield client
 
 
 @pytest.fixture
 def runner(app):
     return app.test_cli_runner()
+
+
+@pytest.fixture
+def db_session(app):
+    with app.app_context():
+        connection = db.engine.connect()
+        transaction = connection.begin()
+
+        options = dict(bind=connection, binds={})
+        session = db.create_scoped_session(options=options)
+        db.session = session
+
+        yield db.session
+
+        transaction.rollback()
+        connection.close()
+        session.remove()

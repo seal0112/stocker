@@ -1,8 +1,6 @@
 import os
 import json
 import logging
-from logging.handlers import TimedRotatingFileHandler
-from datetime import datetime
 
 from flask import (request, jsonify, make_response)
 from flask_swagger import swagger
@@ -10,7 +8,6 @@ from flask_swagger_ui import get_swaggerui_blueprint
 
 from app import create_app, db
 from app.utils.slack_manager import SlackManager
-import traceback
 
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
