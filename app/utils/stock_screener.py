@@ -81,28 +81,157 @@ class StockScreenerManager:
         message_list.pop(0)
         return message_list
 
-    def save_recommended_stock(self, stocks, today=None):
-        today = today or self.query_condition['date']
+    def save_recommended_stock(self, stocks) -> dict:
+        """
+        Save recommended stocks to database with bulk operations for better performance.
+
+        Args:
+            stocks: List of stock tuples from screener results
+
+        Returns:
+            dict: Statistics with keys 'added', 'skipped', 'total'
+        """
+        if not stocks:
+            logger.warning("No stocks to save")
+            return {"added": 0, "skipped": 0, "total": 0}
+
         try:
-            for stock in stocks:
-                recommended_stock = db.session.query(db.exists().where(
-                    db.and_(
-                        RecommendedStock.stock_id == stock[0],
-                        RecommendedStock.update_date == self.query_condition['date'],
-                        RecommendedStock.filter_model == self.option
-                    )
-                )).scalar()
-                if not recommended_stock:
-                    new_recommended_stock = RecommendedStock(
-                        stock_id=stock[0],
-                        update_date=self.query_condition['date'],
+            # Extract stock IDs from the result tuples
+            stock_ids = [stock[0] for stock in stocks]
+            update_date = self.query_condition['date']
+
+            # Bulk query existing records to avoid N+1 problem
+            existing_stocks = db.session.query(RecommendedStock.stock_id).filter(
+                db.and_(
+                    RecommendedStock.stock_id.in_(stock_ids),
+                    RecommendedStock.update_date == update_date,
+                    RecommendedStock.filter_model == self.option
+                )
+            ).all()
+
+            existing_stock_ids = {stock.stock_id for stock in existing_stocks}
+
+            # Prepare new records for bulk insert
+            new_stocks = []
+            for stock_id in stock_ids:
+                if stock_id not in existing_stock_ids:
+                    new_stocks.append(RecommendedStock(
+                        stock_id=stock_id,
+                        update_date=update_date,
                         filter_model=self.option
-                    )
-                    db.session.add(new_recommended_stock)
-            db.session.commit()
-            logger.info(f"Successfully saved {len(stocks)} recommended stocks for {self.option}")
+                    ))
+
+            # Bulk insert new records
+            if new_stocks:
+                db.session.bulk_save_objects(new_stocks)
+                db.session.commit()
+                logger.info(
+                    f"Saved {len(new_stocks)} new recommended stocks for '{self.option}' "
+                    f"on {update_date} (skipped {len(existing_stock_ids)} existing)"
+                )
+            else:
+                logger.info(f"All {len(stocks)} stocks already exist for '{self.option}' on {update_date}")
+
+            return {
+                "added": len(new_stocks),
+                "skipped": len(existing_stock_ids),
+                "total": len(stocks)
+            }
+
         except Exception as ex:
             logger.error(f"Failed to save recommended stocks: {ex}", exc_info=True)
+            db.session.rollback()
+            raise
+
+    def run_and_save(self) -> dict:
+        """
+        Complete workflow: run screener and save results to database.
+
+        Returns:
+            dict: Results with 'messages' (formatted messages) and 'save_stats' (save statistics)
+        """
+        logger.info(f"Starting screener workflow for '{self.option}' on {self.query_condition['date']}")
+
+        # Get raw stock data
+        sql_command = self.screener_format['sqlSyntax'].format(**self.query_condition)
+        with db.engine.connect() as conn:
+            stocks = conn.execute(text(sql_command)).fetchall()
+
+        if not stocks:
+            logger.info(f"No stocks found for '{self.option}'")
+            return {"messages": [], "save_stats": {"added": 0, "skipped": 0, "total": 0}}
+
+        # Filter stocks
+        logger.info(f"Found {len(stocks)} stocks, applying valuation checks...")
+        filter_stocks = [stock for stock in stocks if self.check_stock_valuation(stock[0])]
+        logger.info(f"{len(filter_stocks)} stocks passed valuation checks")
+
+        if not filter_stocks:
+            return {"messages": [], "save_stats": {"added": 0, "skipped": 0, "total": 0}}
+
+        # Save to database
+        save_stats = self.save_recommended_stock(filter_stocks)
+
+        # Format messages
+        messages = self.format_screener_message(filter_stocks)
+
+        return {
+            "messages": messages,
+            "save_stats": save_stats,
+            "stock_count": len(filter_stocks)
+        }
+
+    @staticmethod
+    def get_recommended_stocks(date=None, filter_model=None):
+        """
+        Retrieve recommended stocks from database.
+
+        Args:
+            date: Date to query (default: today)
+            filter_model: Filter model name (default: all models)
+
+        Returns:
+            list: RecommendedStock objects
+        """
+        from app.utils.model_utilities import get_current_date
+
+        query = db.session.query(RecommendedStock)
+
+        if date:
+            query = query.filter(RecommendedStock.update_date == date)
+        else:
+            query = query.filter(RecommendedStock.update_date == get_current_date())
+
+        if filter_model:
+            query = query.filter(RecommendedStock.filter_model == filter_model)
+
+        return query.all()
+
+    @staticmethod
+    def cleanup_old_recommendations(days_to_keep=90):
+        """
+        Delete old recommended stock records.
+
+        Args:
+            days_to_keep: Number of days to keep (default: 90)
+
+        Returns:
+            int: Number of records deleted
+        """
+        from datetime import timedelta
+        from app.utils.model_utilities import get_current_date
+
+        cutoff_date = get_current_date() - timedelta(days=days_to_keep)
+
+        try:
+            deleted = db.session.query(RecommendedStock).filter(
+                RecommendedStock.update_date < cutoff_date
+            ).delete()
+            db.session.commit()
+            logger.info(f"Cleaned up {deleted} old recommendation records before {cutoff_date}")
+            return deleted
+        except Exception as ex:
+            logger.error(f"Failed to cleanup old recommendations: {ex}", exc_info=True)
             db.session.rollback()
             raise
 
