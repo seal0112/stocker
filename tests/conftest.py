@@ -80,3 +80,15 @@ def db_session(app):
         transaction.rollback()
         connection.close()
         session.remove()
+
+
+# ============================================================================
+# Import fixtures from fixtures package
+# ============================================================================
+# Pytest automatically discovers fixtures from this file and conftest.py files
+# in subdirectories. We use pytest_plugins to load fixtures from other modules.
+# ============================================================================
+
+pytest_plugins = [
+    'tests.fixtures.models',
+]
