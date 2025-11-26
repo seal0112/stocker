@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app import db
 from app.main import main
-from app.utils.stock_screener import StockScrennerManager
+from app.utils.stock_screener import StockScreenerManager
 from app.utils.discord_bot import DiscordBot
 from app.utils.announcement_handler import AnnounceHandler
 from app.database_setup import (
@@ -41,7 +41,7 @@ def showMain():
 @main.route('screener')
 def use_screener():
     option = request.args.get('option')
-    stock_screener = StockScrennerManager(option)
+    stock_screener = StockScreenerManager(option)
     messages = stock_screener.screener()
     discord_bot = DiscordBot()
     for message in messages:
