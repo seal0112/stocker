@@ -14,7 +14,7 @@ from app.utils.discord_bot import DiscordBot
 from app.utils.announcement_handler import AnnounceHandler
 from app.database_setup import (
     BasicInformation, IncomeSheet, BalanceSheet,
-    CashFlow, DailyInformation, Stock_Commodity
+    CashFlow, DailyInformation, StockCommodity
 )
 from app.models import Feed
 from app.monthly_valuation.models import MonthlyValuation
@@ -230,21 +230,21 @@ class handleStockCommodity(MethodView):
     """
 
     def get(self, stock_id):
-        stockCommodity = db.session.query(Stock_Commodity).filter_by(
+        stockCommodity = db.session.query(StockCommodity).filter_by(
             stock_id=stock_id).one_or_none()
         return 'Stock Commodity: %s' % stock_id\
             if stockCommodity is None else stockCommodity.serialize
 
     def post(self, stock_id):
         payload = json.loads(request.data)
-        stockCommodity = db.session.query(Stock_Commodity).filter_by(
+        stockCommodity = db.session.query(StockCommodity).filter_by(
             stock_id=stock_id).one_or_none()
         try:
             if stockCommodity is not None:
                 for key in payload:
                     stockCommodity[key] = payload[key]
             else:
-                stockCommodity = Stock_Commodity()
+                stockCommodity = StockCommodity()
                 stockCommodity['stock_id'] = stock_id
                 for key in payload:
                     stockCommodity[key] = payload[key]
@@ -289,7 +289,7 @@ main.add_url_rule('/daily_information/<stock_id>',
                   view_func=handleDailyInfo.as_view(
                       'handleDailyInfo'),
                   methods=['GET', 'POST'])
-main.add_url_rule('/stock_commodity/<stock_id>',
+main.add_url_rule('/StockCommodity/<stock_id>',
                   'handleStockCommodity',
                   view_func=handleStockCommodity.as_view(
                       'handleStockCommodity'),

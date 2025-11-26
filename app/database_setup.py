@@ -401,7 +401,7 @@ class DailyInformation(db.Model):
         setattr(self, key, value)
 
 
-class Stock_Commodity(db.Model):
+class StockCommodity(db.Model):
     __tablename__ = 'stock_commodity'
 
     stock_id = db.Column(

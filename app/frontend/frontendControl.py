@@ -12,7 +12,7 @@ from . import frontend
 from app import db
 from app.database_setup import (
     BasicInformation, MonthRevenue, IncomeSheet,
-    DailyInformation, Stock_Commodity, StockSearchCounts
+    DailyInformation, StockCommodity, StockSearchCounts
 )
 from app.models import Feed
 from app.schemas.feed_schema import FeedSchema
@@ -48,9 +48,9 @@ def getFrontEndStockInfoAndCommodity(stock_id):
     stockCommo = db.session\
         .query()\
         .with_entities(
-            Stock_Commodity.stock_future,
-            Stock_Commodity.stock_option,
-            Stock_Commodity.small_stock_future,)\
+            StockCommodity.stock_future,
+            StockCommodity.stock_option,
+            StockCommodity.small_stock_future,)\
         .filter_by(stock_id=stock_id)\
         .one_or_none()
 
