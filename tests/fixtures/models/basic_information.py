@@ -1,4 +1,4 @@
-"""Model fixtures for testing."""
+"""BasicInformation model fixtures for testing."""
 import pytest
 from app.database_setup import BasicInformation
 

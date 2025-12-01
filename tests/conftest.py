@@ -90,5 +90,7 @@ def db_session(app):
 # ============================================================================
 
 pytest_plugins = [
-    'tests.fixtures.models',
+    'tests.fixtures.models.basic_information',
+    'tests.fixtures.models.feed',
+    'tests.fixtures.models.announcement_income_sheet_analysis',
 ]
