@@ -1,9 +1,9 @@
 from datetime import datetime
 
-from .. import db
-from ..database_setup import BasicInformation
-from ..auth.models import User
-from ..utils.model_utilities import get_UUID
+from app import db
+from app.database_setup import BasicInformation
+from app.models import User
+from app.utils.model_utilities import get_UUID
 
 
 class Follow_Stock(db.Model):

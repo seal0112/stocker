@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from .. import db
+from app import db
 
 
 class User(UserMixin, db.Model):
@@ -16,6 +16,7 @@ class User(UserMixin, db.Model):
     external_id = db.Column(db.String(64))
     authenticate = db.Column(db.Boolean, nullable=False, default=False)
     active = db.Column(db.Boolean, nullable=False, default=False)
+    last_login_at = db.Column(db.DateTime, nullable=True)
 
     def __repr__(self):
         return f'<{self.id} User {self.username}>'

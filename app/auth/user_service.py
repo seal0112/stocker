@@ -1,7 +1,8 @@
 import logging
+from datetime import datetime
 
-from .models import User
-from .. import db
+from app.models import User
+from app import db
 
 
 logger = logging.getLogger(__name__)
@@ -52,3 +53,13 @@ class UserService():
             return None
         user_id = self.get_user_id(new_user['external_id'], external_type)
         return user_id
+
+    def update_last_login(self, user_id):
+        """Update the last login timestamp for a user."""
+        try:
+            user = db.session.query(User).filter_by(id=user_id).one()
+            user.last_login_at = datetime.utcnow()
+            db.session.commit()
+        except Exception as ex:
+            db.session.rollback()
+            logger.exception('Failed to update last login time: %s', ex)

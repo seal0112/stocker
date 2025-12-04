@@ -3,6 +3,7 @@ from .feed_tag import FeedTag
 from .association import feed_feed_tag_association
 from .announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
 from .recommended_stock import RecommendedStock
+from .user import User
 
 
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     'feed_feed_tag_association',
     'AnnouncementIncomeSheetAnalysis',
     'RecommendedStock',
+    'User',
 ]

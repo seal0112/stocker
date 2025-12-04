@@ -63,6 +63,9 @@ def login():
 
     user = user_serv.get_user(user_id)
     if user.is_active:
+        # Update last login time
+        user_serv.update_last_login(user_id)
+
         identity = {
             'id': user.id,
             'username': user.username,
