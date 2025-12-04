@@ -55,15 +55,28 @@ class HandleFeed(MethodView):
     """
 
     def get(self) -> Response:
-        start_time = request.args.get(
-            'starttime', default=None)
-        end_time = request.args.get(
-            'endtime', default=None)
-        start_time = datetime.strptime(
-            start_time, '%Y-%m-%d') if start_time else datetime.now().replace(
+        start_time_str = request.args.get('starttime', default=None)
+        end_time_str = request.args.get('endtime', default=None)
+
+        # Parse start_time with validation
+        if start_time_str:
+            try:
+                start_time = datetime.strptime(start_time_str, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({"error": "Invalid starttime format. Use YYYY-MM-DD"}), 400
+        else:
+            start_time = datetime.now().replace(
                 hour=0, minute=0, microsecond=0) - timedelta(days=1)
-        end_time = datetime.strptime(
-            end_time, '%Y-%m-%d') if end_time else datetime.now()
+
+        # Parse end_time with validation
+        if end_time_str:
+            try:
+                end_time = datetime.strptime(end_time_str, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({"error": "Invalid endtime format. Use YYYY-MM-DD"}), 400
+        else:
+            end_time = datetime.now()
+
         feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
         return FeedSchema(many=True).jsonify(feeds), 200
 

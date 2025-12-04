@@ -1,6 +1,6 @@
 import json
 
-from flask import request, make_response
+from flask import request, make_response, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
@@ -17,8 +17,15 @@ monthly_valuation_service = MonthlyValuationService()
 class MonthlyValuationListApi(MethodView):
 
     def get(self):
-        stock = request.args.get('stock', '2330')
-        years = request.args.get('years', 5)
+        stock = request.args.get('stock', '2330', type=str)
+        years = request.args.get('years', 5, type=int)
+
+        # Validate parameters
+        if not stock or len(stock) > 10:
+            return jsonify({"error": "Invalid stock parameter"}), 400
+        if years is None or years < 1 or years > 20:
+            return jsonify({"error": "Invalid years parameter. Must be between 1 and 20"}), 400
+
         follow_stocks = monthly_valuation_service.get_stock_monthly_valuations(
             stock, years)
         return MonthlyValuationSchema().dumps(follow_stocks, many=True)

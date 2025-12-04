@@ -52,15 +52,27 @@ class handleIncomeSheet(MethodView):
                     IncomeSheet.year.desc()).order_by(
                         IncomeSheet.season.desc()).first()
         elif mode == 'single':
-            year = request.args.get('year')
-            season = request.args.get('season')
+            year = request.args.get('year', type=int)
+            season = request.args.get('season', type=int)
+
+            # Validate year and season
+            if year is None or season is None:
+                return jsonify({"error": "year and season are required for single mode"}), 400
+            if season not in (1, 2, 3, 4):
+                return jsonify({"error": "season must be 1, 2, 3, or 4"}), 400
+
             incomeSheet = db.session.query(IncomeSheet).filter_by(
                 stock_id=stock_id).filter_by(
                     year=year).filter_by(
                         season=season).one_or_none()
         elif mode == 'multiple':
-            year = request.args.get('year')
-            season = 4 if year is None else int(year) * 4
+            year = request.args.get('year', type=int)
+
+            # Validate year parameter
+            if year is not None and (year < 1 or year > 100):
+                return jsonify({"error": "Invalid year parameter"}), 400
+
+            season = 4 if year is None else year * 4
             incomeSheet = db.session.query(IncomeSheet).filter_by(
                 stock_id=stock_id).order_by(
                     IncomeSheet.year.desc()).order_by(
