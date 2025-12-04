@@ -1,4 +1,3 @@
-import json
 import logging
 import re
 from datetime import datetime, timedelta, date
@@ -82,7 +81,13 @@ class HandleFeed(MethodView):
 
     def post(self) -> Response:
         try:
-            feed_data = json.loads(request.data)
+            feed_data = request.get_json()
+            if not feed_data:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+        try:
             feed = feed_services.create_feed(feed_data)
 
             if (
@@ -127,7 +132,13 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
     def put(self, feed_id) -> Response:
-        anouncement_income_sheet_data = json.loads(request.data)
+        try:
+            anouncement_income_sheet_data = request.get_json()
+            if not anouncement_income_sheet_data:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
         feed = feed_services.get_feed(feed_id)
         income_sheet = anouncement_income_sheet_data['income_sheet']
         year = anouncement_income_sheet_data['year']

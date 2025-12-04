@@ -25,7 +25,13 @@ class FollowStockListApi(MethodView):
     @jwt_required()
     def post(self):
         current_user = get_jwt_identity()
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
         follow_data = follow_stock_service.create_follow_stock(
             current_user['id'],
             payload['stock_id'],
@@ -51,7 +57,13 @@ class FollowStockDetailApi(MethodView):
     @jwt_required()
     def patch(self, follow_stock_id):
         current_user = get_jwt_identity()
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
         try:
             follow_data = follow_stock_service.update_follow_stock(
                 current_user['id'],

@@ -58,8 +58,15 @@ class handleBasicInfo(MethodView):
         """
         basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
+
         try:
-            payload = json.loads(request.data)
+            payload = request.get_json()
+            if not payload:
+                return make_response(json.dumps("Request body is required"), 400)
+        except Exception:
+            return make_response(json.dumps("Invalid JSON format"), 400)
+
+        try:
             if basicInfo is not None:
                 # typeConversSet is used to converse datatype from user input.
                 typeConversSet = set(("實收資本額", "已發行普通股數或TDR原發行股數",
@@ -119,8 +126,15 @@ class handleBasicInfo(MethodView):
         """
         basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
+
         try:
-            payload = json.loads(request.data)
+            payload = request.get_json()
+            if not payload:
+                return make_response(json.dumps("Request body is required"), 400)
+        except Exception:
+            return make_response(json.dumps("Invalid JSON format"), 400)
+
+        try:
             if basicInfo is not None:
                 basicInfo['exchange_type'] = payload['exchangeType']
                 db.session.add(basicInfo)

@@ -38,7 +38,13 @@ class handleCashFlow(MethodView):
         return 'cash_flow: %s' % stock_id
 
     def post(self, stock_id):
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response(json.dumps("Request body is required"), 400)
+        except Exception:
+            return make_response(json.dumps("Invalid JSON format"), 400)
+
         cashFlow = db.session.query(CashFlow).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(

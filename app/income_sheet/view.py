@@ -96,7 +96,13 @@ class handleIncomeSheet(MethodView):
         Create or Update stock_id's Income Sheet
         swagger_from_file: IncomeSheet_post.yml
         """
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response(json.dumps("Request body is required"), 400)
+        except Exception:
+            return make_response(json.dumps("Invalid JSON format"), 400)
+
         incomeSheet = db.session.query(IncomeSheet).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(

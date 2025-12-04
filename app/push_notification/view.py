@@ -25,7 +25,13 @@ class PushNotificationApi(MethodView):
         push_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
 
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response({"error": "Request body is required"}, 400)
+        except Exception:
+            return make_response({"error": "Invalid JSON format"}, 400)
+
         if push_notification is None:
             push_notification = PushNotification()
             push_notification.user_id = current_user['id']

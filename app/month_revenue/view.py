@@ -57,7 +57,13 @@ class handleMonthRevenue(MethodView):
         Create or Update stock_id's month revenue data
         swagger_from_file: MonthRevenue_post.yml
         """
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response(json.dumps("Request body is required"), 400)
+        except Exception:
+            return make_response(json.dumps("Invalid JSON format"), 400)
+
         monthReve = db.session.query(MonthRevenue).filter_by(
             stock_id=stock_id).filter_by(
                 year=payload['year']).filter_by(

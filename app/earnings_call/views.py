@@ -24,7 +24,13 @@ class EarningsCallListApi(MethodView):
 
     # @jwt_required()
     def post(self):
-        earnings_call_data = json.loads(request.data)
+        try:
+            earnings_call_data = request.get_json()
+            if not earnings_call_data:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
         earnings_calls = earnings_call_service.get_stock_earnings_call_by_date(
             earnings_call_data['stock_id'],
             earnings_call_data['meeting_date']
@@ -48,7 +54,13 @@ class EarningsCallDetailApi(MethodView):
 
         @jwt_required()
         def put(self, earnings_call_id):
-            earnings_call_data = json.loads(request.data)
+            try:
+                earnings_call_data = request.get_json()
+                if not earnings_call_data:
+                    return jsonify({"error": "Request body is required"}), 400
+            except Exception:
+                return jsonify({"error": "Invalid JSON format"}), 400
+
             earnings_call = earnings_call_service.update_earnings_call(earnings_call_id, earnings_call_data)
             return EarningsCallchema().dumps(earnings_call)
 

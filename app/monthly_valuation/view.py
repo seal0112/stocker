@@ -1,5 +1,3 @@
-import json
-
 from flask import request, make_response, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
@@ -31,7 +29,13 @@ class MonthlyValuationListApi(MethodView):
         return MonthlyValuationSchema().dumps(follow_stocks, many=True)
 
     def post(self):
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response({"error": "Request body is required"}, 400)
+        except Exception:
+            return make_response({"error": "Invalid JSON format"}, 400)
+
         monthly_valuation = monthly_valuation_service.create_monthly_valuation(payload)
         if monthly_valuation:
             return make_response(MonthlyValuationSchema().dumps(monthly_valuation), 201)
@@ -41,7 +45,13 @@ class MonthlyValuationListApi(MethodView):
             }, 400)
 
     def patch(self):
-        payload = json.loads(request.data)
+        try:
+            payload = request.get_json()
+            if not payload:
+                return make_response({"error": "Request body is required"}, 400)
+        except Exception:
+            return make_response({"error": "Invalid JSON format"}, 400)
+
         try:
             monthly_valuation = monthly_valuation_service.update_monthly_valuation(payload)
         except Exception as ex:
