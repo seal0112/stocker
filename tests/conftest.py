@@ -1,7 +1,6 @@
 import pytest
 import os
 
-from flask_migrate import upgrade, stamp
 from sqlalchemy import create_engine, text
 from app import create_app, db
 
@@ -15,7 +14,7 @@ def dev_app():
         yield app
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def test_app():
     app = create_app('testing')
 
@@ -23,28 +22,25 @@ def test_app():
     db_name = os.environ.get('DB_NAME', 'stocker') + '_test'
 
     with app.app_context():
-        try:
-            engine = create_engine(test_db_url.rsplit('/', 1)[0])
-            with engine.connect() as conn:
-                conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name}"))
+        # Create test database if not exists
+        engine = create_engine(test_db_url.rsplit('/', 1)[0])
+        with engine.connect() as conn:
+            conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name}"))
 
-            upgrade()
+        # Drop all tables first to ensure clean state
+        db.drop_all()
+        # Create all tables from models (skip migrations for tests)
+        db.create_all()
 
-            db.create_all()
+        ctx = app.test_request_context()
+        ctx.push()
 
-            ctx = app.test_request_context()
-            ctx.push()
+        yield app
 
-            yield app
-
-            ctx.pop()
-
-        except Exception as e:
-            print(f"Error creating test database: {e}")
-        finally:
-            with app.app_context():
-                db.session.remove()
-                db.drop_all()
+        # Cleanup
+        ctx.pop()
+        db.session.remove()
+        db.drop_all()
 
 
 @pytest.fixture
