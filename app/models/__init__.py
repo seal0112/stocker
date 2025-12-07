@@ -1,16 +1,23 @@
 from .feed import Feed
 from .feed_tag import FeedTag
-from .association import feed_feed_tag_association
+from .feed_feed_tag import FeedFeedTag
 from .announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
 from .recommended_stock import RecommendedStock
 from .user import User
+from .role import Role
+from .user_role import UserRole
+from .permission import Permission, role_permission
 
 
 __all__ = [
     'Feed',
     'FeedTag',
-    'feed_feed_tag_association',
+    'FeedFeedTag',
     'AnnouncementIncomeSheetAnalysis',
     'RecommendedStock',
     'User',
+    'Role',
+    'UserRole',
+    'Permission',
+    'role_permission',
 ]

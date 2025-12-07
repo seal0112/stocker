@@ -93,4 +93,5 @@ pytest_plugins = [
     'tests.fixtures.models.basic_information',
     'tests.fixtures.models.feed',
     'tests.fixtures.models.announcement_income_sheet_analysis',
+    'tests.fixtures.models.user',
 ]

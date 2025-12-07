@@ -74,4 +74,14 @@ def create_app(config_name):
     from app.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/api/auth')
 
+    # Sync permissions on app startup
+    with app.app_context():
+        try:
+            from app.services.permission_service import sync_permissions
+            sync_permissions()
+        except Exception as e:
+            # Log error but don't prevent app from starting
+            # This handles cases where DB isn't ready yet (e.g., migrations not run)
+            app.logger.warning(f"Failed to sync permissions on startup: {e}")
+
     return app

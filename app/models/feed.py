@@ -3,7 +3,6 @@ import logging
 from app import db
 from app.utils.model_utilities import get_current_date
 
-from app.models.association import feed_feed_tag_association
 from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
 
 
@@ -24,7 +23,8 @@ class Feed(db.Model):
         db.Enum('announcement', 'news'),
         nullable=False, default='announcement')
     tags = db.relationship(
-        'FeedTag', secondary=feed_feed_tag_association,
+        'FeedTag',
+        secondary='feed_feedTag',
         backref=db.backref('feeds', lazy='dynamic'),
         lazy='joined'
     )
