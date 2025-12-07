@@ -31,7 +31,7 @@ def setup_logging(log_dir='log', log_filename='app.log'):
     handler.addFilter(RequestIDLogFilter())
 
     logger = logging.getLogger('sqlalchemy.engine')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.WARNING)  # Only log warnings and errors, not SQL queries
     logger.addHandler(handler)
 
 class GZipTimedRotatingFileHandler(TimedRotatingFileHandler):
