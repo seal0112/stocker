@@ -1,0 +1,1179 @@
+openapi: 3.0.3
+info:
+  title: Stocker API
+  description: |
+    股票資訊管理系統 API
+
+    ## 認證
+    大部分 API 需要 JWT 認證。請先透過 `/api/auth/login` 取得 token，
+    然後在 Header 加入 `Authorization: Bearer <token>`
+
+    ## 版本
+    目前版本為 v0，所有 API 前綴為 `/api/v0/`
+  version: 0.1.0
+  contact:
+    name: Stocker API Support
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+tags:
+  - name: Auth
+    description: 認證相關 API
+  - name: BasicInformation
+    description: 股票基本資料
+  - name: IncomeSheet
+    description: 損益表
+  - name: MonthRevenue
+    description: 月營收
+  - name: BalanceSheet
+    description: 資產負債表
+  - name: CashFlow
+    description: 現金流量表
+  - name: FollowStock
+    description: 使用者追蹤股票
+  - name: Feed
+    description: 動態消息
+  - name: EarningsCall
+    description: 法說會
+  - name: MonthlyValuation
+    description: 月估值資料
+  - name: RecommendedStock
+    description: 推薦股票
+  - name: PushNotification
+    description: 推播通知設定
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Resource not found"
+
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "OK"
+
+    BasicInformation:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "2330"
+        公司名稱:
+          type: string
+          example: "台灣積體電路製造股份有限公司"
+        公司簡稱:
+          type: string
+          example: "台積電"
+        exchange_type:
+          type: string
+          enum: [sii, otc, rotc, pub, delist]
+          example: "sii"
+        產業類別:
+          type: string
+          example: "半導體業"
+        董事長:
+          type: string
+        總經理:
+          type: string
+        實收資本額:
+          type: integer
+          format: int64
+        已發行普通股數或TDR原發行股數:
+          type: integer
+          format: int64
+        公司網址:
+          type: string
+        update_date:
+          type: string
+          format: date
+
+    IncomeSheet:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock_id:
+          type: string
+          example: "2330"
+        year:
+          type: integer
+          example: 113
+        season:
+          type: string
+          enum: ["1", "2", "3", "4"]
+        update_date:
+          type: string
+          format: date
+        營業收入合計:
+          type: integer
+          format: int64
+        營業成本合計:
+          type: integer
+          format: int64
+        營業毛利:
+          type: integer
+          format: int64
+        營業毛利率:
+          type: number
+          format: float
+        營業費用:
+          type: integer
+          format: int64
+        營業費用率:
+          type: number
+          format: float
+        營業利益:
+          type: integer
+          format: int64
+        營業利益率:
+          type: number
+          format: float
+        稅前淨利:
+          type: integer
+          format: int64
+        稅前淨利率:
+          type: number
+          format: float
+        本期淨利:
+          type: integer
+          format: int64
+        本期淨利率:
+          type: number
+          format: float
+        基本每股盈餘:
+          type: number
+          format: float
+        稀釋每股盈餘:
+          type: number
+          format: float
+
+    MonthRevenue:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock_id:
+          type: string
+          example: "2330"
+        year:
+          type: integer
+          example: 113
+        month:
+          type: string
+          enum: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+        update_date:
+          type: string
+          format: date
+        當月營收:
+          type: integer
+          format: int64
+        上月營收:
+          type: integer
+          format: int64
+        去年當月營收:
+          type: integer
+          format: int64
+        上月比較增減:
+          type: number
+          format: float
+          description: 百分比
+        去年同月增減:
+          type: number
+          format: float
+          description: 百分比
+        當月累計營收:
+          type: integer
+          format: int64
+        去年累計營收:
+          type: integer
+          format: int64
+        前期比較增減:
+          type: number
+          format: float
+        備註:
+          type: string
+
+    FollowStock:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        stock:
+          $ref: '#/components/schemas/BasicInformationSimple'
+        last_update_time:
+          type: string
+          format: date-time
+        comment:
+          type: string
+        long_or_short:
+          type: string
+          enum: [long, short]
+
+    BasicInformationSimple:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "2330"
+        公司簡稱:
+          type: string
+          example: "台積電"
+        exchange_type:
+          type: string
+
+    EarningsCall:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock_id:
+          type: string
+        meeting_date:
+          type: string
+          format: date
+        meeting_time:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+
+    MonthlyValuation:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock_id:
+          type: string
+        year:
+          type: integer
+        month:
+          type: integer
+        均價:
+          type: number
+          format: float
+        本益比:
+          type: number
+          format: float
+
+    RecommendedStock:
+      type: object
+      properties:
+        id:
+          type: integer
+        stock_id:
+          type: string
+        date:
+          type: string
+          format: date
+        filter_model:
+          type: string
+        score:
+          type: number
+          format: float
+
+    PushNotification:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        notify_enabled:
+          type: boolean
+        gmail:
+          type: string
+        notify_time:
+          type: string
+          format: time
+        notify_news:
+          type: boolean
+        notify_announcement:
+          type: boolean
+        notify_month_revenue:
+          type: boolean
+        notify_income_sheet:
+          type: boolean
+        notify_earnings_call:
+          type: boolean
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    UserInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+
+paths:
+  # ============ Auth ============
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: 使用者登入
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登入成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: 認證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/refresh:
+    get:
+      tags: [Auth]
+      summary: 刷新 access token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token 刷新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+
+  /api/auth/logout:
+    get:
+      tags: [Auth]
+      summary: 使用者登出
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+
+  /api/auth/user_info:
+    get:
+      tags: [Auth]
+      summary: 取得使用者資訊
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 使用者資訊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
+
+  # ============ Basic Information ============
+  /api/v0/basic_information/{stock_id}:
+    get:
+      tags: [BasicInformation]
+      summary: 取得股票基本資料
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "2330"
+      responses:
+        '200':
+          description: 股票基本資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicInformation'
+        '404':
+          description: 找不到股票
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags: [BasicInformation]
+      summary: 新增或更新股票基本資料
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BasicInformation'
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '200':
+          description: 無變更
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+    patch:
+      tags: [BasicInformation]
+      summary: 部分更新股票基本資料
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exchangeType:
+                  type: string
+                  enum: [sii, otc, rotc, pub, delist]
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '404':
+          description: 找不到股票
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============ Income Sheet ============
+  /api/v0/income_sheet/{stock_id}:
+    get:
+      tags: [IncomeSheet]
+      summary: 取得股票損益表
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "2330"
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [single, multiple]
+          description: |
+            - 不指定: 取得最新一季
+            - single: 指定年份季度
+            - multiple: 取得多季資料
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: 民國年份 (mode=single 必填，mode=multiple 可選)
+        - name: season
+          in: query
+          schema:
+            type: integer
+            enum: [1, 2, 3, 4]
+          description: 季度 (mode=single 必填)
+      responses:
+        '200':
+          description: 損益表資料
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IncomeSheet'
+        '404':
+          description: 找不到資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags: [IncomeSheet]
+      summary: 新增或更新損益表
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncomeSheet'
+      responses:
+        '201':
+          description: 建立成功
+        '200':
+          description: 無變更
+
+  # ============ Month Revenue ============
+  /api/v0/month_revenue/{stock_id}:
+    get:
+      tags: [MonthRevenue]
+      summary: 取得股票月營收 (最近 60 個月)
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "2330"
+      responses:
+        '200':
+          description: 月營收資料
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthRevenue'
+        '404':
+          description: 找不到資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags: [MonthRevenue]
+      summary: 新增或更新月營收
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthRevenue'
+      responses:
+        '201':
+          description: 建立成功
+        '200':
+          description: 無變更
+
+  # ============ Balance Sheet ============
+  /api/v0/balance_sheet/{stock_id}:
+    get:
+      tags: [BalanceSheet]
+      summary: 取得資產負債表 (未實作)
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 資產負債表資料
+          content:
+            text/plain:
+              schema:
+                type: string
+
+    post:
+      tags: [BalanceSheet]
+      summary: 新增或更新資產負債表
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: 建立成功
+        '200':
+          description: 無變更
+
+  # ============ Cash Flow ============
+  /api/v0/cash_flow/{stock_id}:
+    get:
+      tags: [CashFlow]
+      summary: 取得現金流量表 (未實作)
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 現金流量表資料
+          content:
+            text/plain:
+              schema:
+                type: string
+
+    post:
+      tags: [CashFlow]
+      summary: 新增或更新現金流量表
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: 建立成功
+        '200':
+          description: 無變更
+
+  # ============ Follow Stock ============
+  /api/v0/follow_stock/:
+    get:
+      tags: [FollowStock]
+      summary: 取得使用者追蹤的股票列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: show_delete
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: 是否顯示已刪除的追蹤
+      responses:
+        '200':
+          description: 追蹤股票列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FollowStock'
+
+    post:
+      tags: [FollowStock]
+      summary: 新增追蹤股票
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stock_id
+                - long_or_short
+              properties:
+                stock_id:
+                  type: string
+                  example: "2330"
+                long_or_short:
+                  type: string
+                  enum: [long, short]
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStock'
+
+  /api/v0/follow_stock/{follow_stock_id}:
+    get:
+      tags: [FollowStock]
+      summary: 取得單一追蹤股票詳情
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: follow_stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 追蹤股票詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStock'
+        '404':
+          description: 找不到資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags: [FollowStock]
+      summary: 更新追蹤股票
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: follow_stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                long_or_short:
+                  type: string
+                  enum: [long, short]
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowStock'
+        '404':
+          description: 找不到資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags: [FollowStock]
+      summary: 刪除追蹤股票
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: follow_stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 刪除成功
+
+  # ============ Earnings Call ============
+  /api/v0/earnings_call:
+    get:
+      tags: [EarningsCall]
+      summary: 取得法說會列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: stock
+          in: query
+          schema:
+            type: string
+          description: 股票代號
+        - name: meeting_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 會議日期 (預設今天)
+      responses:
+        '200':
+          description: 法說會列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EarningsCall'
+
+    post:
+      tags: [EarningsCall]
+      summary: 新增法說會
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stock_id
+                - meeting_date
+              properties:
+                stock_id:
+                  type: string
+                meeting_date:
+                  type: string
+                  format: date
+                meeting_time:
+                  type: string
+                location:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: 建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EarningsCall'
+        '409':
+          description: 資料已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============ Monthly Valuation ============
+  /api/v0/monthly_valuation:
+    get:
+      tags: [MonthlyValuation]
+      summary: 取得月估值資料
+      parameters:
+        - name: stock
+          in: query
+          schema:
+            type: string
+            default: "2330"
+          description: 股票代號
+        - name: years
+          in: query
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 20
+          description: 取得幾年資料
+      responses:
+        '200':
+          description: 月估值資料
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyValuation'
+
+    post:
+      tags: [MonthlyValuation]
+      summary: 新增月估值
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthlyValuation'
+      responses:
+        '201':
+          description: 建立成功
+
+    patch:
+      tags: [MonthlyValuation]
+      summary: 更新月估值
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthlyValuation'
+      responses:
+        '200':
+          description: 更新成功
+
+  # ============ Recommended Stock ============
+  /api/v0/recommended_stock:
+    get:
+      tags: [RecommendedStock]
+      summary: 取得推薦股票列表
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: 日期 (預設今天)
+        - name: filter_model
+          in: query
+          schema:
+            type: string
+          description: 篩選模型名稱
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: 限制筆數
+      responses:
+        '200':
+          description: 推薦股票列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendedStock'
+
+    post:
+      tags: [RecommendedStock]
+      summary: 新增推薦股票
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stock_id
+                - filter_model
+              properties:
+                stock_id:
+                  type: string
+                filter_model:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                score:
+                  type: number
+      responses:
+        '201':
+          description: 建立成功
+
+  /api/v0/recommended_stock/{id}:
+    get:
+      tags: [RecommendedStock]
+      summary: 取得單一推薦股票詳情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 推薦股票詳情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendedStock'
+        '404':
+          description: 找不到資料
+
+    delete:
+      tags: [RecommendedStock]
+      summary: 刪除推薦股票
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 刪除成功
+
+  /api/v0/recommended_stock/stock/{stock_id}:
+    get:
+      tags: [RecommendedStock]
+      summary: 取得特定股票的推薦記錄
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 推薦記錄
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecommendedStock'
+
+  /api/v0/recommended_stock/statistics:
+    get:
+      tags: [RecommendedStock]
+      summary: 取得推薦統計資料
+      responses:
+        '200':
+          description: 統計資料
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v0/recommended_stock/filter-models:
+    get:
+      tags: [RecommendedStock]
+      summary: 取得所有篩選模型
+      responses:
+        '200':
+          description: 篩選模型列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  # ============ Push Notification ============
+  /api/v0/push_notification/:
+    get:
+      tags: [PushNotification]
+      summary: 取得推播通知設定
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 推播設定
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushNotification'
+
+    put:
+      tags: [PushNotification]
+      summary: 更新推播通知設定
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushNotification'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushNotification'
+
+  # ============ Feed ============
+  /api/v0/feed/{stock_id}:
+    get:
+      tags: [Feed]
+      summary: 取得股票動態
+      parameters:
+        - name: stock_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 動態列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/v0/feed:
+    get:
+      tags: [Feed]
+      summary: 取得動態列表
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: 動態類型
+      responses:
+        '200':
+          description: 動態列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+    post:
+      tags: [Feed]
+      summary: 新增動態
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: 建立成功
