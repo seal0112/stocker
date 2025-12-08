@@ -58,7 +58,7 @@ class handleCashFlow(MethodView):
                         cashFlow[key] = payload[key]
                 # If there is no data to modify, then return 200
                 if changeFlag is not True:
-                    return make_response(json.dumps('OK'), 200)
+                    return jsonify({"message": "OK"}), 200
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 cashFlow['update_date'] = datetime.now(
@@ -74,25 +74,17 @@ class handleCashFlow(MethodView):
         except IntegrityError as ie:
             db.session.rollback()
             logging.warning(
-                "400 %s is failed to update Cash Flowe. Reason: %s"
+                "400 %s is failed to update Cash Flow. Reason: %s"
                 % (stock_id, ie))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Cash Flow.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Cash Flow" % stock_id}), 400
         except Exception as ex:
             db.session.rollback()
             logger.warning(
                 "400 %s is failed to update Cash Flow. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Cash Flow.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Cash Flow" % stock_id}), 400
 
-        res = make_response(
-            json.dumps('Create'), 201)
-        return res
+        return jsonify({"message": "Created"}), 201
 
 
 cash_flow.add_url_rule('/<stock_id>',

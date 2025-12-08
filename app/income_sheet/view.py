@@ -81,9 +81,7 @@ class handleIncomeSheet(MethodView):
             incomeSheet = None
 
         if incomeSheet is None:
-            res = make_response(json.dumps(
-                'Failed to get %s Income Sheet.' % (stock_id)), 404)
-            return res
+            return jsonify({"error": "Failed to get %s Income Sheet" % stock_id}), 404
         elif mode == 'single' or mode == None:
             res = [incomeSheet.serialize]
             return jsonify(res)
@@ -116,7 +114,7 @@ class handleIncomeSheet(MethodView):
                         incomeSheet[key] = payload[key]
                 # If there is no data to modify, then return 200
                 if changeFlag is not True:
-                    return make_response(json.dumps('OK'), 200)
+                    return jsonify({"message": "OK"}), 200
                 # if there is any data to modify,
                 # then record currennt date for update_date
                 incomeSheet['update_date'] = datetime.now(
@@ -135,24 +133,16 @@ class handleIncomeSheet(MethodView):
             logging.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ie))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Income Sheet.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Income Sheet" % stock_id}), 400
         except Exception as ex:
             db.session.rollback()
             logger.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Income sheet.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Income Sheet" % stock_id}), 400
 
         checkFourSeasonEPS(stock_id)
-        res = make_response(
-            json.dumps('Create'), 201)
-        return res
+        return jsonify({"message": "Created"}), 201
 
 
 def checkFourSeasonEPS(stock_id):

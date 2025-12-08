@@ -54,7 +54,7 @@ class PushNotificationApi(MethodView):
                 f'Failed to update user {current_user["id"]} push notification: {ex}')
             db.session.rollback()
             return make_response({
-                "status": "資料錯誤"
+                "error": "Failed to update push notification"
             }, 400)
         else:
             return PushNotificationSchema().dumps(push_notification)

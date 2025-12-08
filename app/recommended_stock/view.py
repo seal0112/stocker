@@ -7,6 +7,7 @@ from flask import request, make_response, jsonify
 from flask.views import MethodView
 from marshmallow import ValidationError
 
+from app import db
 from .services import RecommendedStockService
 from .serializer import RecommendedStockSchema, RecommendedStockDetailSchema
 from . import recommended_stock
@@ -109,8 +110,10 @@ class RecommendedStockListApi(MethodView):
             )
 
         except ValueError as e:
+            db.session.rollback()
             return make_response(jsonify({"error": str(e)}), 400)
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Error in POST /recommended_stock: {e}", exc_info=True)
             return make_response(jsonify({
                 "error": "Failed to create recommendation"
@@ -174,6 +177,7 @@ class RecommendedStockDetailApi(MethodView):
             }), 200)
 
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Error in DELETE /recommended_stock/{recommendation_id}: {e}", exc_info=True)
             return make_response(jsonify({
                 "error": "Failed to delete recommendation"

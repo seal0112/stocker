@@ -1,16 +1,18 @@
 import json
+import logging
 from datetime import datetime
 
 from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
+from app import db
 from .models import EarningsCall
 from . import earnings_call
 from .serializer import EarningsCallchema
 from .earnings_call_services import EarningsCallService
 
-
+logger = logging.getLogger(__name__)
 earnings_call_service = EarningsCallService()
 
 class EarningsCallListApi(MethodView):
@@ -37,12 +39,14 @@ class EarningsCallListApi(MethodView):
         )
 
         if earnings_calls:
-            return jsonify({"status": "資料已存在"}), 200
+            return jsonify({"error": "Resource already exists"}), 409
 
         try:
             earnings_call = earnings_call_service.create_earnings_call(earnings_call_data)
-        except Exception:
-            return jsonify({"status": "資料錯誤"}), 400
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error creating earnings call: {e}", exc_info=True)
+            return jsonify({"error": "Failed to create earnings call"}), 400
         else:
             return EarningsCallchema().dumps(earnings_call), 201
 

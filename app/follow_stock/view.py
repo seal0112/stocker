@@ -50,7 +50,7 @@ class FollowStockDetailApi(MethodView):
             current_user['id'], follow_stock_id)
 
         if not follow_data:
-            return jsonify(None), 200
+            return jsonify({"error": "Resource not found"}), 404
 
         return jsonify(follow_data.serialize)
 

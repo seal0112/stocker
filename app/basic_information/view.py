@@ -46,8 +46,7 @@ class handleBasicInfo(MethodView):
         basicInfo = db.session.query(BasicInformation).filter_by(
             id=stock_id).one_or_none()
         if basicInfo is None:
-            return make_response(
-                json.dumps("404 Not Found"), 404)
+            return jsonify({"error": "Resource not found"}), 404
         else:
             return jsonify(basicInfo.serialize)
 
@@ -81,7 +80,7 @@ class handleBasicInfo(MethodView):
 
                 # If no data has been modified, then return 200
                 if not changeFlag:
-                    return make_response(json.dumps('OK'), 200)
+                    return jsonify({"message": "OK"}), 200
 
                 # If any data is modified,
                 # update update_date to today's date
@@ -100,24 +99,16 @@ class handleBasicInfo(MethodView):
             logging.warning(
                 "400 %s is failed to update Basic Info. Reason: %s"
                 % (stock_id, ie))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Basic Info.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Basic Info" % stock_id}), 400
         except Exception as ex:
             logger.warning(
                 "400 %s is failed to update basic_information. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Basic Info.'), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Basic Info" % stock_id}), 400
 
         stock_search_count_service.create_stock_search_count(stock_id)
 
-        res = make_response(
-            json.dumps('Create'), 201)
-        return res
+        return jsonify({"message": "Created"}), 201
 
     def patch(self, stock_id):
         """
@@ -139,21 +130,15 @@ class handleBasicInfo(MethodView):
                 basicInfo['exchange_type'] = payload['exchangeType']
                 db.session.add(basicInfo)
                 db.session.commit()
-                res = make_response(json.dumps('OK'), 200)
+                return jsonify({"message": "OK"}), 200
             else:
-                res = make_response(
-                    json.dumps('No such stock id.'), 404)
-            return res
+                return jsonify({"error": "No such stock id"}), 404
         except Exception as ex:
             db.session.rollback()
             logger.warning(
-                "400 %s is failed to update Baisc information. Reason: %s"
+                "400 %s is failed to update Basic information. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Basic Information.'
-                    % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Basic Information" % stock_id}), 400
 
 
 basic_information.add_url_rule('/<stock_id>',
