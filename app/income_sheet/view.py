@@ -12,6 +12,7 @@ from app.database_setup import (
 )
 from .. import db
 from . import income_sheet
+from .serializer import IncomeSheetSchema
 
 
 logger = logging.getLogger(__name__)
@@ -83,11 +84,9 @@ class handleIncomeSheet(MethodView):
         if incomeSheet is None:
             return jsonify({"error": "Failed to get %s Income Sheet" % stock_id}), 404
         elif mode == 'single' or mode == None:
-            res = [incomeSheet.serialize]
-            return jsonify(res)
+            return IncomeSheetSchema(many=True).dumps([incomeSheet])
         else:
-            res = [i.serialize for i in incomeSheet]
-            return jsonify(res)
+            return IncomeSheetSchema(many=True).dumps(incomeSheet)
 
     def post(self, stock_id):
         """

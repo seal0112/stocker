@@ -10,6 +10,7 @@ from ..database_setup import BasicInformation
 from ..utils.stock_search_count_service import StockSearchCountService
 from .. import db
 from . import basic_information
+from .serializer import BasicInformationDetailSchema
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class handleBasicInfo(MethodView):
         if basicInfo is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            return jsonify(basicInfo.serialize)
+            return BasicInformationDetailSchema().dumps(basicInfo)
 
     def post(self, stock_id):
         """

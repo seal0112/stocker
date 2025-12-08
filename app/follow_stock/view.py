@@ -38,7 +38,7 @@ class FollowStockListApi(MethodView):
             payload['long_or_short'],
             payload['comment']
         )
-        return jsonify(follow_data.serialize)
+        return FollowStockSchema().dumps(follow_data)
 
 
 class FollowStockDetailApi(MethodView):
@@ -52,7 +52,7 @@ class FollowStockDetailApi(MethodView):
         if not follow_data:
             return jsonify({"error": "Resource not found"}), 404
 
-        return jsonify(follow_data.serialize)
+        return FollowStockSchema().dumps(follow_data)
 
     @jwt_required()
     def patch(self, follow_stock_id):
@@ -71,10 +71,9 @@ class FollowStockDetailApi(MethodView):
                 payload['long_or_short'],
                 payload['comment']
             )
-            data = follow_data.serialize
-            return jsonify(data)
+            return FollowStockSchema().dumps(follow_data)
         except Exception as ex:
-            return jsonify({}), 404
+            return jsonify({"error": "Resource not found"}), 404
 
     @jwt_required()
     def delete(self, follow_stock_id):

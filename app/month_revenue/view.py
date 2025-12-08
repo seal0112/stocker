@@ -10,6 +10,7 @@ from ..utils.data_update_date_service import DataUpdateDateService
 from ..database_setup import MonthRevenue
 from .. import db
 from . import month_revenue
+from .serializer import MonthRevenueSchema
 
 
 logger = logging.getLogger(__name__)
@@ -49,8 +50,7 @@ class handleMonthRevenue(MethodView):
         if monthReve is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            result = [i.serialize for i in monthReve]
-            return jsonify(result)
+            return MonthRevenueSchema(many=True).dumps(monthReve)
 
     def post(self, stock_id):
         """
