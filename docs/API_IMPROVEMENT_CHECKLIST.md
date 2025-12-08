@@ -135,9 +135,9 @@ if not follow_data:
 
 ### 3.2 加入 db.session.rollback()
 
-- [x] [app/earnings_call/views.py:36-39](../app/earnings_call/views.py#L36)
-- [x] [app/recommended_stock/view.py:62-66](../app/recommended_stock/view.py#L62)
-- [x] [app/monthly_valuation/view.py](../app/monthly_valuation/view.py) - 檢查所有 except block
+- [x] [app/earnings_call/views.py:36-39](../app/earnings_call/views.py#L36) ✅ 2024-12-08
+- [x] [app/recommended_stock/view.py:62-66](../app/recommended_stock/view.py#L62) ✅ 2024-12-08
+- [x] [app/monthly_valuation/view.py](../app/monthly_valuation/view.py) - 檢查所有 except block ✅ 2024-12-08
 
 **修正範例：**
 ```python
@@ -241,10 +241,10 @@ def get(self):
 | Phase | 總項目 | 已完成 | 完成率 |
 |-------|--------|--------|--------|
 | Phase 1: 安全性 | 23 | 0 | 0% |
-| Phase 2: 一致性 | 18 | 0 | 0% |
-| Phase 3: 品質 | 7 | 7 | 100% |
+| Phase 2: 一致性 | 18 | 16 | 89% |
+| Phase 3: 品質 | 10 | 7 | 70% |
 | Phase 4: 功能 | 14 | 0 | 0% |
-| **總計** | **62** | **17** | **27%** |
+| **總計** | **65** | **23** | **35%** |
 
 ---
 
