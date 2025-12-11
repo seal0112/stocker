@@ -1,10 +1,10 @@
 from functools import wraps
 
-from flask import jsonify
+from flask import jsonify, request, g
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 
 from app import db
-from app.models import User
+from app.models import User, ApiToken
 
 
 def role_required(*required_roles):
@@ -148,3 +148,79 @@ def permission_required(*required_permissions):
             return fn(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def api_auth_required(fn):
+    """
+    Decorator that supports both JWT and API token authentication.
+
+    Checks Authorization header:
+    - If token starts with 'stk_', validates as API token
+    - Otherwise, falls back to JWT validation
+
+    Sets g.current_user with user identity dict and g.auth_type with 'api_token' or 'jwt'.
+
+    Usage:
+        @api_auth_required
+        def my_endpoint():
+            user = g.current_user
+            auth_type = g.auth_type
+            ...
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+
+        # Check if it's an API token
+        if auth_header.startswith('Bearer stk_'):
+            token = auth_header[7:]  # Remove 'Bearer ' prefix
+            api_token = ApiToken.verify_token(token)
+
+            if not api_token:
+                return jsonify({'error': 'Invalid or expired API token'}), 401
+
+            # Get user info
+            user = db.session.query(User).filter_by(id=api_token.user_id).first()
+            if not user or not user.is_active:
+                return jsonify({'error': 'User not found or inactive'}), 401
+
+            # Check if user still has required role (admin or moderator)
+            if not (user.has_role('admin') or user.has_role('moderator')):
+                # Deactivate the token since user no longer has permission
+                api_token.is_active = False
+                db.session.commit()
+                return jsonify({
+                    'error': 'Access denied',
+                    'message': 'API token revoked: user no longer has required role'
+                }), 403
+
+            # Set current user in g
+            g.current_user = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'picture': user.profile_pic
+            }
+            g.auth_type = 'api_token'
+            g.api_token = api_token
+
+            return fn(*args, **kwargs)
+
+        # Fall back to JWT authentication
+        try:
+            verify_jwt_in_request()
+            g.current_user = get_jwt_identity()
+            g.auth_type = 'jwt'
+            return fn(*args, **kwargs)
+        except Exception:
+            return jsonify({'error': 'Authentication required'}), 401
+
+    return wrapper
+
+
+def api_auth_or_jwt_required(fn):
+    """
+    Alias for api_auth_required for clarity.
+    Supports both API token and JWT authentication.
+    """
+    return api_auth_required(fn)

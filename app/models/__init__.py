@@ -7,6 +7,7 @@ from .user import User
 from .role import Role
 from .user_role import UserRole
 from .permission import Permission, role_permission
+from .api_token import ApiToken
 
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     'UserRole',
     'Permission',
     'role_permission',
+    'ApiToken',
 ]
