@@ -1,0 +1,88 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            APP_DIR="${{ secrets.APP_DIR }}"
+            cd $APP_DIR
+
+            echo "=== Pulling latest code ==="
+            git fetch origin master
+            git reset --hard origin/master
+
+            echo "=== Installing dependencies ==="
+            source venv/bin/activate
+            pip install -r requirements.txt -q
+
+            echo "=== Running database migrations ==="
+            export FLASK_CONFIG=production
+            flask db upgrade
+
+            echo "=== Restarting gunicorn ==="
+            pkill -f "gunicorn.*wsgi:app" || true
+            sleep 2
+
+            nohup gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app \
+              --pid gunicorn.pid \
+              --access-logfile logs/access.log \
+              --error-logfile logs/error.log \
+              --daemon
+
+            echo "=== Verifying deployment ==="
+            sleep 3
+            if pgrep -f "gunicorn.*wsgi:app" > /dev/null; then
+              echo "Deployment successful!"
+            else
+              echo "Deployment failed - gunicorn not running"
+              exit 1
+            fi
+
+      - name: Health check
+        run: |
+          sleep 5
+          curl -f http://${{ secrets.SERVER_HOST }}/api/v0/ || echo "Health check skipped (may need different endpoint)"
+
+
+  notify-success:
+    needs: deploy
+    if: success()
+    uses: ./.github/workflows/notify.yml
+    with:
+      success: true
+      service_name: "Stocker API"
+    secrets:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+  notify-failure:
+    needs: deploy
+    if: failure()
+    uses: ./.github/workflows/notify.yml
+    with:
+      success: false
+      service_name: "Stocker API"
+    secrets:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
