@@ -6,7 +6,8 @@ from flask import (
 )
 from flask_jwt_extended import (
     jwt_required, create_access_token, create_refresh_token,
-    get_jwt_identity, set_refresh_cookies
+    get_jwt_identity, set_access_cookies, set_refresh_cookies,
+    unset_jwt_cookies
 )
 
 from . import auth
@@ -33,6 +34,7 @@ def make_jwt_repsonse(identity):
     response = make_response(
         jsonify(access_token=access_token), 200
     )
+    set_access_cookies(response, access_token)
     return response
 
 
@@ -97,7 +99,7 @@ def logout():
     response = make_response(
         jsonify({'isAuth': False})
     )
-    response.delete_cookie("refresh_token")
+    unset_jwt_cookies(response)
 
     return response
 
