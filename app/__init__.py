@@ -65,7 +65,7 @@ def create_app(config_name):
     app.register_blueprint(monthly_valuation, url_prefix='/api/v0/monthly_valuation')
     app.register_blueprint(recommended_stock, url_prefix='/api/v0/recommended_stock')
     app.register_blueprint(announcement_income_sheet_analysis, url_prefix='/api/v0/announcement_income_sheet_analysis')
-    app.register_blueprint(api_token, url_prefix='/api/v0/tokens')
+    app.register_blueprint(api_token, url_prefix='/api/v1/token')
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')

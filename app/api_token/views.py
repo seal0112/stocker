@@ -2,7 +2,7 @@ import logging
 
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import get_jwt_identity
 from marshmallow import ValidationError
 
 from app import db
@@ -19,7 +19,7 @@ token_service = TokenService()
 class ApiTokenListView(MethodView):
     """API for listing and creating tokens."""
 
-    @jwt_required()
+    @moderator_required
     def get(self):
         """List all tokens for the current user."""
         current_user = get_jwt_identity()
@@ -68,7 +68,7 @@ class ApiTokenListView(MethodView):
 class ApiTokenDetailView(MethodView):
     """API for managing individual tokens."""
 
-    @jwt_required()
+    @moderator_required
     def get(self, token_id):
         """Get a specific token."""
         current_user = get_jwt_identity()
@@ -79,7 +79,7 @@ class ApiTokenDetailView(MethodView):
 
         return jsonify(api_token_schema.dump(token_obj)), 200
 
-    @jwt_required()
+    @moderator_required
     def delete(self, token_id):
         """Revoke/delete a token."""
         current_user = get_jwt_identity()
@@ -93,7 +93,7 @@ class ApiTokenDetailView(MethodView):
 class ApiTokenRegenerateView(MethodView):
     """API for regenerating a token."""
 
-    @jwt_required()
+    @moderator_required
     def post(self, token_id):
         """Regenerate a token with a new value."""
         current_user = get_jwt_identity()

@@ -14,7 +14,7 @@ info:
     ```
 
     ### API Token (Personal Access Token)
-    透過 `/api/v0/tokens` 建立 API Token，然後在 Header 加入：
+    透過 `/api/v1/token` 建立 API Token，然後在 Header 加入：
     ```
     Authorization: Bearer stk_xxxxxxxx...
     ```
@@ -1252,7 +1252,7 @@ paths:
           description: 建立成功
 
   # ============ API Token ============
-  /api/v0/tokens:
+  /api/v1/token:
     get:
       tags: [ApiToken]
       summary: 取得使用者的 API Token 列表
@@ -1303,7 +1303,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api/v0/tokens/{token_id}:
+  /api/v1/token/{token_id}:
     get:
       tags: [ApiToken]
       summary: 取得單一 API Token 詳情
@@ -1352,7 +1352,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /api/v0/tokens/{token_id}/regenerate:
+  /api/v1/token/{token_id}/regenerate:
     post:
       tags: [ApiToken]
       summary: 重新產生 API Token

@@ -50,13 +50,13 @@ def auth_headers(test_user):
 
 
 class TestApiTokenListEndpoint:
-    """Tests for GET/POST /api/v0/tokens."""
+    """Tests for GET/POST /api/v1/token."""
 
     def test_list_tokens_empty(self, client, test_user, auth_headers):
         """Should return empty list when no tokens exist."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
-                response = client.get('/api/v0/tokens')
+                response = client.get('/api/v1/token')
                 assert response.status_code == 200
                 data = json.loads(response.data)
                 assert data == []
@@ -66,7 +66,7 @@ class TestApiTokenListEndpoint:
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'My API Token'}),
                     content_type='application/json'
                 )
@@ -82,7 +82,7 @@ class TestApiTokenListEndpoint:
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({
                         'name': 'Scoped Token',
                         'scopes': ['read', 'write']
@@ -98,7 +98,7 @@ class TestApiTokenListEndpoint:
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({
                         'name': 'Expiring Token',
                         'expires_in_days': 30
@@ -114,7 +114,7 @@ class TestApiTokenListEndpoint:
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({}),
                     content_type='application/json'
                 )
@@ -127,14 +127,14 @@ class TestApiTokenListEndpoint:
                 # Create max tokens
                 for i in range(ApiToken.MAX_TOKENS_PER_USER):
                     client.post(
-                        '/api/v0/tokens',
+                        '/api/v1/token',
                         data=json.dumps({'name': f'Token {i}'}),
                         content_type='application/json'
                     )
 
                 # Try to create one more
                 response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Extra Token'}),
                     content_type='application/json'
                 )
@@ -148,18 +148,18 @@ class TestApiTokenListEndpoint:
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 # Create tokens
                 client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Token 1'}),
                     content_type='application/json'
                 )
                 client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Token 2'}),
                     content_type='application/json'
                 )
 
                 # List tokens
-                response = client.get('/api/v0/tokens')
+                response = client.get('/api/v1/token')
                 assert response.status_code == 200
                 data = json.loads(response.data)
                 assert len(data) == 2
@@ -168,7 +168,7 @@ class TestApiTokenListEndpoint:
 
 
 class TestApiTokenDetailEndpoint:
-    """Tests for GET/DELETE /api/v0/tokens/<id>."""
+    """Tests for GET/DELETE /api/v1/token/<id>."""
 
     def test_get_token_success(self, client, test_user, auth_headers):
         """Should return token details."""
@@ -176,7 +176,7 @@ class TestApiTokenDetailEndpoint:
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 # Create a token
                 create_response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Detail Token'}),
                     content_type='application/json'
                 )
@@ -184,7 +184,7 @@ class TestApiTokenDetailEndpoint:
                 token_id = created['id']
 
                 # Get token
-                response = client.get(f'/api/v0/tokens/{token_id}')
+                response = client.get(f'/api/v1/token/{token_id}')
                 assert response.status_code == 200
                 data = json.loads(response.data)
                 assert data['id'] == token_id
@@ -194,7 +194,7 @@ class TestApiTokenDetailEndpoint:
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
-                response = client.get('/api/v0/tokens/nonexistent-id')
+                response = client.get('/api/v1/token/nonexistent-id')
                 assert response.status_code == 404
 
     def test_delete_token_success(self, client, test_user, auth_headers):
@@ -203,7 +203,7 @@ class TestApiTokenDetailEndpoint:
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 # Create a token
                 create_response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Delete Token'}),
                     content_type='application/json'
                 )
@@ -211,11 +211,11 @@ class TestApiTokenDetailEndpoint:
                 token_id = created['id']
 
                 # Delete token
-                response = client.delete(f'/api/v0/tokens/{token_id}')
+                response = client.delete(f'/api/v1/token/{token_id}')
                 assert response.status_code == 204
 
                 # Verify token is gone from list
-                list_response = client.get('/api/v0/tokens')
+                list_response = client.get('/api/v1/token')
                 tokens = json.loads(list_response.data)
                 assert all(t['id'] != token_id for t in tokens)
 
@@ -223,12 +223,12 @@ class TestApiTokenDetailEndpoint:
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
-                response = client.delete('/api/v0/tokens/nonexistent-id')
+                response = client.delete('/api/v1/token/nonexistent-id')
                 assert response.status_code == 404
 
 
 class TestApiTokenRegenerateEndpoint:
-    """Tests for POST /api/v0/tokens/<id>/regenerate."""
+    """Tests for POST /api/v1/token/<id>/regenerate."""
 
     def test_regenerate_token_success(self, client, test_user, auth_headers):
         """Should regenerate token with new value."""
@@ -236,7 +236,7 @@ class TestApiTokenRegenerateEndpoint:
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 # Create a token
                 create_response = client.post(
-                    '/api/v0/tokens',
+                    '/api/v1/token',
                     data=json.dumps({'name': 'Regenerate Token'}),
                     content_type='application/json'
                 )
@@ -245,7 +245,7 @@ class TestApiTokenRegenerateEndpoint:
                 old_token = created['token']
 
                 # Regenerate token
-                response = client.post(f'/api/v0/tokens/{token_id}/regenerate')
+                response = client.post(f'/api/v1/token/{token_id}/regenerate')
                 assert response.status_code == 200
                 data = json.loads(response.data)
                 assert 'token' in data
@@ -256,5 +256,5 @@ class TestApiTokenRegenerateEndpoint:
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
-                response = client.post('/api/v0/tokens/nonexistent-id/regenerate')
+                response = client.post('/api/v1/token/nonexistent-id/regenerate')
                 assert response.status_code == 404

@@ -105,5 +105,10 @@ def logout():
 @auth.route("/user_info")
 @jwt_required()
 def get_user_info():
-    current_user = get_jwt_identity()
-    return jsonify(current_user), 200
+    identity = get_jwt_identity()
+    user = user_serv.get_user(identity['id'])
+
+    return jsonify({
+        **identity,
+        'roles': user.role_names if user else []
+    }), 200
