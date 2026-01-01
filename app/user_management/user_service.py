@@ -65,3 +65,23 @@ class UserService:
         # Refresh user to get updated roles
         db.session.refresh(user)
         return user
+
+    def update_user_status(self, user_id, active):
+        """
+        Update user active status.
+
+        Args:
+            user_id: The user ID to update
+            active: Boolean indicating if user should be active
+
+        Returns:
+            Updated User object or None if user not found
+        """
+        user = self.get_user_by_id(user_id)
+        if not user:
+            return None
+
+        user.active = active
+        db.session.commit()
+        db.session.refresh(user)
+        return user

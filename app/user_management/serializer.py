@@ -28,8 +28,14 @@ class UpdateUserRolesSchema(Schema):
     )
 
 
+class UpdateUserStatusSchema(Schema):
+    """Schema for updating user active status."""
+    active = fields.Boolean(required=True)
+
+
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 role_schema = RoleSchema()
 roles_schema = RoleSchema(many=True)
 update_user_roles_schema = UpdateUserRolesSchema()
+update_user_status_schema = UpdateUserStatusSchema()

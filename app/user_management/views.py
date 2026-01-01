@@ -13,7 +13,8 @@ from .serializer import (
     user_schema,
     users_schema,
     roles_schema,
-    update_user_roles_schema
+    update_user_roles_schema,
+    update_user_status_schema
 )
 
 logger = logging.getLogger(__name__)
@@ -93,6 +94,37 @@ class UserRolesView(MethodView):
         return jsonify(user_data), 200
 
 
+class UserStatusView(MethodView):
+    """API for updating user active status."""
+
+    @admin_required
+    def patch(self, user_id):
+        """Update user active status."""
+        # Validate request body
+        try:
+            data = update_user_status_schema.load(request.get_json() or {})
+        except ValidationError as err:
+            return jsonify({"error": err.messages}), 400
+
+        # Update status
+        try:
+            user = user_service.update_user_status(
+                user_id=user_id,
+                active=data['active']
+            )
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating user status: {e}", exc_info=True)
+            return jsonify({"error": "Failed to update user status"}), 500
+
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        user_data = user_schema.dump(user)
+        user_data['roles'] = user.role_names
+        return jsonify(user_data), 200
+
+
 class RoleListView(MethodView):
     """API for listing all roles."""
 
@@ -121,6 +153,12 @@ user_management.add_url_rule(
 user_management.add_url_rule(
     '/<int:user_id>/roles',
     view_func=UserRolesView.as_view('user_roles'),
+    methods=['PATCH']
+)
+
+user_management.add_url_rule(
+    '/<int:user_id>/status',
+    view_func=UserStatusView.as_view('user_status'),
     methods=['PATCH']
 )
 

@@ -325,3 +325,83 @@ class TestRoleListEndpoint:
                     assert 'id' in role
                     assert 'name' in role
                     assert 'description' in role
+
+
+class TestUserStatusEndpoint:
+    """Tests for PATCH /api/v1/users/<user_id>/status."""
+
+    def test_deactivate_user_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Admin should be able to deactivate a user."""
+        assert target_user.active is True
+
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.patch(
+                    f'/api/v1/users/{target_user.id}/status',
+                    data=json.dumps({'active': False}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert data['active'] is False
+
+    def test_activate_user_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Admin should be able to activate a user."""
+        # First deactivate the user
+        target_user.active = False
+        db.session.commit()
+
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.patch(
+                    f'/api/v1/users/{target_user.id}/status',
+                    data=json.dumps({'active': True}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert data['active'] is True
+
+    def test_update_status_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers, target_user):
+        """Regular user should get 403 when trying to update status."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
+                response = client.patch(
+                    f'/api/v1/users/{target_user.id}/status',
+                    data=json.dumps({'active': False}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 403
+
+    def test_update_status_user_not_found(self, client, admin_user_for_api, admin_auth_headers):
+        """Should return 404 for non-existent user."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.patch(
+                    '/api/v1/users/99999/status',
+                    data=json.dumps({'active': False}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 404
+
+    def test_update_status_missing_body(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Should return 400 when request body is missing."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.patch(
+                    f'/api/v1/users/{target_user.id}/status',
+                    data=json.dumps({}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 400
+
+    def test_update_status_invalid_value(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Should return 400 when active value is not boolean."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.patch(
+                    f'/api/v1/users/{target_user.id}/status',
+                    data=json.dumps({'active': 'not_a_boolean'}),
+                    content_type='application/json'
+                )
+                assert response.status_code == 400
