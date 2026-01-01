@@ -46,7 +46,8 @@ class Config:
     JWT_TOKEN_LOCATION = ['cookies', 'headers']
     JWT_REFRESH_COOKIE_PATH = '/api/auth/refresh'
     JWT_COOKIE_SECURE = True
-    JWT_CSRF_IN_COOKIES = False
+    JWT_COOKIE_CSRF_PROTECT = True
+    JWT_CSRF_IN_COOKIES = True
 
     # celery config
     broker_url = os.environ.get('CELERY_BROKER_URL') or REDIS_URL
