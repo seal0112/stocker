@@ -5,9 +5,21 @@ from app.models import User, Role, UserRole
 class UserService:
     """Service for managing users and their roles."""
 
-    def get_all_users(self):
-        """Get all users with their roles."""
-        return User.query.order_by(User.id).all()
+    def get_all_users(self, page=None, per_page=None):
+        """Get all users with their roles, with optional pagination."""
+        query = User.query.order_by(User.id)
+
+        if page is not None and per_page is not None:
+            pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+            return {
+                'items': pagination.items,
+                'total': pagination.total,
+                'page': pagination.page,
+                'per_page': pagination.per_page,
+                'pages': pagination.pages
+            }
+
+        return {'items': query.all(), 'total': query.count()}
 
     def get_user_by_id(self, user_id):
         """Get a specific user by ID."""

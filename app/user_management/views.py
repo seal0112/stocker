@@ -26,20 +26,36 @@ class UserListView(MethodView):
 
     @admin_required
     def get(self):
-        """List all users."""
-        users = user_service.get_all_users()
+        """List all users with optional pagination."""
+        # Get pagination parameters
+        page = request.args.get('page', type=int)
+        per_page = request.args.get('per_page', type=int)
+
+        # Validate per_page if provided
+        if per_page is not None and per_page not in [10, 30, 50, 100]:
+            per_page = 10
+
+        users_data = user_service.get_all_users(page=page, per_page=per_page)
 
         # Transform users to include role names
         result = []
-        for user in users:
+        for user in users_data['items']:
             user_data = user_schema.dump(user)
             user_data['roles'] = user.role_names
             result.append(user_data)
 
-        return jsonify({
+        response = {
             "data": result,
-            "total": len(result)
-        }), 200
+            "total": users_data['total']
+        }
+
+        # Add pagination info if paginated
+        if page is not None and per_page is not None:
+            response['page'] = users_data.get('page')
+            response['per_page'] = users_data.get('per_page')
+            response['pages'] = users_data.get('pages')
+
+        return jsonify(response), 200
 
 
 class UserDetailView(MethodView):
