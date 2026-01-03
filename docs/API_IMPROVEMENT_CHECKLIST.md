@@ -4,6 +4,43 @@
 
 ---
 
+## Phase 0: API 開發規範 (Must Follow)
+
+> ⚠️ 開發新 API 時必須遵守的規範，避免常見錯誤。
+
+### 0.1 URL 路由規範
+
+- [x] 後端已設置 `strict_slashes=False` - [app/__init__.py:36](../app/__init__.py#L36) ✅ 2026-01-03
+  - 這讓 `/api/v1/users` 和 `/api/v1/users/` 都能正確路由
+
+**開發新 API 時的檢查項目：**
+
+| 項目 | 正確做法 | 錯誤做法 |
+|------|----------|----------|
+| Blueprint URL prefix | `/api/v1/users` (無尾部斜杠) | `/api/v1/users/` |
+| add_url_rule 路徑 | `''` 或 `'/<int:id>'` | `'/'` |
+| 前端 baseURL | `/api/v1/users` | `/api/v1/users/` |
+| 前端 API 調用 | `.get('')` 或 `.get('?page=1')` | `.get('/')` |
+
+### 0.2 回應格式規範
+
+```python
+# 成功回應
+{"status": "ok", "data": {...}}
+# 或直接回傳 data
+{"data": [...], "total": 100, "page": 1}
+
+# 錯誤回應
+{"error": "Error message in English"}, 4xx/5xx
+```
+
+### 0.3 認證規範
+
+- 所有 API endpoint 必須加上 `@jwt_required()` 或 `@admin_required`
+- 例外：公開 API 需明確標註原因
+
+---
+
 ## Phase 1: 安全性修復 (Critical)
 
 ### 1.1 認證缺失 - 加上 `@jwt_required()`
@@ -49,6 +86,13 @@
 - [ ] `GET /api/v0/recommended_stock/stock/<stock_id>` - [app/recommended_stock/view.py:186](../app/recommended_stock/view.py#L186)
 - [ ] `GET /api/v0/recommended_stock/statistics` - [app/recommended_stock/view.py:222](../app/recommended_stock/view.py#L222)
 - [ ] `GET /api/v0/recommended_stock/filter-models` - [app/recommended_stock/view.py:258](../app/recommended_stock/view.py#L258)
+
+---
+
+### 1.2 CSRF 保護
+
+- [x] 啟用 JWT_COOKIE_CSRF_PROTECT - [config.py:49](../config.py#L49) ✅ 2026-01-01
+- [x] 前端自動帶入 X-CSRF-TOKEN header - react-stocker/src/utils/DomainSetup.js ✅ 2026-01-01
 
 ---
 
@@ -240,11 +284,11 @@ def get(self):
 
 | Phase | 總項目 | 已完成 | 完成率 |
 |-------|--------|--------|--------|
-| Phase 1: 安全性 | 23 | 0 | 0% |
+| Phase 1: 安全性 | 25 | 2 | 8% |
 | Phase 2: 一致性 | 18 | 16 | 89% |
 | Phase 3: 品質 | 10 | 7 | 70% |
 | Phase 4: 功能 | 14 | 0 | 0% |
-| **總計** | **65** | **23** | **35%** |
+| **總計** | **67** | **25** | **37%** |
 
 ---
 
@@ -252,6 +296,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-01 | 完成 1.2 CSRF 保護 (2項) | Claude |
 | 2024-12-09 | 完成 3.3 統一使用 Marshmallow Serializer (4項) | Claude |
 | 2024-12-09 | 完成 2.1 統一回應格式 (5項) | Claude |
 | 2024-12-09 | 完成 2.2 統一 404 Not Found 處理 (3項) | Claude |

@@ -32,6 +32,9 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    # Allow both /path and /path/ to match the same route
+    app.url_map.strict_slashes = False
+
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)

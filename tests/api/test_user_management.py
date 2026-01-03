@@ -147,6 +147,72 @@ class TestUserListEndpoint:
                 assert 'total' in data
                 assert isinstance(data['data'], list)
 
+    def test_list_users_with_trailing_slash(self, client, admin_user_for_api, admin_auth_headers):
+        """Should work with trailing slash (strict_slashes=False)."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.get('/api/v1/users/')
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert 'data' in data
+
+    def test_list_users_with_pagination(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Should return paginated results when page and per_page are provided."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.get('/api/v1/users?page=1&per_page=10')
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert 'data' in data
+                assert 'total' in data
+                assert 'page' in data
+                assert 'per_page' in data
+                assert 'pages' in data
+                assert data['page'] == 1
+                assert data['per_page'] == 10
+
+    def test_list_users_with_trailing_slash_and_pagination(self, client, admin_user_for_api, admin_auth_headers):
+        """Should work with trailing slash and query params."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.get('/api/v1/users/?page=1&per_page=10')
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert 'data' in data
+                assert data['page'] == 1
+
+    def test_list_users_invalid_per_page_defaults_to_10(self, client, admin_user_for_api, admin_auth_headers):
+        """Invalid per_page value should default to 10."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.get('/api/v1/users?page=1&per_page=25')
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert data['per_page'] == 10  # Should default to 10
+
+    def test_list_users_valid_per_page_values(self, client, admin_user_for_api, admin_auth_headers):
+        """Should accept valid per_page values: 10, 30, 50, 100."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                for per_page in [10, 30, 50, 100]:
+                    response = client.get(f'/api/v1/users?page=1&per_page={per_page}')
+                    assert response.status_code == 200
+                    data = json.loads(response.data)
+                    assert data['per_page'] == per_page
+
+    def test_list_users_without_pagination_returns_all(self, client, admin_user_for_api, admin_auth_headers, target_user):
+        """Without pagination params, should return all users without pagination info."""
+        with patch('app.decorators.auth.verify_jwt_in_request'):
+            with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
+                response = client.get('/api/v1/users')
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert 'data' in data
+                assert 'total' in data
+                # Should not have pagination keys when not paginated
+                assert 'page' not in data
+                assert 'per_page' not in data
+
     def test_list_users_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers):
         """Regular user should get 403 when trying to list users."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
