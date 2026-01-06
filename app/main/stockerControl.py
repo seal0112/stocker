@@ -42,7 +42,8 @@ def showMain():
 def use_screener():
     option = request.args.get('option')
     stock_screener = StockScreenerManager(option)
-    messages = stock_screener.screener()
+    result = stock_screener.run_and_save()
+    messages = result['messages']
     discord_bot = DiscordBot()
     for message in messages:
         discord_bot.push_message(option, message)
