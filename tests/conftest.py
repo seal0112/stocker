@@ -86,8 +86,18 @@ def db_session(app):
 # ============================================================================
 
 pytest_plugins = [
+    # Base models
     'tests.fixtures.models.basic_information',
-    'tests.fixtures.models.feed',
-    'tests.fixtures.models.announcement_income_sheet_analysis',
     'tests.fixtures.models.user',
+    'tests.fixtures.models.permission',
+    # Stock-related models
+    'tests.fixtures.models.stock',
+    # Feed-related models
+    'tests.fixtures.models.feed',
+    'tests.fixtures.models.feed_tag',
+    'tests.fixtures.models.announcement_income_sheet_analysis',
+    # User-related models
+    'tests.fixtures.models.api_token',
+    'tests.fixtures.models.follow_stock',
+    'tests.fixtures.models.push_notification',
 ]
