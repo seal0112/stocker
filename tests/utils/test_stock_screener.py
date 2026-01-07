@@ -1,3 +1,12 @@
+"""
+Stock Screener Tests
+
+Note: This file uses its own local fixtures (prefixed with 'screener_') instead of
+shared fixtures because the tests require specific values to verify valuation logic:
+- EPS > 0.3
+- core_business_ratio (營業利益率/稅前淨利率) > 0.7
+- stock_price < average_monthly_price * 1.25
+"""
 import pytest
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -11,12 +20,11 @@ from app.models.recommended_stock import RecommendedStock
 
 
 @pytest.fixture
-def sample_basic_info(test_app):
-    """Create a sample BasicInformation record for testing."""
+def screener_basic_info(test_app):
+    """Create a BasicInformation record for screener testing."""
     with test_app.app_context():
         from app import db
 
-        # Create basic information
         stock = BasicInformation(
             id='2330',
             公司名稱='台積電',
@@ -36,13 +44,13 @@ def sample_basic_info(test_app):
 
 
 @pytest.fixture
-def sample_daily_info(test_app, sample_basic_info):
-    """Create sample DailyInformation for the stock."""
+def screener_daily_info(test_app, screener_basic_info):
+    """Create DailyInformation for screener testing."""
     with test_app.app_context():
         from app import db
 
         daily_info = DailyInformation(
-            stock_id=sample_basic_info.id,
+            stock_id=screener_basic_info.id,
             本日收盤價=500.0,
             本日漲跌=5.0,
             近四季每股盈餘=25.0,
@@ -62,13 +70,18 @@ def sample_daily_info(test_app, sample_basic_info):
 
 
 @pytest.fixture
-def sample_income_sheet(test_app, sample_basic_info):
-    """Create sample IncomeSheet for the stock."""
+def screener_income_sheet(test_app, screener_basic_info):
+    """Create IncomeSheet with specific values for valuation testing.
+
+    Values set to pass valuation checks:
+    - 基本每股盈餘 = 6.5 (> 0.3 threshold)
+    - 營業利益率 = 15.0, 稅前淨利率 = 18.0 (ratio = 0.833 > 0.7 threshold)
+    """
     with test_app.app_context():
         from app import db
 
         income_sheet = IncomeSheet(
-            stock_id=sample_basic_info.id,
+            stock_id=screener_basic_info.id,
             year=2024,
             season='3',
             營業收入合計=1000000000,
@@ -92,19 +105,18 @@ def sample_income_sheet(test_app, sample_basic_info):
 
 
 @pytest.fixture
-def sample_monthly_valuation(test_app, sample_basic_info):
-    """Create sample MonthlyValuation records for the stock."""
+def screener_monthly_valuation(test_app, screener_basic_info):
+    """Create 12 months of MonthlyValuation records for screener testing."""
     with test_app.app_context():
         from app import db
 
         valuations = []
         current_date = date.today()
 
-        # Create 12 months of valuation data
         for i in range(12):
             month_date = current_date - timedelta(days=30 * i)
             valuation = MonthlyValuation(
-                stock_id=sample_basic_info.id,
+                stock_id=screener_basic_info.id,
                 year=month_date.year,
                 month=str(month_date.month),
                 本益比=Decimal('18.5') + Decimal(str(i * 0.5)),
@@ -127,16 +139,16 @@ def sample_monthly_valuation(test_app, sample_basic_info):
 
 @pytest.fixture
 def complete_stock_data(
-    test_app, sample_basic_info, sample_daily_info,
-    sample_income_sheet, sample_monthly_valuation
+    test_app, screener_basic_info, screener_daily_info,
+    screener_income_sheet, screener_monthly_valuation
 ):
-    """Fixture providing complete stock data setup."""
+    """Fixture providing complete stock data setup for screener testing."""
     with test_app.app_context():
         yield {
-            'basic_info': sample_basic_info,
-            'daily_info': sample_daily_info,
-            'income_sheet': sample_income_sheet,
-            'monthly_valuation': sample_monthly_valuation
+            'basic_info': screener_basic_info,
+            'daily_info': screener_daily_info,
+            'income_sheet': screener_income_sheet,
+            'monthly_valuation': screener_monthly_valuation
         }
 
 
@@ -208,12 +220,12 @@ class TestStockScreenerManager:
             assert result is False
 
     def test_check_stock_valuation_missing_daily_info(
-        self, test_app, sample_basic_info, sample_income_sheet, sample_monthly_valuation
+        self, test_app, screener_basic_info, screener_income_sheet, screener_monthly_valuation
     ):
         """Test check_stock_valuation when daily_information is missing."""
         with test_app.app_context():
             screener = StockScreenerManager("月營收近一年次高")
-            result = screener.check_stock_valuation(sample_basic_info.id)
+            result = screener.check_stock_valuation(screener_basic_info.id)
 
             assert result is False
 

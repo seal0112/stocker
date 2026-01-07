@@ -4,46 +4,17 @@ import json
 from unittest.mock import patch
 
 from app import db
-from app.models import ApiToken, User
-from app.models.role import Role
+from app.models import ApiToken
 
 
 @pytest.fixture
-def test_user(test_app):
-    """Create a test user for API tests."""
-    role = Role.query.filter_by(name='user').first()
-    if not role:
-        role = Role(name='user', description='Regular User', is_default=True)
-        db.session.add(role)
-        db.session.commit()
-
-    user = User(
-        username='api_token_test_user',
-        email='api_token_test@test.com',
-        active=True,
-        authenticate=True
-    )
-    user.set_password('testpassword123')
-    user.roles.append(role)
-    db.session.add(user)
-    db.session.commit()
-
-    yield user
-
-    # Cleanup
-    ApiToken.query.filter_by(user_id=user.id).delete()
-    db.session.delete(user)
-    db.session.commit()
-
-
-@pytest.fixture
-def auth_headers(test_user):
+def auth_headers(regular_user):
     """Create mock JWT auth headers."""
     return {
         'user_identity': {
-            'id': test_user.id,
-            'username': test_user.username,
-            'email': test_user.email,
+            'id': regular_user.id,
+            'username': regular_user.username,
+            'email': regular_user.email,
             'picture': None
         }
     }
@@ -52,7 +23,7 @@ def auth_headers(test_user):
 class TestApiTokenListEndpoint:
     """Tests for GET/POST /api/v1/token."""
 
-    def test_list_tokens_empty(self, client, test_user, auth_headers):
+    def test_list_tokens_empty(self, client, regular_user, auth_headers):
         """Should return empty list when no tokens exist."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -61,7 +32,7 @@ class TestApiTokenListEndpoint:
                 data = json.loads(response.data)
                 assert data == []
 
-    def test_create_token_success(self, client, test_user, auth_headers):
+    def test_create_token_success(self, client, regular_user, auth_headers):
         """Should create a new token successfully."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -77,7 +48,7 @@ class TestApiTokenListEndpoint:
                 assert data['token'].startswith('stk_')
                 assert data['is_active'] is True
 
-    def test_create_token_with_scopes(self, client, test_user, auth_headers):
+    def test_create_token_with_scopes(self, client, regular_user, auth_headers):
         """Should create a token with scopes."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -93,7 +64,7 @@ class TestApiTokenListEndpoint:
                 data = json.loads(response.data)
                 assert data['scopes'] == ['read', 'write']
 
-    def test_create_token_with_expiration(self, client, test_user, auth_headers):
+    def test_create_token_with_expiration(self, client, regular_user, auth_headers):
         """Should create a token with expiration."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -109,7 +80,7 @@ class TestApiTokenListEndpoint:
                 data = json.loads(response.data)
                 assert data['expires_at'] is not None
 
-    def test_create_token_missing_name(self, client, test_user, auth_headers):
+    def test_create_token_missing_name(self, client, regular_user, auth_headers):
         """Should return 400 when name is missing."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -120,7 +91,7 @@ class TestApiTokenListEndpoint:
                 )
                 assert response.status_code == 400
 
-    def test_create_token_exceeds_limit(self, client, test_user, auth_headers):
+    def test_create_token_exceeds_limit(self, client, regular_user, auth_headers):
         """Should return 400 when token limit is exceeded."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -142,7 +113,7 @@ class TestApiTokenListEndpoint:
                 data = json.loads(response.data)
                 assert 'Maximum' in data['error']
 
-    def test_list_tokens_returns_created_tokens(self, client, test_user, auth_headers):
+    def test_list_tokens_returns_created_tokens(self, client, regular_user, auth_headers):
         """Should return all created tokens."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -170,7 +141,7 @@ class TestApiTokenListEndpoint:
 class TestApiTokenDetailEndpoint:
     """Tests for GET/DELETE /api/v1/token/<id>."""
 
-    def test_get_token_success(self, client, test_user, auth_headers):
+    def test_get_token_success(self, client, regular_user, auth_headers):
         """Should return token details."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -190,14 +161,14 @@ class TestApiTokenDetailEndpoint:
                 assert data['id'] == token_id
                 assert data['name'] == 'Detail Token'
 
-    def test_get_token_not_found(self, client, test_user, auth_headers):
+    def test_get_token_not_found(self, client, regular_user, auth_headers):
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
                 response = client.get('/api/v1/token/nonexistent-id')
                 assert response.status_code == 404
 
-    def test_delete_token_success(self, client, test_user, auth_headers):
+    def test_delete_token_success(self, client, regular_user, auth_headers):
         """Should delete (revoke) token successfully."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -219,7 +190,7 @@ class TestApiTokenDetailEndpoint:
                 tokens = json.loads(list_response.data)
                 assert all(t['id'] != token_id for t in tokens)
 
-    def test_delete_token_not_found(self, client, test_user, auth_headers):
+    def test_delete_token_not_found(self, client, regular_user, auth_headers):
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -230,7 +201,7 @@ class TestApiTokenDetailEndpoint:
 class TestApiTokenRegenerateEndpoint:
     """Tests for POST /api/v1/token/<id>/regenerate."""
 
-    def test_regenerate_token_success(self, client, test_user, auth_headers):
+    def test_regenerate_token_success(self, client, regular_user, auth_headers):
         """Should regenerate token with new value."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):
@@ -252,7 +223,7 @@ class TestApiTokenRegenerateEndpoint:
                 assert data['token'] != old_token
                 assert data['token'].startswith('stk_')
 
-    def test_regenerate_token_not_found(self, client, test_user, auth_headers):
+    def test_regenerate_token_not_found(self, client, regular_user, auth_headers):
         """Should return 404 for non-existent token."""
         with patch('flask_jwt_extended.view_decorators.verify_jwt_in_request'):
             with patch('flask_jwt_extended.get_jwt_identity', return_value=auth_headers['user_identity']):

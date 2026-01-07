@@ -9,68 +9,8 @@ from app.models.role import Role
 
 
 @pytest.fixture
-def admin_user_for_api(test_app):
-    """Create an admin user for API tests."""
-    admin_role = Role.query.filter_by(name='admin').first()
-    if not admin_role:
-        admin_role = Role(name='admin', description='Administrator', is_default=False)
-        db.session.add(admin_role)
-        db.session.commit()
-
-    user = User(
-        username='admin_api_test',
-        email='admin_api@test.com',
-        active=True,
-        authenticate=True
-    )
-    user.set_password('testpassword123')
-    user.roles.append(admin_role)
-    db.session.add(user)
-    db.session.commit()
-
-    yield user
-
-    # Cleanup
-    db.session.delete(user)
-    db.session.commit()
-
-
-@pytest.fixture
-def regular_user_for_api(test_app):
-    """Create a regular user for API tests."""
-    user_role = Role.query.filter_by(name='user').first()
-    if not user_role:
-        user_role = Role(name='user', description='Regular User', is_default=True)
-        db.session.add(user_role)
-        db.session.commit()
-
-    user = User(
-        username='regular_api_test',
-        email='regular_api@test.com',
-        active=True,
-        authenticate=True
-    )
-    user.set_password('testpassword123')
-    user.roles.append(user_role)
-    db.session.add(user)
-    db.session.commit()
-
-    yield user
-
-    # Cleanup
-    db.session.delete(user)
-    db.session.commit()
-
-
-@pytest.fixture
-def target_user(test_app):
-    """Create a target user to be managed."""
-    user_role = Role.query.filter_by(name='user').first()
-    if not user_role:
-        user_role = Role(name='user', description='Regular User', is_default=True)
-        db.session.add(user_role)
-        db.session.commit()
-
+def target_user(test_app, user_role):
+    """Create a target user to be managed (separate from other fixtures)."""
     user = User(
         username='target_user',
         email='target@test.com',
@@ -90,53 +30,45 @@ def target_user(test_app):
 
 
 @pytest.fixture
-def admin_auth_headers(admin_user_for_api):
+def admin_auth_headers(admin_user):
     """Create mock JWT auth headers for admin user."""
     return {
         'user_identity': {
-            'id': admin_user_for_api.id,
-            'username': admin_user_for_api.username,
-            'email': admin_user_for_api.email,
+            'id': admin_user.id,
+            'username': admin_user.username,
+            'email': admin_user.email,
             'picture': None
         }
     }
 
 
 @pytest.fixture
-def regular_auth_headers(regular_user_for_api):
+def regular_auth_headers(regular_user):
     """Create mock JWT auth headers for regular user."""
     return {
         'user_identity': {
-            'id': regular_user_for_api.id,
-            'username': regular_user_for_api.username,
-            'email': regular_user_for_api.email,
+            'id': regular_user.id,
+            'username': regular_user.username,
+            'email': regular_user.email,
             'picture': None
         }
     }
 
 
 @pytest.fixture
-def all_roles(test_app):
-    """Ensure all roles exist for testing."""
-    roles = {}
-    for role_name, desc, is_default in [
-        ('admin', 'Administrator', False),
-        ('moderator', 'Moderator', False),
-        ('user', 'Regular User', True)
-    ]:
-        role = Role.query.filter_by(name=role_name).first()
-        if not role:
-            role = Role(name=role_name, description=desc, is_default=is_default)
-            db.session.add(role)
-            db.session.commit()
-        roles[role_name] = role
-    return roles
+def all_roles(test_app, admin_role, moderator_role, user_role):
+    """Provide all roles for testing (using shared fixtures)."""
+    return {
+        'admin': admin_role,
+        'moderator': moderator_role,
+        'user': user_role
+    }
 
 
 class TestUserListEndpoint:
     """Tests for GET /api/v1/users."""
 
-    def test_list_users_as_admin(self, client, admin_user_for_api, admin_auth_headers):
+    def test_list_users_as_admin(self, client, admin_user, admin_auth_headers):
         """Admin should be able to list all users."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -147,7 +79,7 @@ class TestUserListEndpoint:
                 assert 'total' in data
                 assert isinstance(data['data'], list)
 
-    def test_list_users_with_trailing_slash(self, client, admin_user_for_api, admin_auth_headers):
+    def test_list_users_with_trailing_slash(self, client, admin_user, admin_auth_headers):
         """Should work with trailing slash (strict_slashes=False)."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -156,7 +88,7 @@ class TestUserListEndpoint:
                 data = json.loads(response.data)
                 assert 'data' in data
 
-    def test_list_users_with_pagination(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_list_users_with_pagination(self, client, admin_user, admin_auth_headers, target_user):
         """Should return paginated results when page and per_page are provided."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -171,7 +103,7 @@ class TestUserListEndpoint:
                 assert data['page'] == 1
                 assert data['per_page'] == 10
 
-    def test_list_users_with_trailing_slash_and_pagination(self, client, admin_user_for_api, admin_auth_headers):
+    def test_list_users_with_trailing_slash_and_pagination(self, client, admin_user, admin_auth_headers):
         """Should work with trailing slash and query params."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -181,7 +113,7 @@ class TestUserListEndpoint:
                 assert 'data' in data
                 assert data['page'] == 1
 
-    def test_list_users_invalid_per_page_defaults_to_10(self, client, admin_user_for_api, admin_auth_headers):
+    def test_list_users_invalid_per_page_defaults_to_10(self, client, admin_user, admin_auth_headers):
         """Invalid per_page value should default to 10."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -190,7 +122,7 @@ class TestUserListEndpoint:
                 data = json.loads(response.data)
                 assert data['per_page'] == 10  # Should default to 10
 
-    def test_list_users_valid_per_page_values(self, client, admin_user_for_api, admin_auth_headers):
+    def test_list_users_valid_per_page_values(self, client, admin_user, admin_auth_headers):
         """Should accept valid per_page values: 10, 30, 50, 100."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -200,7 +132,7 @@ class TestUserListEndpoint:
                     data = json.loads(response.data)
                     assert data['per_page'] == per_page
 
-    def test_list_users_without_pagination_returns_all(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_list_users_without_pagination_returns_all(self, client, admin_user, admin_auth_headers, target_user):
         """Without pagination params, should return all users without pagination info."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -213,7 +145,7 @@ class TestUserListEndpoint:
                 assert 'page' not in data
                 assert 'per_page' not in data
 
-    def test_list_users_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers):
+    def test_list_users_as_regular_user_forbidden(self, client, regular_user, regular_auth_headers):
         """Regular user should get 403 when trying to list users."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
@@ -222,7 +154,7 @@ class TestUserListEndpoint:
                 data = json.loads(response.data)
                 assert 'error' in data
 
-    def test_list_users_includes_roles(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_list_users_includes_roles(self, client, admin_user, admin_auth_headers, target_user):
         """Listed users should include their roles."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -243,7 +175,7 @@ class TestUserListEndpoint:
 class TestUserDetailEndpoint:
     """Tests for GET /api/v1/users/<user_id>."""
 
-    def test_get_user_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_get_user_as_admin(self, client, admin_user, admin_auth_headers, target_user):
         """Admin should be able to get user details."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -254,14 +186,14 @@ class TestUserDetailEndpoint:
                 assert data['email'] == 'target@test.com'
                 assert 'roles' in data
 
-    def test_get_user_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers, target_user):
+    def test_get_user_as_regular_user_forbidden(self, client, regular_user, regular_auth_headers, target_user):
         """Regular user should get 403 when trying to get user details."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
                 response = client.get(f'/api/v1/users/{target_user.id}')
                 assert response.status_code == 403
 
-    def test_get_user_not_found(self, client, admin_user_for_api, admin_auth_headers):
+    def test_get_user_not_found(self, client, admin_user, admin_auth_headers):
         """Should return 404 for non-existent user."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -274,7 +206,7 @@ class TestUserDetailEndpoint:
 class TestUserRolesEndpoint:
     """Tests for PATCH /api/v1/users/<user_id>/roles."""
 
-    def test_update_roles_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user, all_roles):
+    def test_update_roles_as_admin(self, client, admin_user, admin_auth_headers, target_user, all_roles):
         """Admin should be able to update user roles."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -289,7 +221,7 @@ class TestUserRolesEndpoint:
                     assert 'moderator' in data['roles']
                     assert 'user' in data['roles']
 
-    def test_update_roles_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers, target_user):
+    def test_update_roles_as_regular_user_forbidden(self, client, regular_user, regular_auth_headers, target_user):
         """Regular user should get 403 when trying to update roles."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
@@ -300,7 +232,7 @@ class TestUserRolesEndpoint:
                 )
                 assert response.status_code == 403
 
-    def test_update_roles_user_not_found(self, client, admin_user_for_api, admin_auth_headers, all_roles):
+    def test_update_roles_user_not_found(self, client, admin_user, admin_auth_headers, all_roles):
         """Should return 404 for non-existent user."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -312,7 +244,7 @@ class TestUserRolesEndpoint:
                     )
                     assert response.status_code == 404
 
-    def test_update_roles_invalid_role(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_update_roles_invalid_role(self, client, admin_user, admin_auth_headers, target_user):
         """Should return 400 for invalid role name."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -326,7 +258,7 @@ class TestUserRolesEndpoint:
                     data = json.loads(response.data)
                     assert 'error' in data
 
-    def test_update_roles_missing_body(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_update_roles_missing_body(self, client, admin_user, admin_auth_headers, target_user):
         """Should return 400 when request body is missing."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -338,7 +270,7 @@ class TestUserRolesEndpoint:
                     )
                     assert response.status_code == 400
 
-    def test_update_roles_adds_user_role_automatically(self, client, admin_user_for_api, admin_auth_headers, target_user, all_roles):
+    def test_update_roles_adds_user_role_automatically(self, client, admin_user, admin_auth_headers, target_user, all_roles):
         """User role should be added automatically even if not specified."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -357,7 +289,7 @@ class TestUserRolesEndpoint:
 class TestRoleListEndpoint:
     """Tests for GET /api/v1/roles."""
 
-    def test_list_roles_as_admin(self, client, admin_user_for_api, admin_auth_headers, all_roles):
+    def test_list_roles_as_admin(self, client, admin_user, admin_auth_headers, all_roles):
         """Admin should be able to list all roles."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -372,14 +304,14 @@ class TestRoleListEndpoint:
                 assert 'moderator' in role_names
                 assert 'user' in role_names
 
-    def test_list_roles_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers):
+    def test_list_roles_as_regular_user_forbidden(self, client, regular_user, regular_auth_headers):
         """Regular user should get 403 when trying to list roles."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
                 response = client.get('/api/v1/roles')
                 assert response.status_code == 403
 
-    def test_list_roles_includes_description(self, client, admin_user_for_api, admin_auth_headers, all_roles):
+    def test_list_roles_includes_description(self, client, admin_user, admin_auth_headers, all_roles):
         """Listed roles should include description."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -396,7 +328,7 @@ class TestRoleListEndpoint:
 class TestUserStatusEndpoint:
     """Tests for PATCH /api/v1/users/<user_id>/status."""
 
-    def test_deactivate_user_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_deactivate_user_as_admin(self, client, admin_user, admin_auth_headers, target_user):
         """Admin should be able to deactivate a user."""
         assert target_user.active is True
 
@@ -411,7 +343,7 @@ class TestUserStatusEndpoint:
                 data = json.loads(response.data)
                 assert data['active'] is False
 
-    def test_activate_user_as_admin(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_activate_user_as_admin(self, client, admin_user, admin_auth_headers, target_user):
         """Admin should be able to activate a user."""
         # First deactivate the user
         target_user.active = False
@@ -428,7 +360,7 @@ class TestUserStatusEndpoint:
                 data = json.loads(response.data)
                 assert data['active'] is True
 
-    def test_update_status_as_regular_user_forbidden(self, client, regular_user_for_api, regular_auth_headers, target_user):
+    def test_update_status_as_regular_user_forbidden(self, client, regular_user, regular_auth_headers, target_user):
         """Regular user should get 403 when trying to update status."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=regular_auth_headers['user_identity']):
@@ -439,7 +371,7 @@ class TestUserStatusEndpoint:
                 )
                 assert response.status_code == 403
 
-    def test_update_status_user_not_found(self, client, admin_user_for_api, admin_auth_headers):
+    def test_update_status_user_not_found(self, client, admin_user, admin_auth_headers):
         """Should return 404 for non-existent user."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -450,7 +382,7 @@ class TestUserStatusEndpoint:
                 )
                 assert response.status_code == 404
 
-    def test_update_status_missing_body(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_update_status_missing_body(self, client, admin_user, admin_auth_headers, target_user):
         """Should return 400 when request body is missing."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
@@ -461,7 +393,7 @@ class TestUserStatusEndpoint:
                 )
                 assert response.status_code == 400
 
-    def test_update_status_invalid_value(self, client, admin_user_for_api, admin_auth_headers, target_user):
+    def test_update_status_invalid_value(self, client, admin_user, admin_auth_headers, target_user):
         """Should return 400 when active value is not boolean."""
         with patch('app.decorators.auth.verify_jwt_in_request'):
             with patch('app.decorators.auth.get_jwt_identity', return_value=admin_auth_headers['user_identity']):
