@@ -10,3 +10,9 @@ pidfile = '/tmp/gunicorn_stocker.pid'
 graceful_timeout = 30
 
 workers = 2
+
+# Logging
+accesslog = 'log/gunicorn_access.log'
+errorlog = 'log/gunicorn_error.log'
+loglevel = 'info'
+capture_output = True

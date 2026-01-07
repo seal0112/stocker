@@ -30,9 +30,14 @@ def setup_logging(log_dir='log', log_filename='app.log'):
     handler.setFormatter(formatter)
     handler.addFilter(RequestIDLogFilter())
 
-    logger = logging.getLogger('sqlalchemy.engine')
-    logger.setLevel(logging.WARNING)  # Only log warnings and errors, not SQL queries
-    logger.addHandler(handler)
+    # 設定 root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(handler)
+
+    # SQLAlchemy 只記錄 warning 以上
+    sqlalchemy_logger = logging.getLogger('sqlalchemy.engine')
+    sqlalchemy_logger.setLevel(logging.WARNING)
 
 class GZipTimedRotatingFileHandler(TimedRotatingFileHandler):
     def rotate(self, source, dest):
