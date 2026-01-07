@@ -280,6 +280,58 @@ def get(self):
 
 ---
 
+## Phase 5: AI 功能 (New Feature)
+
+### 5.1 法說會新聞 AI 摘要
+
+> 當有法說會時，自動擷取相關新聞並透過 AI 摘要重點，儲存至資料庫。
+
+#### 5.1.1 資料模型設計
+- [ ] 建立 `EarningsCallSummary` model
+  - `earnings_call_id` (FK to earnings_call)
+  - `stock_id` (FK to basic_information)
+  - `created_at` (建立時間)
+  - `company_outlook` (公司前景摘要)
+  - `capex_plan` (資本支出計畫)
+  - `investment_focus` (投資重點：本業/其他)
+  - `investment_focus_detail` (投資重點詳細說明)
+  - `key_points` (JSON - 其他重點)
+  - `source_feed_ids` (JSON - 來源新聞 ID 列表)
+  - `raw_ai_response` (原始 AI 回應，供除錯用)
+  - `processing_status` (pending/processing/completed/failed)
+
+#### 5.1.2 新聞比對服務
+- [ ] 建立 `EarningsCallNewsService`
+  - 根據 stock_id 和 meeting_date 查詢相關新聞
+  - 時間範圍：法說會前 N 天到當天
+  - 過濾條件：feedType = 'news' 或包含 'announcement'
+
+#### 5.1.3 AI 整合
+- [ ] 選擇 LLM provider (OpenAI / Anthropic / 其他)
+- [ ] 建立 `AIService` 或 `LLMService`
+- [ ] 設計結構化 prompt (輸出 JSON 格式)
+- [ ] 處理 token 限制和長文本切割
+- [ ] 錯誤處理和重試機制
+
+#### 5.1.4 觸發機制
+- [ ] 批次排程：每日檢查當日法說會
+- [ ] API endpoint：手動觸發摘要生成
+  - `POST /api/v1/earnings_call/<id>/summarize`
+- [ ] 事件驅動：爬蟲抓到法說會時觸發 (optional)
+
+#### 5.1.5 API Endpoints
+- [ ] `GET /api/v1/earnings_call/<id>/summary` - 取得法說會摘要
+- [ ] `POST /api/v1/earnings_call/<id>/summarize` - 觸發 AI 摘要
+- [ ] `GET /api/v1/earnings_call/summaries` - 列出所有摘要 (分頁)
+
+#### 5.1.6 測試
+- [ ] Unit tests for EarningsCallSummary model
+- [ ] Unit tests for EarningsCallNewsService
+- [ ] Integration tests for AI summarization
+- [ ] API endpoint tests
+
+---
+
 ## 進度統計
 
 | Phase | 總項目 | 已完成 | 完成率 |
@@ -288,7 +340,8 @@ def get(self):
 | Phase 2: 一致性 | 18 | 16 | 89% |
 | Phase 3: 品質 | 10 | 7 | 70% |
 | Phase 4: 功能 | 14 | 0 | 0% |
-| **總計** | **67** | **25** | **37%** |
+| Phase 5: AI 功能 | 16 | 0 | 0% |
+| **總計** | **83** | **25** | **30%** |
 
 ---
 
@@ -296,6 +349,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-07 | 新增 Phase 5: AI 功能 - 法說會新聞 AI 摘要 (16項) | Claude |
 | 2026-01-01 | 完成 1.2 CSRF 保護 (2項) | Claude |
 | 2024-12-09 | 完成 3.3 統一使用 Marshmallow Serializer (4項) | Claude |
 | 2024-12-09 | 完成 2.1 統一回應格式 (5項) | Claude |
