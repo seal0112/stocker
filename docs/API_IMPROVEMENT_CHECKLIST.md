@@ -286,6 +286,12 @@ def get(self):
 
 > 當有法說會時，自動擷取相關新聞並透過 AI 摘要重點，儲存至資料庫。
 
+> ⚠️ **技術決策**：此功能使用 **Pydantic** 取代 Marshmallow，原因：
+> - LLM Structured Output 原生支援 Pydantic schema
+> - LangChain/LlamaIndex 內建 Pydantic 整合
+> - 自動生成 JSON Schema 可直接餵給 LLM
+> - 驗證可行後，可考慮全專案遷移至 Pydantic
+
 #### 5.1.1 資料模型設計
 - [ ] 建立 `EarningsCallSummary` model
   - `earnings_call_id` (FK to earnings_call)
