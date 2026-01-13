@@ -7,11 +7,22 @@ def cleanup_stock_references(db, stock_id):
     """Clean up all records that reference a stock before deleting it."""
     from app.models.feed import Feed
     from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
+    from app.models.recommended_stock import RecommendedStock
+    from app.database_setup import (
+        DailyInformation, BalanceSheet, IncomeSheet, MonthRevenue,
+        MonthlyValuation, FollowStock
+    )
 
-    # Delete AnnouncementIncomeSheetAnalysis first (depends on Feed)
+    # Delete in reverse dependency order
     AnnouncementIncomeSheetAnalysis.query.filter_by(stock_id=stock_id).delete()
-    # Delete Feeds
     Feed.query.filter_by(stock_id=stock_id).delete()
+    RecommendedStock.query.filter_by(stock_id=stock_id).delete()
+    DailyInformation.query.filter_by(stock_id=stock_id).delete()
+    BalanceSheet.query.filter_by(stock_id=stock_id).delete()
+    IncomeSheet.query.filter_by(stock_id=stock_id).delete()
+    MonthRevenue.query.filter_by(stock_id=stock_id).delete()
+    MonthlyValuation.query.filter_by(stock_id=stock_id).delete()
+    FollowStock.query.filter_by(stock_id=stock_id).delete()
     db.session.commit()
 
 
