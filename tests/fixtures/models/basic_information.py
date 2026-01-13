@@ -4,25 +4,26 @@ from app.database_setup import BasicInformation
 
 
 def cleanup_stock_references(db, stock_id):
-    """Clean up all records that reference a stock before deleting it."""
+    """Clean up all records that reference a stock before deleting it.
+
+    Note: DailyInformation, BalanceSheet, IncomeSheet, MonthRevenue, and
+    StockSearchCounts are handled by cascade delete in BasicInformation.
+    This function only needs to clean up models from external modules.
+    """
     from app.models.feed import Feed
     from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
     from app.models.recommended_stock import RecommendedStock
-    from app.database_setup import (
-        DailyInformation, BalanceSheet, IncomeSheet, MonthRevenue,
-        MonthlyValuation, FollowStock
-    )
+    from app.monthly_valuation.models import MonthlyValuation
+    from app.follow_stock.models import Follow_Stock
+    from app.earnings_call.models import EarningsCall
 
-    # Delete in reverse dependency order
+    # Delete records from external models (not covered by cascade)
     AnnouncementIncomeSheetAnalysis.query.filter_by(stock_id=stock_id).delete()
     Feed.query.filter_by(stock_id=stock_id).delete()
     RecommendedStock.query.filter_by(stock_id=stock_id).delete()
-    DailyInformation.query.filter_by(stock_id=stock_id).delete()
-    BalanceSheet.query.filter_by(stock_id=stock_id).delete()
-    IncomeSheet.query.filter_by(stock_id=stock_id).delete()
-    MonthRevenue.query.filter_by(stock_id=stock_id).delete()
     MonthlyValuation.query.filter_by(stock_id=stock_id).delete()
-    FollowStock.query.filter_by(stock_id=stock_id).delete()
+    Follow_Stock.query.filter_by(stock_id=stock_id).delete()
+    EarningsCall.query.filter_by(stock_id=stock_id).delete()
     db.session.commit()
 
 

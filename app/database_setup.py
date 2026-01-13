@@ -37,6 +37,26 @@ class BasicInformation(db.Model):
         uselist=False,
         cascade='all, delete-orphan'
     )
+    balance_sheets = db.relationship(
+        'BalanceSheet',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    income_sheets = db.relationship(
+        'IncomeSheet',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    month_revenues = db.relationship(
+        'MonthRevenue',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    stock_search_counts = db.relationship(
+        'StockSearchCounts',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
     公司名稱 = db.Column(db.Text, nullable=False)
     公司簡稱 = db.Column(db.String(10), index=True)
     產業類別 = db.Column(db.String(10))
@@ -347,7 +367,6 @@ class MonthRevenue(db.Model):
     去年累計營收 = db.Column(db.BigInteger)
     前期比較增減 = db.Column(db.Float)
     備註 = db.Column(db.Text)
-    basic_information = db.relationship(BasicInformation)
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property
