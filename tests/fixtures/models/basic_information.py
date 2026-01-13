@@ -3,6 +3,18 @@ import pytest
 from app.database_setup import BasicInformation
 
 
+def cleanup_stock_references(db, stock_id):
+    """Clean up all records that reference a stock before deleting it."""
+    from app.models.feed import Feed
+    from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
+
+    # Delete AnnouncementIncomeSheetAnalysis first (depends on Feed)
+    AnnouncementIncomeSheetAnalysis.query.filter_by(stock_id=stock_id).delete()
+    # Delete Feeds
+    Feed.query.filter_by(stock_id=stock_id).delete()
+    db.session.commit()
+
+
 @pytest.fixture
 def sample_basic_info(test_app):
     """Create a sample BasicInformation record for testing (TSMC 2330)."""
@@ -20,7 +32,8 @@ def sample_basic_info(test_app):
 
         yield stock
 
-        # Cleanup
+        # Cleanup - delete related records first to avoid FK constraint
+        cleanup_stock_references(db, stock.id)
         db.session.delete(stock)
         db.session.commit()
 
@@ -42,7 +55,8 @@ def sample_basic_info_2(test_app):
 
         yield stock
 
-        # Cleanup
+        # Cleanup - delete related records first to avoid FK constraint
+        cleanup_stock_references(db, stock.id)
         db.session.delete(stock)
         db.session.commit()
 
@@ -64,7 +78,8 @@ def sample_basic_info_list(test_app):
 
         yield stocks
 
-        # Cleanup
+        # Cleanup - delete related records first to avoid FK constraint
         for stock in stocks:
+            cleanup_stock_references(db, stock.id)
             db.session.delete(stock)
         db.session.commit()
