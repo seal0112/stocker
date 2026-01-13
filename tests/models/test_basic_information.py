@@ -79,3 +79,100 @@ class TestBasicInformation:
         """Test __setitem__ method."""
         basic_information_instance["公司名稱"] = "新測試公司"
         assert basic_information_instance.公司名稱 == "新測試公司"
+
+    def test_default_update_date(self, test_app):
+        """Test default value for update_date when saved to database."""
+        from app import db
+
+        basic_info = BasicInformation(
+            id="999998",
+            公司名稱="測試預設日期",
+            公司簡稱="測試"
+        )
+        db.session.add(basic_info)
+        db.session.commit()
+
+        # Refresh to get the default value from database
+        db.session.refresh(basic_info)
+        # Compare date objects (database returns date, get_current_date returns string)
+        assert basic_info.update_date == date.today()
+
+        # Cleanup
+        db.session.delete(basic_info)
+        db.session.commit()
+
+    def test_exchange_type_valid_values(self):
+        """Test exchange_type accepts valid enum values."""
+        valid_types = ['sii', 'otc', 'rotc', 'pub', 'delist']
+        for exchange_type in valid_types:
+            basic_info = BasicInformation(
+                id="999999",
+                公司名稱="測試",
+                exchange_type=exchange_type
+            )
+            assert basic_info.exchange_type == exchange_type
+
+
+class TestBasicInformationDatabase:
+    """Tests that require database interaction."""
+
+    def test_save_and_retrieve(self, test_app, sample_basic_info):
+        """Test saving and retrieving BasicInformation from database."""
+        from app import db
+        from app.database_setup import BasicInformation
+
+        retrieved = db.session.query(BasicInformation).filter_by(
+            id=sample_basic_info.id
+        ).one_or_none()
+
+        assert retrieved is not None
+        assert retrieved.id == sample_basic_info.id
+        assert retrieved.公司名稱 == sample_basic_info.公司名稱
+
+    def test_relationship_with_daily_information(self, test_app, sample_basic_info, sample_daily_info):
+        """Test relationship between BasicInformation and DailyInformation."""
+        from app import db
+        from app.database_setup import BasicInformation
+
+        # Query fresh instance to get relationship
+        stock = db.session.query(BasicInformation).filter_by(
+            id=sample_basic_info.id
+        ).one_or_none()
+
+        assert stock is not None
+        assert stock.daily_information is not None
+        assert stock.daily_information.stock_id == sample_basic_info.id
+
+    def test_cascade_delete(self, test_app):
+        """Test cascade delete removes related DailyInformation."""
+        from app import db
+        from app.database_setup import BasicInformation, DailyInformation
+        from datetime import date
+
+        # Create stock with daily info
+        stock = BasicInformation(
+            id='9999',
+            公司名稱='測試刪除',
+            公司簡稱='測試',
+            exchange_type='sii'
+        )
+        db.session.add(stock)
+        db.session.commit()
+
+        daily_info = DailyInformation(
+            stock_id='9999',
+            update_date=date.today(),
+            本日收盤價=100.0
+        )
+        db.session.add(daily_info)
+        db.session.commit()
+
+        # Verify daily info exists
+        assert db.session.query(DailyInformation).filter_by(stock_id='9999').one_or_none() is not None
+
+        # Delete stock
+        db.session.delete(stock)
+        db.session.commit()
+
+        # Verify daily info is also deleted
+        assert db.session.query(DailyInformation).filter_by(stock_id='9999').one_or_none() is None
