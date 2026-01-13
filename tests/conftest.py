@@ -91,7 +91,17 @@ pytest_plugins = [
     'tests.fixtures.models.user',
     'tests.fixtures.models.permission',
     # Stock-related models
-    'tests.fixtures.models.stock',
+    'tests.fixtures.models.daily_information',
+    'tests.fixtures.models.balance_sheet',
+    'tests.fixtures.models.income_sheet',
+    'tests.fixtures.models.cash_flow',
+    'tests.fixtures.models.month_revenue',
+    'tests.fixtures.models.monthly_valuation',
+    'tests.fixtures.models.stock_commodity',
+    'tests.fixtures.models.data_update_date',
+    'tests.fixtures.models.stock_search_counts',
+    'tests.fixtures.models.earnings_call',
+    'tests.fixtures.models.recommended_stock',
     # Feed-related models
     'tests.fixtures.models.feed',
     'tests.fixtures.models.feed_tag',
