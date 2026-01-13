@@ -86,6 +86,8 @@ def db_session(app):
 # ============================================================================
 
 pytest_plugins = [
+    # Auth fixtures
+    'tests.fixtures.auth',
     # Base models
     'tests.fixtures.models.basic_information',
     'tests.fixtures.models.user',

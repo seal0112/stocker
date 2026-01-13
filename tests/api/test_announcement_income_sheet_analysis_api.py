@@ -10,7 +10,7 @@ from app.models.feed import Feed
 class TestAnnouncementIncomeSheetAnalysisAPI:
     """Test suite for AnnouncementIncomeSheetAnalysis API endpoints."""
 
-    def test_get_list_empty(self, test_app, client):
+    def test_get_list_empty(self, test_app, authenticated_client):
         """Test getting list when no data exists."""
         with test_app.app_context():
             from app import db
@@ -19,7 +19,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             AnnouncementIncomeSheetAnalysis.query.delete()
             db.session.commit()
 
-            response = client.get('/api/v0/announcement_income_sheet_analysis')
+            response = authenticated_client.get('/api/v0/announcement_income_sheet_analysis')
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -27,11 +27,11 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert len(data) == 0
 
     def test_get_list_with_data(
-        self, test_app, client, sample_announcement_income_sheet_analysis
+        self, test_app, authenticated_client, sample_announcement_income_sheet_analysis
     ):
         """Test getting list with data."""
         with test_app.app_context():
-            response = client.get('/api/v0/announcement_income_sheet_analysis')
+            response = authenticated_client.get('/api/v0/announcement_income_sheet_analysis')
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -48,7 +48,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert '營業收入合計' in first_item
             assert '基本每股盈餘' in first_item
 
-    def test_get_list_filter_by_date(self, test_app, client, sample_feed):
+    def test_get_list_filter_by_date(self, test_app, authenticated_client, sample_feed):
         """Test filtering by specific date."""
         with test_app.app_context():
             from app import db
@@ -69,7 +69,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Test with date filter
-            response = client.get(
+            response = authenticated_client.get(
                 f'/api/v0/announcement_income_sheet_analysis?date=2024-05-20'
             )
 
@@ -83,7 +83,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.delete(analysis)
             db.session.commit()
 
-    def test_get_list_filter_by_date_range(self, test_app, client, sample_feed):
+    def test_get_list_filter_by_date_range(self, test_app, authenticated_client, sample_feed):
         """Test filtering by date range."""
         with test_app.app_context():
             from app import db
@@ -140,7 +140,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Test with date range
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?start_date=2024-03-10&end_date=2024-03-25'
             )
 
@@ -162,7 +162,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.delete(feed3)
             db.session.commit()
 
-    def test_get_list_filter_by_start_date_only(self, test_app, client, sample_feed):
+    def test_get_list_filter_by_start_date_only(self, test_app, authenticated_client, sample_feed):
         """Test filtering by start_date only."""
         with test_app.app_context():
             from app import db
@@ -202,7 +202,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Test with start_date only
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?start_date=2024-06-10'
             )
 
@@ -221,7 +221,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.delete(feed2)
             db.session.commit()
 
-    def test_get_list_filter_by_end_date_only(self, test_app, client, sample_feed):
+    def test_get_list_filter_by_end_date_only(self, test_app, authenticated_client, sample_feed):
         """Test filtering by end_date only."""
         with test_app.app_context():
             from app import db
@@ -261,7 +261,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Test with end_date only
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?end_date=2024-07-10'
             )
 
@@ -280,11 +280,11 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.delete(feed2)
             db.session.commit()
 
-    def test_invalid_date_format(self, test_app, client):
+    def test_invalid_date_format(self, test_app, authenticated_client):
         """Test error handling for invalid date format."""
         with test_app.app_context():
             # Test invalid date format
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?date=2024/05/20'
             )
 
@@ -293,10 +293,10 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert 'error' in data
             assert 'Invalid date format' in data['error']
 
-    def test_invalid_start_date_format(self, test_app, client):
+    def test_invalid_start_date_format(self, test_app, authenticated_client):
         """Test error handling for invalid start_date format."""
         with test_app.app_context():
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?start_date=invalid-date'
             )
 
@@ -305,10 +305,10 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert 'error' in data
             assert 'start_date' in data['error']
 
-    def test_invalid_end_date_format(self, test_app, client):
+    def test_invalid_end_date_format(self, test_app, authenticated_client):
         """Test error handling for invalid end_date format."""
         with test_app.app_context():
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/announcement_income_sheet_analysis?end_date=20240520'
             )
 
@@ -317,7 +317,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert 'error' in data
             assert 'end_date' in data['error']
 
-    def test_ordering_by_date_desc(self, test_app, client, sample_feed):
+    def test_ordering_by_date_desc(self, test_app, authenticated_client, sample_feed):
         """Test that results are ordered by update_date descending."""
         with test_app.app_context():
             from app import db
@@ -359,7 +359,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Get list
-            response = client.get('/api/v0/announcement_income_sheet_analysis')
+            response = authenticated_client.get('/api/v0/announcement_income_sheet_analysis')
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -380,7 +380,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
     def test_get_list_with_multiple_stocks(
-        self, test_app, client, sample_basic_info, sample_basic_info_2
+        self, test_app, authenticated_client, sample_basic_info, sample_basic_info_2
     ):
         """Test getting list with multiple stocks."""
         with test_app.app_context():
@@ -421,7 +421,7 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             db.session.commit()
 
             # Get list
-            response = client.get('/api/v0/announcement_income_sheet_analysis')
+            response = authenticated_client.get('/api/v0/announcement_income_sheet_analysis')
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -451,11 +451,11 @@ class TestAnnouncementIncomeSheetAnalysisAPI:
             assert response.status_code == 401
 
     def test_serializer_field_types(
-        self, test_app, client, sample_announcement_income_sheet_analysis
+        self, test_app, authenticated_client, sample_announcement_income_sheet_analysis
     ):
         """Test that serializer returns correct field types."""
         with test_app.app_context():
-            response = client.get('/api/v0/announcement_income_sheet_analysis')
+            response = authenticated_client.get('/api/v0/announcement_income_sheet_analysis')
 
             assert response.status_code == 200
             data = json.loads(response.data)
