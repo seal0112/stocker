@@ -3,6 +3,7 @@ import pytest
 from app import db
 from app.models.user import User
 from app.models.role import Role
+from app.models.api_token import ApiToken
 
 
 @pytest.fixture(scope='module')
@@ -90,7 +91,8 @@ def moderator_user(test_app, moderator_role):
 
     yield user
 
-    # Cleanup
+    # Cleanup - delete associated tokens first to avoid FK constraint
+    ApiToken.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
 
