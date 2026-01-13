@@ -338,6 +338,61 @@ def get(self):
 
 ---
 
+## Phase 6: Observability & Monitoring (New Feature)
+
+> 建立完整的可觀測性架構，包含 metrics、logs、tracing。
+
+### 6.1 Prometheus Metrics
+
+- [ ] 安裝 `prometheus-flask-exporter`
+- [ ] 設定 `/metrics` endpoint
+- [ ] 加入基本 metrics:
+  - Request count by endpoint, method, status
+  - Request latency histogram
+  - Active requests gauge
+- [ ] 自訂業務 metrics:
+  - Stock API 查詢次數
+  - Feed 新增數量
+  - AI 摘要生成次數/時間
+
+### 6.2 Loki Log Aggregation
+
+- [ ] 設定 structured logging (JSON format)
+- [ ] 加入 request_id 追蹤
+- [ ] 設定 Loki driver 或 Promtail
+- [ ] 定義 log labels (app, env, service)
+- [ ] 將 logs 從 container 外拉至 Loki
+
+### 6.3 Grafana Dashboards
+
+- [ ] 建立 API Overview dashboard
+  - Request rate
+  - Error rate
+  - Latency percentiles (p50, p95, p99)
+- [ ] 建立 Business Metrics dashboard
+  - 每日活躍股票查詢
+  - Feed 新增趨勢
+  - AI 功能使用統計
+- [ ] 建立 Logs dashboard (Loki datasource)
+  - Error log 查詢面板
+  - Request trace 面板
+
+### 6.4 Alerting
+
+- [ ] 設定 Grafana alerting rules
+- [ ] Error rate > threshold
+- [ ] Latency p99 > threshold
+- [ ] Service down alert
+
+### 6.5 Infrastructure
+
+- [ ] docker-compose 加入 Prometheus, Loki, Grafana
+- [ ] 設定 Prometheus scrape config
+- [ ] 設定 Loki retention policy
+- [ ] 設定 Grafana provisioning (datasources, dashboards)
+
+---
+
 ## 進度統計
 
 | Phase | 總項目 | 已完成 | 完成率 |
@@ -347,7 +402,8 @@ def get(self):
 | Phase 3: 品質 | 10 | 7 | 70% |
 | Phase 4: 功能 | 14 | 0 | 0% |
 | Phase 5: AI 功能 | 16 | 0 | 0% |
-| **總計** | **83** | **25** | **30%** |
+| Phase 6: Observability | 17 | 0 | 0% |
+| **總計** | **100** | **25** | **25%** |
 
 ---
 
@@ -355,6 +411,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-14 | 新增 Phase 6: Observability & Monitoring - Prometheus, Loki, Grafana (17項) | Claude |
 | 2026-01-07 | 新增 Phase 5: AI 功能 - 法說會新聞 AI 摘要 (16項) | Claude |
 | 2026-01-01 | 完成 1.2 CSRF 保護 (2項) | Claude |
 | 2024-12-09 | 完成 3.3 統一使用 Marshmallow Serializer (4項) | Claude |
