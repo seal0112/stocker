@@ -24,7 +24,7 @@ class UserService():
             return None
 
     def get_user(self, user_id):
-        user = db.session.query(User).filter_by(id=user_id).one()
+        user = db.session.query(User).filter_by(id=user_id).one_or_none()
         return user
 
     def create_user(self, personal_data, external_type):
