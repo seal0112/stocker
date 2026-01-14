@@ -1,47 +1,23 @@
-"""BasicInformation model fixtures for testing."""
+"""BasicInformation model fixtures for testing.
+
+Architecture:
+- All fixtures depend on `app_context` for unified context management
+- Each fixture ONLY cleans up what it creates
+- Child fixtures (month_revenue, income_sheet, etc.) clean up before this fixture
+- Pytest handles teardown in reverse dependency order automatically
+"""
 import pytest
+from app import db
 from app.database_setup import BasicInformation
-
-
-def cleanup_stock_references(db, stock_id):
-    """Clean up all records that reference a stock before deleting it."""
-    from app.models.feed import Feed
-    from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
-    from app.models.recommended_stock import RecommendedStock
-    from app.monthly_valuation.models import MonthlyValuation
-    from app.follow_stock.models import Follow_Stock
-    from app.earnings_call.models import EarningsCall
-    from app.database_setup import (
-        IncomeSheet, BalanceSheet, DailyInformation,
-        MonthRevenue, StockSearchCounts, CashFlow
-    )
-
-    # Delete records from all related models
-    AnnouncementIncomeSheetAnalysis.query.filter_by(stock_id=stock_id).delete()
-    Feed.query.filter_by(stock_id=stock_id).delete()
-    RecommendedStock.query.filter_by(stock_id=stock_id).delete()
-    MonthlyValuation.query.filter_by(stock_id=stock_id).delete()
-    Follow_Stock.query.filter_by(stock_id=stock_id).delete()
-    EarningsCall.query.filter_by(stock_id=stock_id).delete()
-    # Also explicitly delete records that should be cascade-deleted
-    # (in case cascade isn't configured at DB level)
-    IncomeSheet.query.filter_by(stock_id=stock_id).delete()
-    BalanceSheet.query.filter_by(stock_id=stock_id).delete()
-    DailyInformation.query.filter_by(stock_id=stock_id).delete()
-    MonthRevenue.query.filter_by(stock_id=stock_id).delete()
-    StockSearchCounts.query.filter_by(stock_id=stock_id).delete()
-    CashFlow.query.filter_by(stock_id=stock_id).delete()
-    db.session.commit()
 
 
 @pytest.fixture
 def sample_basic_info(app_context):
     """Create a sample BasicInformation record for testing (TSMC 2330).
 
-    Note: Depends on app_context fixture for unified context management.
+    Depends on: app_context
+    Used by: sample_month_revenue, sample_income_sheet, sample_feed, etc.
     """
-    from app import db
-
     # Check if stock already exists (from previous failed test)
     stock = BasicInformation.query.filter_by(id='2330').first()
     created = False
@@ -58,8 +34,8 @@ def sample_basic_info(app_context):
 
     yield stock
 
-    # Cleanup - delete related records first to avoid FK constraint
-    cleanup_stock_references(db, stock.id)
+    # Only delete BasicInformation if we created it
+    # Child fixtures clean up their own data before this runs
     if created:
         db.session.delete(stock)
         db.session.commit()
@@ -69,11 +45,9 @@ def sample_basic_info(app_context):
 def sample_basic_info_2(app_context):
     """Create a second sample BasicInformation record (Hon Hai 2317).
 
-    Note: Depends on app_context fixture for unified context management.
+    Depends on: app_context
+    Used by: sample_daily_info_2, etc.
     """
-    from app import db
-
-    # Check if stock already exists (from previous failed test)
     stock = BasicInformation.query.filter_by(id='2317').first()
     created = False
     if not stock:
@@ -89,8 +63,6 @@ def sample_basic_info_2(app_context):
 
     yield stock
 
-    # Cleanup - delete related records first to avoid FK constraint
-    cleanup_stock_references(db, stock.id)
     if created:
         db.session.delete(stock)
         db.session.commit()
@@ -100,10 +72,8 @@ def sample_basic_info_2(app_context):
 def sample_basic_info_list(app_context):
     """Create multiple BasicInformation records for batch testing.
 
-    Note: Depends on app_context fixture for unified context management.
+    Depends on: app_context
     """
-    from app import db
-
     stock_data = [
         ('2330', '台積電', '台積電', 'sii'),
         ('2317', '鴻海', '鴻海', 'sii'),
@@ -129,9 +99,8 @@ def sample_basic_info_list(app_context):
 
     yield stocks
 
-    # Cleanup - delete related records first to avoid FK constraint
+    # Only delete what we created
     for stock in stocks:
-        cleanup_stock_references(db, stock.id)
         if stock.id in created_ids:
             db.session.delete(stock)
     db.session.commit()

@@ -97,13 +97,16 @@ def db_session(app):
 # ============================================================================
 
 pytest_plugins = [
-    # Auth fixtures
-    'tests.fixtures.auth',
-    # Base models
-    'tests.fixtures.models.basic_information',
+    # 1. User-related models (用戶相關)
     'tests.fixtures.models.user',
     'tests.fixtures.models.permission',
-    # Stock-related models
+    'tests.fixtures.models.api_token',
+    'tests.fixtures.models.push_notification',
+    # 2. Auth fixtures (認證相關)
+    'tests.fixtures.auth',
+    # 3. BasicInformation (股票基本資料)
+    'tests.fixtures.models.basic_information',
+    # 4. Stock-related models (股票財務資料)
     'tests.fixtures.models.daily_information',
     'tests.fixtures.models.balance_sheet',
     'tests.fixtures.models.income_sheet',
@@ -115,12 +118,10 @@ pytest_plugins = [
     'tests.fixtures.models.stock_search_counts',
     'tests.fixtures.models.earnings_call',
     'tests.fixtures.models.recommended_stock',
-    # Feed-related models
+    # 5. Feed-related models (新聞/公告相關)
     'tests.fixtures.models.feed',
     'tests.fixtures.models.feed_tag',
     'tests.fixtures.models.announcement_income_sheet_analysis',
-    # User-related models
-    'tests.fixtures.models.api_token',
+    # 6. User-Stock relations (用戶與股票的關聯)
     'tests.fixtures.models.follow_stock',
-    'tests.fixtures.models.push_notification',
 ]
