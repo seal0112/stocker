@@ -20,10 +20,10 @@ class FeedServices():
         return Feed.query.filter_by(id=feed_id).one_or_none()
 
     def get_feeds(self, stock_id, time):
-        stock = basic_info_services.get_basic_information(stock_id)
-        feeds = stock.feeds.filter(
-            Feed.releaseTime<time).order_by(
-                Feed.releaseTime.desc()).limit(self.feed_size).all()
+        feeds = Feed.query.filter(
+            Feed.stock_id == stock_id,
+            Feed.releaseTime < time
+        ).order_by(Feed.releaseTime.desc()).limit(self.feed_size).all()
         return feeds
 
     def get_feeds_by_time_range(self, start_time, end_time):

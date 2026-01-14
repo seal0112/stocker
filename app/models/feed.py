@@ -26,7 +26,8 @@ class Feed(db.Model):
         'FeedTag',
         secondary='feed_feedTag',
         backref=db.backref('feeds', lazy='dynamic'),
-        lazy='joined'
+        lazy='joined',
+        passive_deletes=True
     )
     announcement_income_sheet_analysis = db.relationship(
         'AnnouncementIncomeSheetAnalysis',

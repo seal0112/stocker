@@ -6,9 +6,13 @@ Architecture:
 - Child fixtures (month_revenue, income_sheet, etc.) clean up before this fixture
 - Pytest handles teardown in reverse dependency order automatically
 """
+import logging
 import pytest
+from sqlalchemy import text
 from app import db
 from app.database_setup import BasicInformation
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -35,10 +39,19 @@ def sample_basic_info(app_context):
     yield stock
 
     # Only delete BasicInformation if we created it
-    # Child fixtures clean up their own data before this runs
+    # Use raw SQL to delete all related records first
     if created:
-        db.session.delete(stock)
-        db.session.commit()
+        stock_id = stock.id
+        logger.info(f"[sample_basic_info] Cleaning up stock_id={stock_id}")
+        try:
+            # Delete all records that reference basic_information
+            db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
+            db.session.commit()
+            logger.info(f"[sample_basic_info] Cleanup done for stock_id={stock_id}")
+        except Exception as e:
+            logger.error(f"[sample_basic_info] Cleanup error: {e}")
+            db.session.rollback()
 
 
 @pytest.fixture
@@ -64,8 +77,14 @@ def sample_basic_info_2(app_context):
     yield stock
 
     if created:
-        db.session.delete(stock)
-        db.session.commit()
+        stock_id = stock.id
+        try:
+            db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"[sample_basic_info_2] Cleanup error: {e}")
+            db.session.rollback()
 
 
 @pytest.fixture
@@ -99,8 +118,11 @@ def sample_basic_info_list(app_context):
 
     yield stocks
 
-    # Only delete what we created
-    for stock in stocks:
-        if stock.id in created_ids:
-            db.session.delete(stock)
+    # Only delete what we created using raw SQL
+    for stock_id in created_ids:
+        try:
+            db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
+        except Exception as e:
+            logger.error(f"[sample_basic_info_list] Cleanup error for {stock_id}: {e}")
     db.session.commit()
