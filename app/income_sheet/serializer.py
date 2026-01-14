@@ -1,8 +1,17 @@
+from marshmallow import fields
+
 from .. import ma
 
 
 class IncomeSheetSchema(ma.Schema):
     """Schema for IncomeSheet with essential financial fields."""
+    # Decimal fields must be explicitly defined to avoid JSON serialization issues
+    營業毛利率 = fields.Decimal(as_string=True, allow_none=True)
+    營業費用率 = fields.Decimal(as_string=True, allow_none=True)
+    營業利益率 = fields.Decimal(as_string=True, allow_none=True)
+    稅前淨利率 = fields.Decimal(as_string=True, allow_none=True)
+    本期淨利率 = fields.Decimal(as_string=True, allow_none=True)
+
     class Meta:
         fields = (
             "id", "stock_id", "year", "season", "update_date",

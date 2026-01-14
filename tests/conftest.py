@@ -50,6 +50,17 @@ def dev_client(dev_app):
         yield client
 
 
+@pytest.fixture
+def app_context(test_app):
+    """Provide a single app context for the entire test function.
+
+    All fixtures and tests should depend on this fixture instead of
+    creating their own app context with `with test_app.app_context():`.
+    """
+    with test_app.app_context():
+        yield
+
+
 @pytest.fixture()
 def client(test_app):
     with test_app.test_client() as client:
