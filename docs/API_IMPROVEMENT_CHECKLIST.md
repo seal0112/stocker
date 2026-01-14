@@ -393,6 +393,108 @@ def get(self):
 
 ---
 
+## Phase 7: 股票篩選器視覺化 (New Feature)
+
+> 將 `critical_file/screener_format.json` 的 SQL 篩選邏輯改為可拖拉組合的介面。
+
+### 7.1 資料庫：建立 `stock_metrics` 彙總表
+
+> ⚠️ **重要**：先建彙總表，避免每次查詢都執行複雜 JOIN，提升效能從秒級到毫秒級。
+
+- [ ] 設計 `stock_metrics` table schema
+  ```sql
+  stock_id, update_date,
+  -- 預算指標
+  latest_eps, eps_yoy, eps_qoq,
+  latest_revenue, revenue_yoy, revenue_mom,
+  revenue_12m_rank,  -- 近12月營收排名 (1=最高)
+  pe_ratio, gross_margin, operating_margin,
+  -- 常用篩選 flag
+  is_profitable, is_quality
+  ```
+- [ ] 建立 Alembic migration
+- [ ] 建立 `StockMetricsService` 計算並更新彙總表
+- [ ] 設定排程 (Celery beat) 每日更新
+
+### 7.2 資料庫：建立篩選器設定表
+
+- [ ] 設計 `screener_template` table (系統預設篩選器)
+  - `id`, `name`, `description`
+  - `conditions` (JSON - 篩選條件)
+  - `exclude_rules` (JSON - 排除規則)
+  - `output_fields` (JSON - 輸出欄位)
+  - `is_system` (系統內建 vs 用戶自訂)
+- [ ] 設計 `user_screener` table (用戶自訂篩選器)
+  - `id`, `user_id`, `name`
+  - `conditions`, `exclude_rules`, `output_fields`
+  - `created_at`, `updated_at`
+- [ ] 建立 Alembic migration
+
+### 7.3 後端：定義篩選條件 Schema
+
+- [ ] 定義可用欄位清單 (Pydantic/JSON Schema)
+  ```python
+  AVAILABLE_FIELDS = {
+      "eps": {"label": "每股盈餘", "table": "stock_metrics", "type": "decimal"},
+      "eps_yoy": {"label": "EPS年增率", "table": "stock_metrics", "type": "decimal"},
+      "pe_ratio": {"label": "本益比", "table": "stock_metrics", "type": "decimal"},
+      "revenue_yoy": {"label": "營收年增率", "table": "stock_metrics", "type": "decimal"},
+      ...
+  }
+  ```
+- [ ] 定義可用運算子
+  ```python
+  OPERATORS = [">", ">=", "<", "<=", "=", "!=", "in", "not_in", "is_max", "is_min"]
+  ```
+- [ ] 定義條件 JSON 格式
+  ```json
+  {
+    "field": "eps_yoy",
+    "operator": ">",
+    "value": 10,
+    "ref_field": null  // 或 "pe_ratio" 表示 eps_yoy > pe_ratio
+  }
+  ```
+
+### 7.4 後端：篩選器執行引擎
+
+- [ ] 建立 `ScreenerEngine` class
+  - `parse_conditions(json)` → 解析 JSON 條件
+  - `build_query(conditions)` → 組裝 SQLAlchemy query
+  - `execute(conditions, limit, offset)` → 執行並回傳結果
+- [ ] 支援條件組合 (AND/OR)
+- [ ] 支援欄位間比較 (`eps_yoy > pe_ratio`)
+- [ ] 加入 query 快取機制
+
+### 7.5 後端：API Endpoints
+
+- [ ] `GET /api/v1/screener/fields` - 取得可用欄位清單
+- [ ] `GET /api/v1/screener/templates` - 取得系統預設篩選器
+- [ ] `POST /api/v1/screener/execute` - 執行篩選 (傳入 JSON 條件)
+- [ ] `GET /api/v1/screener/user` - 取得用戶自訂篩選器
+- [ ] `POST /api/v1/screener/user` - 儲存用戶自訂篩選器
+- [ ] `PUT /api/v1/screener/user/<id>` - 更新用戶自訂篩選器
+- [ ] `DELETE /api/v1/screener/user/<id>` - 刪除用戶自訂篩選器
+
+### 7.6 前端：拖拉介面 (React)
+
+- [ ] 選擇拖拉套件 (`@dnd-kit/core` 或 `react-dnd`)
+- [ ] 建立「條件積木」元件
+  - 欄位選擇 dropdown
+  - 運算子選擇
+  - 數值輸入 / 欄位參照選擇
+- [ ] 建立「條件容器」(AND/OR 群組)
+- [ ] 建立「排除規則」區塊 (產業、價格門檻)
+- [ ] 即時預覽：顯示符合條件的股票數量
+- [ ] 儲存/載入自訂篩選器
+
+### 7.7 資料遷移
+
+- [ ] 將 `screener_format.json` 現有篩選器轉換為新格式
+- [ ] 匯入為 `screener_template` (is_system=true)
+
+---
+
 ## 進度統計
 
 | Phase | 總項目 | 已完成 | 完成率 |
@@ -403,7 +505,8 @@ def get(self):
 | Phase 4: 功能 | 14 | 0 | 0% |
 | Phase 5: AI 功能 | 16 | 0 | 0% |
 | Phase 6: Observability | 17 | 0 | 0% |
-| **總計** | **100** | **25** | **25%** |
+| Phase 7: 篩選器視覺化 | 26 | 0 | 0% |
+| **總計** | **126** | **25** | **20%** |
 
 ---
 
@@ -411,6 +514,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-15 | 新增 Phase 7: 股票篩選器視覺化 - 拖拉介面、stock_metrics 彙總表 (26項) | Claude |
 | 2026-01-14 | 新增 Phase 6: Observability & Monitoring - Prometheus, Loki, Grafana (17項) | Claude |
 | 2026-01-07 | 新增 Phase 5: AI 功能 - 法說會新聞 AI 摘要 (16項) | Claude |
 | 2026-01-01 | 完成 1.2 CSRF 保護 (2項) | Claude |
