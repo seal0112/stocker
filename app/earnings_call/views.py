@@ -51,27 +51,26 @@ class EarningsCallListApi(MethodView):
             return EarningsCallchema().dumps(earnings_call), 201
 
 class EarningsCallDetailApi(MethodView):
+    @jwt_required()
+    def get(self):
+        return jsonify({"earnings_call": "GET"})
 
-        @jwt_required()
-        def get(self, earnings_call_id):
-            return jsonify({"earnings_call": "GET"})
+    @jwt_required()
+    def put(self, earnings_call_id):
+        try:
+            earnings_call_data = request.get_json()
+            if not earnings_call_data:
+                return jsonify({"error": "Request body is required"}), 400
+        except Exception:
+            return jsonify({"error": "Invalid JSON format"}), 400
 
-        @jwt_required()
-        def put(self, earnings_call_id):
-            try:
-                earnings_call_data = request.get_json()
-                if not earnings_call_data:
-                    return jsonify({"error": "Request body is required"}), 400
-            except Exception:
-                return jsonify({"error": "Invalid JSON format"}), 400
+        earnings_call = earnings_call_service.update_earnings_call(earnings_call_id, earnings_call_data)
+        return EarningsCallchema().dumps(earnings_call)
 
-            earnings_call = earnings_call_service.update_earnings_call(earnings_call_id, earnings_call_data)
-            return EarningsCallchema().dumps(earnings_call)
-
-        @jwt_required()
-        def delete(self, earnings_call_id):
-            earnings_call_service.delete_earnings_call(earnings_call_id)
-            return jsonify({"earnings_call": "DELETE"}, 204)
+    @jwt_required()
+    def delete(self, earnings_call_id):
+        earnings_call_service.delete_earnings_call(earnings_call_id)
+        return jsonify({"earnings_call": "DELETE"}, 204)
 
 
 earnings_call.add_url_rule('',

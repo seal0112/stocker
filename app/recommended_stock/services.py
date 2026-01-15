@@ -16,7 +16,7 @@ class RecommendedStockService:
 
     def get_recommended_stocks(
         self,
-        date: Optional[date] = None,
+        target_date: Optional[date] = None,
         filter_model: Optional[str] = None,
         limit: Optional[int] = None
     ) -> List[RecommendedStock]:
@@ -24,7 +24,7 @@ class RecommendedStockService:
         Get recommended stocks with optional filters.
 
         Args:
-            date: Date to query (default: today)
+            target_date: Date to query (default: today)
             filter_model: Filter model name to query
             limit: Maximum number of results
 
@@ -35,8 +35,8 @@ class RecommendedStockService:
             query = db.session.query(RecommendedStock)
 
             # Filter by date
-            if date:
-                query = query.filter(RecommendedStock.update_date == date)
+            if target_date:
+                query = query.filter(RecommendedStock.update_date == target_date)
             else:
                 query = query.filter(RecommendedStock.update_date == get_current_date())
 
@@ -60,20 +60,20 @@ class RecommendedStockService:
             logger.error(f"Error getting recommended stocks: {e}", exc_info=True)
             raise
 
-    def get_recommended_stock_by_id(self, stock_id: int) -> Optional[RecommendedStock]:
+    def get_recommended_stock_by_id(self, recommendation_id: int) -> Optional[RecommendedStock]:
         """
         Get a specific recommended stock by ID.
 
         Args:
-            stock_id: RecommendedStock ID
+            recommendation_id: RecommendedStock ID
 
         Returns:
             RecommendedStock object or None
         """
         try:
-            return RecommendedStock.query.filter_by(id=stock_id).first()
+            return RecommendedStock.query.filter_by(id=recommendation_id).first()
         except Exception as e:
-            logger.error(f"Error getting recommended stock {stock_id}: {e}", exc_info=True)
+            logger.error(f"Error getting recommended stock {recommendation_id}: {e}", exc_info=True)
             raise
 
     def get_stocks_by_stock_id(
@@ -121,18 +121,18 @@ class RecommendedStockService:
             logger.error(f"Error getting filter models: {e}", exc_info=True)
             raise
 
-    def get_statistics(self, date: Optional[date] = None) -> Dict:
+    def get_statistics(self, target_date: Optional[date] = None) -> Dict:
         """
         Get statistics for recommended stocks.
 
         Args:
-            date: Date to query (default: today)
+            target_date: Date to query (default: today)
 
         Returns:
             Dictionary with statistics
         """
         try:
-            target_date = date or get_current_date()
+            target_date = target_date or get_current_date()
 
             query = RecommendedStock.query.filter_by(update_date=target_date)
             total_count = query.count()

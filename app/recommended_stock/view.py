@@ -5,7 +5,6 @@ from datetime import datetime
 
 from flask import request, make_response, jsonify
 from flask.views import MethodView
-from marshmallow import ValidationError
 
 from app import db
 from .services import RecommendedStockService

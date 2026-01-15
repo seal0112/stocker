@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import time
 
 from . import db
 from .utils.model_utilities import get_current_date
@@ -115,7 +115,6 @@ class BasicInformation(db.Model):
 
     def get_newest_season_income_sheet(self):
         """Get the newest income sheet for this stock."""
-        from app.database_setup import IncomeSheet
         return IncomeSheet.query.filter_by(stock_id=self.id).order_by(
             IncomeSheet.year.desc(),
             IncomeSheet.season.desc()

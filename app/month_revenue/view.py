@@ -98,15 +98,13 @@ class handleMonthRevenue(MethodView):
         except IntegrityError as ie:
             db.session.rollback()
             logging.warning(
-                "400 %s is failed to update Month Revenue. Reason: %s"
-                % (stock_id, ie))
-            return jsonify({"error": "Failed to update %s Month Revenue" % stock_id}), 400
+                f"400 {stock_id} is failed to update Month Revenue. Reason: {ie}")
+            return jsonify({"error": f"Failed to update {stock_id} Month Revenue"}), 400
         except Exception as ex:
             db.session.rollback()
             logging.warning(
-                "400 %s is failed to update Month Revenue. Reason: %s"
-                % (stock_id, ex))
-            return jsonify({"error": "Failed to update %s Month Revenue" % stock_id}), 400
+                f"400 {stock_id} is failed to update Month Revenue. Reason: {ex}")
+            return jsonify({"error": f"Failed to update {stock_id} Month Revenue"}), 400
 
         return jsonify({"message": "Created"}), 201
 

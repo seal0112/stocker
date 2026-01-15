@@ -1,5 +1,4 @@
 import logging
-import json
 
 from flask import request, make_response
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -16,13 +15,13 @@ class PushNotificationApi(MethodView):
 
     def get(self):
         current_user = get_jwt_identity()
-        push_notification = PushNotification.query.filter_by(
+        user_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
-        return PushNotificationSchema().dumps(push_notification)
+        return PushNotificationSchema().dumps(user_notification)
 
     def put(self):
         current_user = get_jwt_identity()
-        push_notification = PushNotification.query.filter_by(
+        user_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
 
         try:
@@ -32,22 +31,22 @@ class PushNotificationApi(MethodView):
         except Exception:
             return make_response({"error": "Invalid JSON format"}, 400)
 
-        if push_notification is None:
-            push_notification = PushNotification()
-            push_notification.user_id = current_user['id']
+        if user_notification is None:
+            user_notification = PushNotification()
+            user_notification.user_id = current_user['id']
 
-        push_notification.notify_enabled = payload.get('notify_enabled', False)
-        push_notification.gmail = payload.get('gmail', None)
-        push_notification.gmail_token = payload.get('gmail_token', None)
-        push_notification.notify_time = payload.get('notify_time', False)
-        push_notification.notify_month_revenue = payload.get('notify_month_revenue', False)
-        push_notification.notify_income_sheet = payload.get('notify_income_sheet', False)
-        push_notification.notify_news = payload.get('notify_news', False)
-        push_notification.notify_announcement = payload.get('notify_announcement', False)
-        push_notification.notify_earnings_call = payload.get('notify_earnings_call', False)
+        user_notification.notify_enabled = payload.get('notify_enabled', False)
+        user_notification.gmail = payload.get('gmail', None)
+        user_notification.gmail_token = payload.get('gmail_token', None)
+        user_notification.notify_time = payload.get('notify_time', False)
+        user_notification.notify_month_revenue = payload.get('notify_month_revenue', False)
+        user_notification.notify_income_sheet = payload.get('notify_income_sheet', False)
+        user_notification.notify_news = payload.get('notify_news', False)
+        user_notification.notify_announcement = payload.get('notify_announcement', False)
+        user_notification.notify_earnings_call = payload.get('notify_earnings_call', False)
 
         try:
-            db.session.add(push_notification)
+            db.session.add(user_notification)
             db.session.commit()
         except Exception as ex:
             logging.error(
@@ -57,7 +56,7 @@ class PushNotificationApi(MethodView):
                 "error": "Failed to update push notification"
             }, 400)
         else:
-            return PushNotificationSchema().dumps(push_notification)
+            return PushNotificationSchema().dumps(user_notification)
 
 
 push_notification.add_url_rule('/',
