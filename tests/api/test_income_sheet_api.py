@@ -8,11 +8,107 @@ from app import db
 from app.database_setup import IncomeSheet, DailyInformation
 
 
+# ============================================================================
+# Yield-based fixtures for automatic cleanup
+# ============================================================================
+
+@pytest.fixture
+def temp_income_sheet(sample_basic_info):
+    """Create a temporary income sheet with automatic cleanup."""
+    income = IncomeSheet(
+        stock_id=sample_basic_info.id,
+        year=2024,
+        season='2',
+        營業收入合計=5000000000,
+        基本每股盈餘=5.0
+    )
+    db.session.add(income)
+    db.session.commit()
+
+    yield income
+
+    db.session.delete(income)
+    db.session.commit()
+
+
+@pytest.fixture
+def temp_income_sheets_4_seasons(sample_basic_info):
+    """Create 4 seasons of income sheet data."""
+    incomes = []
+    for season in ['1', '2', '3', '4']:
+        income = IncomeSheet(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            season=season,
+            營業收入合計=1000000000 * int(season)
+        )
+        incomes.append(income)
+        db.session.add(income)
+    db.session.commit()
+
+    yield incomes
+
+    for income in incomes:
+        db.session.delete(income)
+    db.session.commit()
+
+
+@pytest.fixture
+def temp_income_sheets_multi_year(sample_basic_info):
+    """Create income sheets for multiple years/seasons."""
+    incomes = []
+    for year, season in [(2023, '3'), (2023, '4'), (2024, '1'), (2024, '2')]:
+        income = IncomeSheet(
+            stock_id=sample_basic_info.id,
+            year=year,
+            season=season,
+            營業收入合計=1000000000
+        )
+        incomes.append(income)
+        db.session.add(income)
+    db.session.commit()
+
+    yield incomes
+
+    for income in incomes:
+        db.session.delete(income)
+    db.session.commit()
+
+
+@pytest.fixture
+def temp_income_sheets_with_eps(sample_basic_info):
+    """Create 4 seasons with EPS values for testing calculation."""
+    incomes = []
+    eps_values = [2.0, 2.5, 3.0, 3.5]
+    for i, season in enumerate(['1', '2', '3', '4']):
+        income = IncomeSheet(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            season=season,
+            營業收入合計=1000000000,
+            基本每股盈餘=eps_values[i]
+        )
+        incomes.append(income)
+        db.session.add(income)
+    db.session.commit()
+
+    yield incomes
+
+    for income in incomes:
+        db.session.delete(income)
+    DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
+    db.session.commit()
+
+
+# ============================================================================
+# Test Classes
+# ============================================================================
+
 @pytest.mark.usefixtures('test_app')
 class TestIncomeSheetGetAPI:
     """Tests for GET /api/v0/income_sheet/<stock_id> endpoint."""
 
-    def test_get_income_sheet_default_mode(self, test_app, client, sample_income_sheet):
+    def test_get_income_sheet_default_mode(self, client, sample_income_sheet):
         """Test GET without mode returns latest income sheet."""
         response = client.get(f'/api/v0/income_sheet/{sample_income_sheet.stock_id}')
 
@@ -21,28 +117,16 @@ class TestIncomeSheetGetAPI:
         assert isinstance(data, list)
         assert len(data) == 1
 
-        # Verify response contains expected fields
         item = data[0]
         assert 'stock_id' in item
         assert 'year' in item
         assert 'season' in item
         assert '營業收入合計' in item
 
-    def test_get_income_sheet_single_mode(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_single_mode(self, client, temp_income_sheet):
         """Test GET with mode=single returns specific year/season."""
-        # Create test data
-        income = IncomeSheet(
-            stock_id=sample_basic_info.id,
-            year=2024,
-            season='2',
-            營業收入合計=5000000000,
-            基本每股盈餘=5.0
-        )
-        db.session.add(income)
-        db.session.commit()
-
         response = client.get(
-            f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single&year=2024&season=2'
+            f'/api/v0/income_sheet/{temp_income_sheet.stock_id}?mode=single&year=2024&season=2'
         )
 
         assert response.status_code == 200
@@ -51,27 +135,17 @@ class TestIncomeSheetGetAPI:
         assert data[0]['year'] == 2024
         assert data[0]['season'] == '2'
 
-        # Cleanup
-        db.session.delete(income)
-        db.session.commit()
-
-    def test_get_income_sheet_single_mode_missing_params(self, test_app, client, sample_basic_info):
+    @pytest.mark.parametrize("params,description", [
+        ("?mode=single", "missing both year and season"),
+        ("?mode=single&year=2024", "missing season"),
+        ("?mode=single&season=1", "missing year"),
+    ])
+    def test_get_income_sheet_single_mode_missing_params(self, client, sample_basic_info, params, description):
         """Test GET with mode=single but missing year/season returns 400."""
-        # Missing both year and season
-        response = client.get(f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single')
-        assert response.status_code == 400
-        data = json.loads(response.data)
-        assert 'error' in data
+        response = client.get(f'/api/v0/income_sheet/{sample_basic_info.id}{params}')
+        assert response.status_code == 400, f"Should fail for {description}"
 
-        # Missing season
-        response = client.get(f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single&year=2024')
-        assert response.status_code == 400
-
-        # Missing year
-        response = client.get(f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single&season=1')
-        assert response.status_code == 400
-
-    def test_get_income_sheet_single_mode_invalid_season(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_single_mode_invalid_season(self, client, sample_basic_info):
         """Test GET with invalid season returns 400."""
         response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single&year=2024&season=5'
@@ -80,22 +154,8 @@ class TestIncomeSheetGetAPI:
         data = json.loads(response.data)
         assert 'season must be 1, 2, 3, or 4' in data['error']
 
-    def test_get_income_sheet_multiple_mode(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_multiple_mode(self, client, temp_income_sheets_4_seasons, sample_basic_info):
         """Test GET with mode=multiple returns multiple records."""
-        # Create test data (4 seasons)
-        incomes = []
-        for season in ['1', '2', '3', '4']:
-            income = IncomeSheet(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                season=season,
-                營業收入合計=1000000000 * int(season)
-            )
-            incomes.append(income)
-            db.session.add(income)
-        db.session.commit()
-
-        # Get 2 years (8 seasons)
         response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=multiple&year=2'
         )
@@ -104,26 +164,8 @@ class TestIncomeSheetGetAPI:
         data = json.loads(response.data)
         assert len(data) <= 8  # 2 years * 4 seasons
 
-        # Cleanup
-        for income in incomes:
-            db.session.delete(income)
-        db.session.commit()
-
-    def test_get_income_sheet_multiple_mode_default_limit(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_multiple_mode_default_limit(self, client, temp_income_sheets_4_seasons, sample_basic_info):
         """Test GET with mode=multiple without year uses default limit of 4."""
-        # Create test data
-        incomes = []
-        for season in ['1', '2', '3', '4']:
-            income = IncomeSheet(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                season=season,
-                營業收入合計=1000000000
-            )
-            incomes.append(income)
-            db.session.add(income)
-        db.session.commit()
-
         response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=multiple'
         )
@@ -132,38 +174,20 @@ class TestIncomeSheetGetAPI:
         data = json.loads(response.data)
         assert len(data) <= 4  # Default 1 year = 4 seasons
 
-        # Cleanup
-        for income in incomes:
-            db.session.delete(income)
-        db.session.commit()
-
-    def test_get_income_sheet_invalid_mode(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_invalid_mode(self, client, sample_basic_info):
         """Test GET with invalid mode returns 404."""
         response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=invalid'
         )
         assert response.status_code == 404
 
-    def test_get_income_sheet_nonexistent_stock(self, test_app, client):
+    def test_get_income_sheet_nonexistent_stock(self, client):
         """Test GET for non-existent stock returns 404."""
         response = client.get('/api/v0/income_sheet/9999')
         assert response.status_code == 404
 
-    def test_get_income_sheet_ordered_desc(self, test_app, client, sample_basic_info):
+    def test_get_income_sheet_ordered_desc(self, client, temp_income_sheets_multi_year, sample_basic_info):
         """Test that results are ordered by year and season descending."""
-        # Create records for different years/seasons
-        incomes = []
-        for year, season in [(2023, '3'), (2023, '4'), (2024, '1'), (2024, '2')]:
-            income = IncomeSheet(
-                stock_id=sample_basic_info.id,
-                year=year,
-                season=season,
-                營業收入合計=1000000000
-            )
-            incomes.append(income)
-            db.session.add(income)
-        db.session.commit()
-
         response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=multiple&year=2'
         )
@@ -178,17 +202,12 @@ class TestIncomeSheetGetAPI:
                 next_item = (data[i + 1]['year'], data[i + 1]['season'])
                 assert current >= next_item
 
-        # Cleanup
-        for income in incomes:
-            db.session.delete(income)
-        db.session.commit()
-
 
 @pytest.mark.usefixtures('test_app')
 class TestIncomeSheetPostAPI:
     """Tests for POST /api/v0/income_sheet/<stock_id> endpoint."""
 
-    def test_create_income_sheet_success(self, test_app, client, sample_basic_info):
+    def test_create_income_sheet_success(self, client, sample_basic_info):
         """Test successful creation of income sheet record."""
         payload = {
             'stock_id': sample_basic_info.id,
@@ -225,30 +244,18 @@ class TestIncomeSheetPostAPI:
         db.session.delete(saved)
         db.session.commit()
 
-    def test_update_existing_income_sheet(self, test_app, client, sample_basic_info):
+    def test_update_existing_income_sheet(self, client, temp_income_sheet):
         """Test updating existing income sheet record."""
-        # Create initial record
-        initial = IncomeSheet(
-            stock_id=sample_basic_info.id,
-            year=2024,
-            season='4',
-            營業收入合計=5000000000,
-            基本每股盈餘=5.0
-        )
-        db.session.add(initial)
-        db.session.commit()
-
-        # Update via POST
         payload = {
-            'stock_id': sample_basic_info.id,
-            'year': 2024,
-            'season': '4',
+            'stock_id': temp_income_sheet.stock_id,
+            'year': temp_income_sheet.year,
+            'season': temp_income_sheet.season,
             '營業收入合計': 6000000000,
             '基本每股盈餘': 6.5
         }
 
         response = client.post(
-            f'/api/v0/income_sheet/{sample_basic_info.id}',
+            f'/api/v0/income_sheet/{temp_income_sheet.stock_id}',
             data=json.dumps(payload),
             content_type='application/json'
         )
@@ -258,42 +265,22 @@ class TestIncomeSheetPostAPI:
         assert data['message'] == 'Created'
 
         # Verify update
-        updated = IncomeSheet.query.filter_by(
-            stock_id=sample_basic_info.id,
-            year=2024,
-            season='4'
-        ).first()
-        assert updated.營業收入合計 == 6000000000
-        assert updated.基本每股盈餘 == 6.5
+        db.session.refresh(temp_income_sheet)
+        assert temp_income_sheet.營業收入合計 == 6000000000
+        assert temp_income_sheet.基本每股盈餘 == 6.5
 
-        # Cleanup
-        db.session.delete(updated)
-        db.session.commit()
-
-    def test_update_no_changes_returns_200(self, test_app, client, sample_basic_info):
+    def test_update_no_changes_returns_200(self, client, temp_income_sheet):
         """Test that updating with same values returns 200 OK."""
-        # Create initial record
-        initial = IncomeSheet(
-            stock_id=sample_basic_info.id,
-            year=2023,
-            season='4',
-            營業收入合計=5000000000,
-            基本每股盈餘=5.0
-        )
-        db.session.add(initial)
-        db.session.commit()
-
-        # POST with same values
         payload = {
-            'stock_id': sample_basic_info.id,
-            'year': 2023,
-            'season': '4',
-            '營業收入合計': 5000000000,
-            '基本每股盈餘': 5.0
+            'stock_id': temp_income_sheet.stock_id,
+            'year': temp_income_sheet.year,
+            'season': temp_income_sheet.season,
+            '營業收入合計': temp_income_sheet.營業收入合計,
+            '基本每股盈餘': temp_income_sheet.基本每股盈餘
         }
 
         response = client.post(
-            f'/api/v0/income_sheet/{sample_basic_info.id}',
+            f'/api/v0/income_sheet/{temp_income_sheet.stock_id}',
             data=json.dumps(payload),
             content_type='application/json'
         )
@@ -302,33 +289,23 @@ class TestIncomeSheetPostAPI:
         data = json.loads(response.data)
         assert data['message'] == 'OK'
 
-        # Cleanup
-        db.session.delete(initial)
-        db.session.commit()
-
-    def test_create_income_sheet_missing_body(self, test_app, client, sample_basic_info):
-        """Test POST without request body returns 400."""
+    @pytest.mark.parametrize("data,content_type,description", [
+        (None, 'application/json', "missing body"),
+        ('not valid json', 'application/json', "invalid JSON"),
+    ])
+    def test_create_income_sheet_invalid_request(self, client, sample_basic_info, data, content_type, description):
+        """Test POST with invalid request returns 400."""
         response = client.post(
             f'/api/v0/income_sheet/{sample_basic_info.id}',
-            content_type='application/json'
+            data=data,
+            content_type=content_type
         )
+        assert response.status_code == 400, f"Should fail for {description}"
 
-        assert response.status_code == 400
-
-    def test_create_income_sheet_invalid_json(self, test_app, client, sample_basic_info):
-        """Test POST with invalid JSON returns 400."""
-        response = client.post(
-            f'/api/v0/income_sheet/{sample_basic_info.id}',
-            data='not valid json',
-            content_type='application/json'
-        )
-
-        assert response.status_code == 400
-
-    def test_create_income_sheet_invalid_stock_returns_400(self, test_app, client):
+    def test_create_income_sheet_invalid_stock_returns_400(self, client):
         """Test POST with invalid stock_id returns 400."""
         payload = {
-            'stock_id': '9999',  # Non-existent stock
+            'stock_id': '9999',
             'year': 2024,
             'season': '1',
             '營業收入合計': 1000000000
@@ -347,30 +324,15 @@ class TestIncomeSheetPostAPI:
 class TestCheckFourSeasonEPS:
     """Tests for checkFourSeasonEPS function."""
 
-    def test_four_season_eps_calculation(self, test_app, client, sample_basic_info):
+    def test_four_season_eps_calculation(self, client, temp_income_sheets_with_eps, sample_basic_info):
         """Test that four season EPS is calculated and stored."""
-        # Create 4 seasons of income sheet data
-        incomes = []
-        eps_values = [2.0, 2.5, 3.0, 3.5]  # Total = 11.0
-        for i, season in enumerate(['1', '2', '3', '4']):
-            income = IncomeSheet(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                season=season,
-                營業收入合計=1000000000,
-                基本每股盈餘=eps_values[i]
-            )
-            incomes.append(income)
-            db.session.add(income)
-        db.session.commit()
-
-        # POST another income sheet to trigger checkFourSeasonEPS
+        # POST to trigger checkFourSeasonEPS
         payload = {
             'stock_id': sample_basic_info.id,
             'year': 2024,
             'season': '4',
             '營業收入合計': 1000000000,
-            '基本每股盈餘': 4.0  # Updated value
+            '基本每股盈餘': 4.0
         }
 
         response = client.post(
@@ -381,7 +343,7 @@ class TestCheckFourSeasonEPS:
 
         assert response.status_code == 201
 
-        # Verify DailyInformation was updated with four season EPS
+        # Verify DailyInformation was updated
         daily_info = DailyInformation.query.filter_by(
             stock_id=sample_basic_info.id
         ).first()
@@ -389,19 +351,10 @@ class TestCheckFourSeasonEPS:
         if daily_info:
             assert daily_info.近四季每股盈餘 is not None
 
-        # Cleanup
-        for income in incomes:
-            db.session.delete(income)
-        if daily_info:
-            db.session.delete(daily_info)
-        db.session.commit()
-
-    def test_four_season_eps_creates_daily_info(self, test_app, client, sample_basic_info):
+    def test_four_season_eps_creates_daily_info(self, client, sample_basic_info):
         """Test that DailyInformation is created if it doesn't exist."""
         # Ensure no DailyInformation exists
-        DailyInformation.query.filter_by(
-            stock_id=sample_basic_info.id
-        ).delete()
+        DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
         db.session.commit()
 
         # Create 4 seasons of income sheet data
@@ -427,7 +380,7 @@ class TestCheckFourSeasonEPS:
             '基本每股盈餘': 2.5
         }
 
-        response = client.post(
+        client.post(
             f'/api/v0/income_sheet/{sample_basic_info.id}',
             data=json.dumps(payload),
             content_type='application/json'
@@ -436,19 +389,30 @@ class TestCheckFourSeasonEPS:
         # Cleanup
         for income in incomes:
             db.session.delete(income)
-        DailyInformation.query.filter_by(
-            stock_id=sample_basic_info.id
-        ).delete()
+        DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
         db.session.commit()
+
+
+@pytest.fixture
+def cleanup_integration_income_sheet(sample_basic_info):
+    """Cleanup fixture for integration tests."""
+    yield
+
+    # Cleanup any created records
+    IncomeSheet.query.filter(
+        IncomeSheet.stock_id == sample_basic_info.id,
+        IncomeSheet.year.in_([2023, 2024]),
+        IncomeSheet.season.in_(['1', '2', '3', '4'])
+    ).delete()
+    db.session.commit()
 
 
 @pytest.mark.usefixtures('test_app')
 class TestIncomeSheetAPIIntegration:
     """Integration tests for IncomeSheet API."""
 
-    def test_create_then_get(self, test_app, client, sample_basic_info):
+    def test_create_then_get(self, client, sample_basic_info, cleanup_integration_income_sheet):
         """Test creating a record then retrieving it."""
-        # Create
         payload = {
             'stock_id': sample_basic_info.id,
             'year': 2024,
@@ -465,7 +429,6 @@ class TestIncomeSheetAPIIntegration:
         )
         assert create_response.status_code == 201
 
-        # Get
         get_response = client.get(
             f'/api/v0/income_sheet/{sample_basic_info.id}?mode=single&year=2024&season=1'
         )
@@ -475,15 +438,7 @@ class TestIncomeSheetAPIIntegration:
         assert len(data) == 1
         assert data[0]['營業收入合計'] == 5000000000
 
-        # Cleanup
-        IncomeSheet.query.filter_by(
-            stock_id=sample_basic_info.id,
-            year=2024,
-            season='1'
-        ).delete()
-        db.session.commit()
-
-    def test_create_multiple_seasons(self, test_app, client, sample_basic_info):
+    def test_create_multiple_seasons(self, client, sample_basic_info, cleanup_integration_income_sheet):
         """Test creating multiple seasons of income sheet data."""
         created_seasons = []
 
@@ -514,20 +469,12 @@ class TestIncomeSheetAPIIntegration:
             matching = [d for d in data if d['year'] == 2023 and d['season'] == season]
             assert len(matching) == 1
 
-        # Cleanup
-        IncomeSheet.query.filter(
-            IncomeSheet.stock_id == sample_basic_info.id,
-            IncomeSheet.year == 2023,
-            IncomeSheet.season.in_(created_seasons)
-        ).delete()
-        db.session.commit()
-
 
 @pytest.mark.usefixtures('test_app')
 class TestIncomeSheetSerializer:
     """Tests for IncomeSheetSchema serialization."""
 
-    def test_serializer_includes_expected_fields(self, test_app, client, sample_income_sheet):
+    def test_serializer_includes_expected_fields(self, client, sample_income_sheet):
         """Test that serializer includes all expected fields."""
         response = client.get(f'/api/v0/income_sheet/{sample_income_sheet.stock_id}')
 
@@ -547,7 +494,7 @@ class TestIncomeSheetSerializer:
         for field in expected_fields:
             assert field in item, f"Missing field: {field}"
 
-    def test_serializer_date_format(self, test_app, client, sample_income_sheet):
+    def test_serializer_date_format(self, client, sample_income_sheet):
         """Test that dates are properly serialized."""
         response = client.get(f'/api/v0/income_sheet/{sample_income_sheet.stock_id}')
 
