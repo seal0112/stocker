@@ -19,6 +19,29 @@ from app.monthly_valuation.models import MonthlyValuation
 from app.models.recommended_stock import RecommendedStock
 
 
+@pytest.fixture(autouse=True)
+def cleanup_screener_recommended_stocks(test_app):
+    """Clean up any leftover recommended_stocks before and after each test."""
+    with test_app.app_context():
+        from app import db
+        try:
+            RecommendedStock.query.filter_by(stock_id='2330').delete()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    yield
+
+    with test_app.app_context():
+        from app import db
+        try:
+            db.session.rollback()
+            RecommendedStock.query.filter_by(stock_id='2330').delete()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+
 @pytest.fixture
 def screener_basic_info(test_app):
     """Create a BasicInformation record for screener testing."""
@@ -399,14 +422,14 @@ class TestStockScreenerManager:
         with test_app.app_context():
             from app import db
 
-            # Create test data with different filter models
+            # Create test data with different filter models (both use existing stock)
             rec1 = RecommendedStock(
                 stock_id='2330',
                 update_date=date.today(),
                 filter_model='月營收近一年次高'
             )
             rec2 = RecommendedStock(
-                stock_id='2317',
+                stock_id='2330',
                 update_date=date.today(),
                 filter_model='其他模型'
             )
@@ -430,7 +453,7 @@ class TestStockScreenerManager:
         with test_app.app_context():
             from app import db
 
-            # Create old and new recommendations
+            # Create old and new recommendations (both use existing stock)
             old_date = date.today() - timedelta(days=100)
             recent_date = date.today() - timedelta(days=30)
 
@@ -440,9 +463,9 @@ class TestStockScreenerManager:
                 filter_model='月營收近一年次高'
             )
             recent_rec = RecommendedStock(
-                stock_id='2317',
+                stock_id='2330',
                 update_date=recent_date,
-                filter_model='月營收近一年次高'
+                filter_model='月營收近一年次高_recent'
             )
             db.session.add_all([old_rec, recent_rec])
             db.session.commit()

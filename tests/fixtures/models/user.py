@@ -136,3 +136,51 @@ def user_no_roles(test_app):
     # Cleanup
     db.session.delete(user)
     db.session.commit()
+
+
+@pytest.fixture
+def multi_role_user(test_app, user_role, admin_role, moderator_role):
+    """Create a user with multiple roles for testing."""
+    user = User(
+        username='multi_role_test',
+        email='multi_role@test.com',
+        active=True,
+        authenticate=True
+    )
+    user.set_password('testpassword123')
+    user.roles.append(user_role)
+    user.roles.append(admin_role)
+    user.roles.append(moderator_role)
+    db.session.add(user)
+    db.session.commit()
+
+    yield user
+
+    db.session.delete(user)
+    db.session.commit()
+
+@pytest.fixture
+def deleted_user_token(test_app, user_role):
+    """Create a token for a user that will be deleted."""
+    """建立一個使用者，產生 Token 後將其刪除，並回傳該 Token"""
+    from flask_jwt_extended import create_access_token
+
+    user = User(username='ghost', email='ghost@test.com')
+    user.roles.append(user_role)
+    db.session.add(user)
+    db.session.commit()
+
+    # 2. 產生身份與 Token
+    identity = {
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'picture': user.profile_pic
+    }
+    token = create_access_token(identity=identity)
+
+    # 3. 刪除使用者
+    db.session.delete(user)
+    db.session.commit()
+
+    return token
