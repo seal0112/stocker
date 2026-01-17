@@ -357,8 +357,8 @@ def get(self):
 
 ### 6.2 Loki Log Aggregation
 
-- [ ] 設定 structured logging (JSON format)
-- [ ] 加入 request_id 追蹤
+- [x] 設定 structured logging (JSON format) - [app/log_config.py](../app/log_config.py) ✅ 2026-01-18
+- [x] 加入 request_id 追蹤 - [app/log_config.py:12](../app/log_config.py#L12) ✅ 2026-01-18
 - [ ] 設定 Loki driver 或 Promtail
 - [ ] 定義 log labels (app, env, service)
 - [ ] 將 logs 從 container 外拉至 Loki
@@ -504,9 +504,9 @@ def get(self):
 | Phase 3: 品質 | 10 | 7 | 70% |
 | Phase 4: 功能 | 14 | 0 | 0% |
 | Phase 5: AI 功能 | 16 | 0 | 0% |
-| Phase 6: Observability | 17 | 0 | 0% |
+| Phase 6: Observability | 17 | 2 | 12% |
 | Phase 7: 篩選器視覺化 | 26 | 0 | 0% |
-| **總計** | **126** | **25** | **20%** |
+| **總計** | **126** | **27** | **21%** |
 
 ---
 
@@ -514,6 +514,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-18 | 完成 6.2 structured logging (structlog) 及 request_id 追蹤 (2項) | Claude |
 | 2026-01-15 | 新增 Phase 7: 股票篩選器視覺化 - 拖拉介面、stock_metrics 彙總表 (26項) | Claude |
 | 2026-01-14 | 新增 Phase 6: Observability & Monitoring - Prometheus, Loki, Grafana (17項) | Claude |
 | 2026-01-07 | 新增 Phase 5: AI 功能 - 法說會新聞 AI 摘要 (16項) | Claude |
