@@ -113,7 +113,8 @@ def regular_user(test_app, user_role):
 
     yield user
 
-    # Cleanup
+    # Cleanup - delete associated tokens first to avoid FK constraint
+    ApiToken.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
 
@@ -133,7 +134,8 @@ def user_no_roles(test_app):
 
     yield user
 
-    # Cleanup
+    # Cleanup - delete associated tokens first to avoid FK constraint
+    ApiToken.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
 
@@ -156,8 +158,11 @@ def multi_role_user(test_app, user_role, admin_role, moderator_role):
 
     yield user
 
+    # Cleanup - delete associated tokens first to avoid FK constraint
+    ApiToken.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
+
 
 @pytest.fixture
 def deleted_user_token(test_app, user_role):

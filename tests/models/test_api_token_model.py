@@ -32,7 +32,7 @@ class TestApiTokenModel:
         """Token prefix should be first 12 characters."""
         token = 'stk_abc123def456'
         prefix = ApiToken.get_token_prefix(token)
-        assert prefix == 'stk_abc12345'
+        assert prefix == 'stk_abc123de'
 
     def test_create_token_success(self, test_app, regular_user):
         """Creating a token should return ApiToken and plain token."""
