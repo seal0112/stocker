@@ -285,6 +285,9 @@ class CashFlow(db.Model):
 # prototype done
 class IncomeSheet(db.Model):
     __tablename__ = 'income_sheet'
+    __table_args__ = (
+        db.UniqueConstraint('stock_id', 'year', 'season', name='uix_income_sheet_stock_year_season'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
@@ -345,6 +348,9 @@ class IncomeSheet(db.Model):
 # done
 class MonthRevenue(db.Model):
     __tablename__ = 'month_revenue'
+    __table_args__ = (
+        db.UniqueConstraint('stock_id', 'year', 'month', name='uix_month_revenue_stock_year_month'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     stock_id = db.Column(

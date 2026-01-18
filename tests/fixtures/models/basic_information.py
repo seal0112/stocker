@@ -39,12 +39,11 @@ def sample_basic_info(app_context):
     yield stock
 
     # Only delete BasicInformation if we created it
-    # Use raw SQL to delete all related records first
+    # Child fixtures (income_sheet, etc.) clean up before this runs
     if created:
         stock_id = stock.id
         logger.info(f"[sample_basic_info] Cleaning up stock_id={stock_id}")
         try:
-            # Delete all records that reference basic_information
             db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
             db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
             db.session.commit()

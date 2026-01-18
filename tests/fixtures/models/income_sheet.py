@@ -56,12 +56,14 @@ def sample_income_sheet_list(sample_basic_info):
     Explicit cleanup in teardown.
     """
     income_sheets = []
+    # Season to month mapping: Q1->5月, Q2->8月, Q3->11月, Q4->次年2月(簡化為12月)
+    season_month = {'1': 5, '2': 8, '3': 11, '4': 12}
     for season in ['1', '2', '3', '4']:
         inc = IncomeSheet(
             stock_id=sample_basic_info.id,
             year=2023,
             season=season,
-            update_date=date(2023, int(season) * 3 + 2, 15),
+            update_date=date(2023, season_month[season], 15),
             營業收入合計=550000000000 + int(season) * 10000000000,
             營業毛利=275000000000,
             營業毛利率=Decimal('50.00'),
