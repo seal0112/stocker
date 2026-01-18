@@ -4,7 +4,7 @@ import gzip
 import shutil
 
 from logging.handlers import TimedRotatingFileHandler
-from flask_log_request_id import current_request_id
+from app.utils.request_id import current_request_id
 
 import structlog
 

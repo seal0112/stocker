@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from redis import Redis
-from flask_log_request_id import RequestID
+from app.utils.request_id import RequestID
 
 from config import config
 from app.log_config import setup_logging
