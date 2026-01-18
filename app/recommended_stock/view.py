@@ -50,7 +50,7 @@ class RecommendedStockListApi(MethodView):
 
             # Get recommendations
             recommendations = recommended_stock_service.get_recommended_stocks(
-                date=target_date,
+                target_date=target_date,
                 filter_model=filter_model,
                 limit=limit
             )
@@ -244,7 +244,7 @@ class RecommendedStockStatisticsApi(MethodView):
                         "error": "Invalid date format. Use YYYY-MM-DD"
                     }), 400)
 
-            stats = recommended_stock_service.get_statistics(date=target_date)
+            stats = recommended_stock_service.get_statistics(target_date=target_date)
 
             return make_response(jsonify(stats), 200)
 
