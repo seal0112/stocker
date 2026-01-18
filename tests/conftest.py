@@ -5,6 +5,22 @@ from sqlalchemy import create_engine, text
 from app import create_app, db
 
 
+@pytest.fixture(scope='session', autouse=True)
+def clean_test_db():
+    """Clean the test database at the start of the test session.
+
+    This runs once before all tests, ensuring a completely clean state.
+    """
+    app = create_app('testing')
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+    yield
+    # Optionally clean up after all tests too
+    with app.app_context():
+        db.drop_all()
+
+
 @pytest.fixture(scope='module')
 def dev_app():
     """development environment app fixture"""
@@ -15,7 +31,12 @@ def dev_app():
 
 
 @pytest.fixture(scope='module')
-def test_app():
+def test_app(clean_test_db):
+    """Test app fixture that depends on clean_test_db.
+
+    The clean_test_db fixture ensures the database is clean at session start.
+    This fixture just provides the app context for each module.
+    """
     app = create_app('testing')
 
     test_db_url = app.config['SQLALCHEMY_DATABASE_URI']
@@ -27,20 +48,14 @@ def test_app():
         with engine.connect() as conn:
             conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name}"))
 
-        # Drop all tables first to ensure clean state
-        db.drop_all()
-        # Create all tables from models (skip migrations for tests)
-        db.create_all()
-
         ctx = app.test_request_context()
         ctx.push()
 
         yield app
 
-        # Cleanup
+        # Cleanup session but don't drop tables (other modules may need them)
         ctx.pop()
         db.session.remove()
-        db.drop_all()
 
 
 @pytest.fixture
@@ -56,6 +71,9 @@ def app_context(test_app):
 
     All fixtures and tests should depend on this fixture instead of
     creating their own app context with `with test_app.app_context():`.
+
+    Note: Fixtures should clean up data at the START (before creating)
+    to handle leftover data from crashed/interrupted tests.
     """
     with test_app.app_context():
         yield

@@ -39,12 +39,27 @@ def sample_basic_info(app_context):
     yield stock
 
     # Only delete BasicInformation if we created it
-    # Child fixtures (income_sheet, etc.) clean up before this runs
+    # Delete child tables first (FK dependency order: children -> parent)
     if created:
         stock_id = stock.id
         logger.info(f"[sample_basic_info] Cleaning up stock_id={stock_id}")
         try:
+            # 1. Delete all FK-referencing tables (order doesn't matter among siblings)
+            db.session.execute(text("DELETE FROM month_revenue WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM income_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM balance_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM cashflow WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM daily_information WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM monthly_valuation WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM StockCommodity WHERE stock_id = :sid"), {"sid": stock_id})
             db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM recommended_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM feed WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM announcement_income_sheet_analysis WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM earnings_call WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM follow_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM stock_search_counts WHERE stock_id = :sid"), {"sid": stock_id})
+            # 2. Finally delete the parent table
             db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
             db.session.commit()
             logger.info(f"[sample_basic_info] Cleanup done for stock_id={stock_id}")
@@ -75,10 +90,26 @@ def sample_basic_info_2(app_context):
 
     yield stock
 
+    # Delete child tables first (FK dependency order: children -> parent)
     if created:
         stock_id = stock.id
         try:
+            # 1. Delete all FK-referencing tables
+            db.session.execute(text("DELETE FROM month_revenue WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM income_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM balance_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM cashflow WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM daily_information WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM monthly_valuation WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM StockCommodity WHERE stock_id = :sid"), {"sid": stock_id})
             db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM recommended_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM feed WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM announcement_income_sheet_analysis WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM earnings_call WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM follow_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM stock_search_counts WHERE stock_id = :sid"), {"sid": stock_id})
+            # 2. Finally delete the parent table
             db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
             db.session.commit()
         except Exception as e:
@@ -117,10 +148,25 @@ def sample_basic_info_list(app_context):
 
     yield stocks
 
-    # Only delete what we created using raw SQL
+    # Delete child tables first (FK dependency order: children -> parent)
     for stock_id in created_ids:
         try:
+            # 1. Delete all FK-referencing tables
+            db.session.execute(text("DELETE FROM month_revenue WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM income_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM balance_sheet WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM cashflow WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM daily_information WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM monthly_valuation WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM StockCommodity WHERE stock_id = :sid"), {"sid": stock_id})
             db.session.execute(text("DELETE FROM data_update_date WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM recommended_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM feed WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM announcement_income_sheet_analysis WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM earnings_call WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM follow_stock WHERE stock_id = :sid"), {"sid": stock_id})
+            db.session.execute(text("DELETE FROM stock_search_counts WHERE stock_id = :sid"), {"sid": stock_id})
+            # 2. Finally delete the parent table
             db.session.execute(text("DELETE FROM basic_information WHERE id = :sid"), {"sid": stock_id})
         except Exception as e:
             logger.error(f"[sample_basic_info_list] Cleanup error for {stock_id}: {e}")

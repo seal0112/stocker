@@ -70,7 +70,8 @@ def admin_user(test_app, admin_role):
 
     yield user
 
-    # Cleanup
+    # Cleanup - delete FK-referencing tables first (children -> parent)
+    ApiToken.query.filter_by(user_id=user.id).delete()
     db.session.delete(user)
     db.session.commit()
 

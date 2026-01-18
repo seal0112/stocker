@@ -89,7 +89,7 @@ class TestMonthRevenueDatabaseOperations:
         with test_app.app_context():
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="5",
                 update_date=date(2024, 6, 10),
                 當月營收=210000000000,
@@ -106,7 +106,7 @@ class TestMonthRevenueDatabaseOperations:
             # Verify in database
             saved = MonthRevenue.query.filter_by(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="5"
             ).first()
             assert saved is not None
@@ -134,7 +134,7 @@ class TestMonthRevenueDatabaseOperations:
             # Create
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="6",
                 當月營收=100000000000
             )
@@ -161,7 +161,7 @@ class TestMonthRevenueDatabaseOperations:
             # Create
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="7",
                 當月營收=100000000000
             )
@@ -187,7 +187,7 @@ class TestMonthRevenueConstraints:
             # Create first record
             revenue1 = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="8",
                 當月營收=100000000000
             )
@@ -197,7 +197,7 @@ class TestMonthRevenueConstraints:
             # Try to create duplicate
             revenue2 = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="8",
                 當月營收=200000000000
             )
@@ -211,7 +211,7 @@ class TestMonthRevenueConstraints:
             # Cleanup
             MonthRevenue.query.filter_by(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="8"
             ).delete()
             db.session.commit()
@@ -269,7 +269,7 @@ class TestMonthRevenueRelationships:
         with test_app.app_context():
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="9",
                 當月營收=100000000000
             )
@@ -313,12 +313,12 @@ class TestMonthRevenueQueries:
     def test_query_ordered_by_date(self, test_app, sample_basic_info):
         """Test querying revenues ordered by year and month descending."""
         with test_app.app_context():
-            # Create multiple records
+            # Create multiple records (use 2025 to avoid conflict with sample_month_revenue_list)
             revenues = []
             for month in ['1', '3', '6', '9', '12']:
                 rev = MonthRevenue(
                     stock_id=sample_basic_info.id,
-                    year=2024,
+                    year=2025,
                     month=month,
                     當月營收=100000000000
                 )
@@ -329,14 +329,15 @@ class TestMonthRevenueQueries:
             # Query ordered
             results = MonthRevenue.query.filter_by(
                 stock_id=sample_basic_info.id,
-                year=2024
+                year=2025
             ).order_by(
                 MonthRevenue.month.desc()
             ).all()
 
-            # Verify order (descending by month as string)
+            # Verify order (descending by month - Enum sorts by definition order, which is numeric)
             months = [r.month for r in results]
-            assert months == sorted(months, reverse=True)
+            # MySQL Enum sorts by position in enum definition (1,2,3...12), so descending is 12,9,6,3,1
+            assert months == ['12', '9', '6', '3', '1']
 
             # Cleanup
             for rev in revenues:
@@ -349,7 +350,7 @@ class TestMonthRevenueQueries:
             # Create test data
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="10",
                 當月營收=100000000000
             )
@@ -380,7 +381,7 @@ class TestMonthRevenueEdgeCases:
         with test_app.app_context():
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,
                 month="11",
                 # Only required fields, rest null
             )
@@ -403,7 +404,7 @@ class TestMonthRevenueEdgeCases:
 
             revenue = MonthRevenue(
                 stock_id=sample_basic_info.id,
-                year=2024,
+                year=2025,  # Use different year to avoid conflict with sample_month_revenue_list
                 month="12",
                 當月營收=large_value
             )
