@@ -7,7 +7,7 @@ from app.database_setup import DailyInformation, BasicInformation
 
 @pytest.fixture
 def mock_daily_info():
-    """Fixture to create a DailyInformation instance."""
+    """Fixture to create a DailyInformation instance (not persisted to DB)."""
     return DailyInformation(
         stock_id='2330',
         update_date=date(2025, 1, 15),
@@ -20,7 +20,7 @@ def mock_daily_info():
     )
 
 
-@pytest.mark.usefixtures('test_app')
+@pytest.mark.usefixtures('app_context')
 class TestDailyInformation:
     """Test suite for DailyInformation model."""
 
@@ -56,11 +56,17 @@ class TestDailyInformation:
         assert mock_daily_info.本日收盤價 == 560.0
         assert mock_daily_info.殖利率 == 3.0
 
-    def test_database_relationship(self, test_app, sample_basic_info):
+    def test_database_relationship(self, sample_basic_info):
         """Test relationship with BasicInformation."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
+        # Check if record already exists (from previous tests)
+        existing = DailyInformation.query.filter_by(stock_id=sample_basic_info.id).first()
+        created = False
+
+        if existing:
+            daily_info = existing
+        else:
             daily_info = DailyInformation(
                 stock_id=sample_basic_info.id,
                 本日收盤價=550.0,
@@ -68,41 +74,49 @@ class TestDailyInformation:
             )
             db.session.add(daily_info)
             db.session.commit()
+            created = True
 
-            # Verify relationship
-            retrieved = DailyInformation.query.filter_by(stock_id='2330').first()
-            assert retrieved is not None
-            assert retrieved.basic_information.公司名稱 == '台積電'
+        # Verify relationship
+        retrieved = DailyInformation.query.filter_by(stock_id='2330').first()
+        assert retrieved is not None
+        assert retrieved.basic_information.公司名稱 == '台積電'
 
-            # Cleanup
+        # Cleanup - only delete if we created it
+        if created:
             db.session.delete(daily_info)
             db.session.commit()
 
-    def test_primary_key_constraint(self, test_app, sample_basic_info):
+    def test_primary_key_constraint(self, sample_basic_info):
         """Test that stock_id is unique (primary key)."""
-        with test_app.app_context():
-            from app import db
-            from sqlalchemy.exc import IntegrityError
+        from app import db
+        from sqlalchemy.exc import IntegrityError
 
+        # Check if record already exists (from previous tests)
+        existing = DailyInformation.query.filter_by(stock_id=sample_basic_info.id).first()
+        created_first = False
+
+        if not existing:
             daily1 = DailyInformation(
                 stock_id=sample_basic_info.id,
                 本日收盤價=550.0
             )
             db.session.add(daily1)
             db.session.commit()
+            created_first = True
 
-            # Try to add duplicate
-            daily2 = DailyInformation(
-                stock_id=sample_basic_info.id,
-                本日收盤價=560.0
-            )
-            db.session.add(daily2)
+        # Try to add duplicate - this should always fail
+        daily2 = DailyInformation(
+            stock_id=sample_basic_info.id,
+            本日收盤價=560.0
+        )
+        db.session.add(daily2)
 
-            with pytest.raises(IntegrityError):
-                db.session.commit()
+        with pytest.raises(IntegrityError):
+            db.session.commit()
 
-            db.session.rollback()
+        db.session.rollback()
 
-            # Cleanup
+        # Cleanup - only delete if we created the first record
+        if created_first:
             DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
             db.session.commit()

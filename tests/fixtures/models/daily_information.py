@@ -18,24 +18,31 @@ def sample_daily_info(sample_basic_info):
 
     Depends on: sample_basic_info → app_context
     """
-    daily_info = DailyInformation(
-        stock_id=sample_basic_info.id,
-        update_date=date(2024, 3, 15),
-        本日收盤價=580.0,
-        本日漲跌=5.0,
-        近四季每股盈餘=32.5,
-        本益比=Decimal('17.85'),
-        殖利率=2.5,
-        股價淨值比=4.8
-    )
-    db.session.add(daily_info)
-    db.session.commit()
+    # Check if record already exists (from previous test or seed data)
+    daily_info = DailyInformation.query.filter_by(stock_id=sample_basic_info.id).first()
+    created = False
+
+    if not daily_info:
+        daily_info = DailyInformation(
+            stock_id=sample_basic_info.id,
+            update_date=date(2024, 3, 15),
+            本日收盤價=580.0,
+            本日漲跌=5.0,
+            近四季每股盈餘=32.5,
+            本益比=Decimal('17.85'),
+            殖利率=2.5,
+            股價淨值比=4.8
+        )
+        db.session.add(daily_info)
+        db.session.commit()
+        created = True
 
     yield daily_info
 
     # Explicit cleanup - only delete what this fixture created
-    DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
-    db.session.commit()
+    if created:
+        DailyInformation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
 
 
 @pytest.fixture
@@ -44,21 +51,28 @@ def sample_daily_info_2(sample_basic_info_2):
 
     Depends on: sample_basic_info_2 → app_context
     """
-    daily_info = DailyInformation(
-        stock_id=sample_basic_info_2.id,
-        update_date=date(2024, 3, 15),
-        本日收盤價=105.0,
-        本日漲跌=-1.5,
-        近四季每股盈餘=10.2,
-        本益比=Decimal('10.29'),
-        殖利率=5.3,
-        股價淨值比=1.2
-    )
-    db.session.add(daily_info)
-    db.session.commit()
+    # Check if record already exists (from previous test or seed data)
+    daily_info = DailyInformation.query.filter_by(stock_id=sample_basic_info_2.id).first()
+    created = False
+
+    if not daily_info:
+        daily_info = DailyInformation(
+            stock_id=sample_basic_info_2.id,
+            update_date=date(2024, 3, 15),
+            本日收盤價=105.0,
+            本日漲跌=-1.5,
+            近四季每股盈餘=10.2,
+            本益比=Decimal('10.29'),
+            殖利率=5.3,
+            股價淨值比=1.2
+        )
+        db.session.add(daily_info)
+        db.session.commit()
+        created = True
 
     yield daily_info
 
     # Explicit cleanup - only delete what this fixture created
-    DailyInformation.query.filter_by(stock_id=sample_basic_info_2.id).delete()
-    db.session.commit()
+    if created:
+        DailyInformation.query.filter_by(stock_id=sample_basic_info_2.id).delete()
+        db.session.commit()

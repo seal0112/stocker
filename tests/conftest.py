@@ -34,8 +34,8 @@ def dev_app():
 def test_app(clean_test_db):
     """Test app fixture that depends on clean_test_db.
 
-    The clean_test_db fixture ensures the database is clean at session start.
-    This fixture just provides the app context for each module.
+    Each test module gets a clean database state by truncating all tables.
+    This ensures complete isolation between test modules.
     """
     app = create_app('testing')
 
@@ -48,14 +48,33 @@ def test_app(clean_test_db):
         with engine.connect() as conn:
             conn.execute(text(f"CREATE DATABASE IF NOT EXISTS {db_name}"))
 
+        # Clean all tables at the start of each module for isolation
+        _truncate_all_tables()
+
         ctx = app.test_request_context()
         ctx.push()
 
         yield app
 
-        # Cleanup session but don't drop tables (other modules may need them)
+        # Cleanup session
         ctx.pop()
         db.session.remove()
+
+
+def _truncate_all_tables():
+    """Truncate all tables to ensure clean state for each test module.
+
+    Uses TRUNCATE with foreign key checks disabled for speed.
+    """
+    # Get all table names from metadata
+    tables = db.metadata.sorted_tables
+
+    # Disable foreign key checks, truncate, then re-enable
+    db.session.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+    for table in tables:
+        db.session.execute(text(f"TRUNCATE TABLE `{table.name}`"))
+    db.session.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+    db.session.commit()
 
 
 @pytest.fixture
@@ -65,18 +84,25 @@ def dev_client(dev_app):
         yield client
 
 
+@pytest.fixture(autouse=True)
+def auto_rollback(test_app):
+    """Automatically rollback after each test.
+
+    This rolls back any uncommitted changes after each test.
+    Note: For committed data, fixtures must handle their own cleanup.
+    """
+    yield
+    db.session.rollback()
+
+
 @pytest.fixture
 def app_context(test_app):
-    """Provide a single app context for the entire test function.
+    """Alias for test_app's app context.
 
-    All fixtures and tests should depend on this fixture instead of
-    creating their own app context with `with test_app.app_context():`.
-
-    Note: Fixtures should clean up data at the START (before creating)
-    to handle leftover data from crashed/interrupted tests.
+    Many fixtures depend on this. test_app already provides the context,
+    so this just ensures those fixtures work.
     """
-    with test_app.app_context():
-        yield
+    yield
 
 
 @pytest.fixture()

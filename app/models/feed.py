@@ -84,3 +84,5 @@ class Feed(db.Model):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
+
+        return announcement_income_sheet

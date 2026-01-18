@@ -37,7 +37,6 @@ def mock_cash_flow():
     )
 
 
-@pytest.mark.usefixtures('test_app')
 class TestCashFlow:
     """Test suite for CashFlow model."""
 
@@ -86,35 +85,34 @@ class TestCashFlow:
         mock_cash_flow['營業活動之淨現金流入流出'] = 3000000000
         assert mock_cash_flow.營業活動之淨現金流入流出 == 3000000000
 
-    def test_database_operations(self, test_app, sample_basic_info):
+    def test_database_operations(self, sample_basic_info):
         """Test database CRUD operations."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
-            # Create
-            cash_flow = CashFlow(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                season='3',
-                營業活動之淨現金流入流出=2500000000,
-                投資活動之淨現金流入流出=-1500000000,
-                籌資活動之淨現金流入流出=-800000000
-            )
-            db.session.add(cash_flow)
-            db.session.commit()
+        # Create
+        cash_flow = CashFlow(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            season='3',
+            營業活動之淨現金流入流出=2500000000,
+            投資活動之淨現金流入流出=-1500000000,
+            籌資活動之淨現金流入流出=-800000000
+        )
+        db.session.add(cash_flow)
+        db.session.commit()
 
-            # Read
-            retrieved = CashFlow.query.filter_by(
-                stock_id='2330',
-                year=2024,
-                season='3'
-            ).first()
-            assert retrieved is not None
-            assert retrieved.營業活動之淨現金流入流出 == 2500000000
+        # Read
+        retrieved = CashFlow.query.filter_by(
+            stock_id='2330',
+            year=2024,
+            season='3'
+        ).first()
+        assert retrieved is not None
+        assert retrieved.營業活動之淨現金流入流出 == 2500000000
 
-            # Cleanup
-            db.session.delete(retrieved)
-            db.session.commit()
+        # Cleanup
+        db.session.delete(retrieved)
+        db.session.commit()
 
     def test_operating_cash_flow_positive(self, mock_cash_flow):
         """Test that operating cash flow is positive (healthy sign)."""
@@ -133,34 +131,33 @@ class TestCashFlow:
 
         assert free_cash_flow == 1300000000  # 2500M - 1200M
 
-    def test_multiple_seasons(self, test_app, sample_basic_info):
+    def test_multiple_seasons(self, sample_basic_info):
         """Test storing multiple seasons of cash flow data."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
-            # Create data for all 4 seasons
-            for season in ['1', '2', '3', '4']:
-                cash_flow = CashFlow(
-                    stock_id=sample_basic_info.id,
-                    year=2024,
-                    season=season,
-                    營業活動之淨現金流入流出=1000000000 * int(season),
-                    投資活動之淨現金流入流出=-500000000 * int(season),
-                    籌資活動之淨現金流入流出=-200000000 * int(season)
-                )
-                db.session.add(cash_flow)
-            db.session.commit()
+        # Create data for all 4 seasons
+        for season in ['1', '2', '3', '4']:
+            cash_flow = CashFlow(
+                stock_id=sample_basic_info.id,
+                year=2024,
+                season=season,
+                營業活動之淨現金流入流出=1000000000 * int(season),
+                投資活動之淨現金流入流出=-500000000 * int(season),
+                籌資活動之淨現金流入流出=-200000000 * int(season)
+            )
+            db.session.add(cash_flow)
+        db.session.commit()
 
-            # Query all seasons
-            all_seasons = CashFlow.query.filter_by(
-                stock_id='2330',
-                year=2024
-            ).order_by(CashFlow.season).all()
+        # Query all seasons
+        all_seasons = CashFlow.query.filter_by(
+            stock_id='2330',
+            year=2024
+        ).order_by(CashFlow.season).all()
 
-            assert len(all_seasons) == 4
-            assert all_seasons[2].season == '3'
-            assert all_seasons[2].營業活動之淨現金流入流出 == 3000000000
+        assert len(all_seasons) == 4
+        assert all_seasons[2].season == '3'
+        assert all_seasons[2].營業活動之淨現金流入流出 == 3000000000
 
-            # Cleanup
-            CashFlow.query.filter_by(stock_id='2330').delete()
-            db.session.commit()
+        # Cleanup
+        CashFlow.query.filter_by(stock_id='2330').delete()
+        db.session.commit()
