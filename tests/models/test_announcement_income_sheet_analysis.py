@@ -96,13 +96,15 @@ class TestAnnouncementIncomeSheetAnalysis:
             assert analysis.營業利益率 is None
             assert analysis.稅前淨利率 is None
             assert analysis.本期淨利率 is None
+            # 本業佔比 should also be None when ratios are None
+            assert analysis.本業佔比 is None
 
             # Cleanup
             db.session.delete(analysis)
             db.session.commit()
 
     def test_calculate_ratio_zero_pretax_profit(self, test_app, sample_feed):
-        """Test calculate_ratio with zero pretax profit."""
+        """Test calculate_ratio with zero pretax profit (稅前淨利=0)."""
         with test_app.app_context():
             from app import db
 
@@ -112,18 +114,18 @@ class TestAnnouncementIncomeSheetAnalysis:
                 營業收入合計=1000000,
                 營業毛利=300000,
                 營業利益=200000,
-                稅前淨利=100000,
-                本期淨利=80000
+                稅前淨利=0,  # Zero pretax profit
+                本期淨利=0
             )
             db.session.add(analysis)
             db.session.commit()
 
-            # Set 稅前淨利率 to 0
-            analysis.稅前淨利率 = 0
             analysis.calculate_ratio()
 
-            # 本業佔比 should be 0 when 稅前淨利率 is 0
-            assert analysis.本業佔比 == 0
+            # 稅前淨利率 should be 0 when 稅前淨利 is 0
+            assert analysis.稅前淨利率 == 0
+            # 本業佔比 should be None when 稅前淨利率 is 0 (can't divide by zero)
+            assert analysis.本業佔比 is None
 
             # Cleanup
             db.session.delete(analysis)
