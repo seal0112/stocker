@@ -137,7 +137,8 @@ class ApiToken(db.Model):
             'expires_at': self.expires_at.isoformat() if self.expires_at else None,
             'last_used_at': self.last_used_at.isoformat() if self.last_used_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'is_expired': self.is_expired
         }
 
         if include_token and plain_token:

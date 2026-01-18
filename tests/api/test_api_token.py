@@ -17,16 +17,16 @@ def token_factory(moderator_user):
     created_ids = []
 
     def _create_token(name="Test Token", scopes=None, expires_in_days=None):
-        token = ApiToken(
+        expires_at = None
+        if expires_in_days:
+            expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
+
+        token, _ = ApiToken.create_token(
             user_id=moderator_user.id,
             name=name,
-            scopes=scopes or []
+            scopes=scopes,
+            expires_at=expires_at
         )
-        if expires_in_days:
-            token.expires_at = datetime.now(timezone.utc) + timedelta(days=expires_in_days)
-        token.generate_token()
-        db.session.add(token)
-        db.session.commit()
         created_ids.append(token.id)
         return token
 
@@ -53,14 +53,11 @@ def clean_user_tokens(moderator_user):
 @pytest.fixture
 def other_user_token(regular_user):
     """Create a token for another user (for cross-user access tests)."""
-    token = ApiToken(
+    token, _ = ApiToken.create_token(
         user_id=regular_user.id,
         name="Other User Token",
         scopes=[]
     )
-    token.generate_token()
-    db.session.add(token)
-    db.session.commit()
 
     yield token
 
@@ -306,12 +303,14 @@ class TestApiTokenSecurity:
     def test_expired_token_marked_inactive(self, moderator_authenticated_client, moderator_user):
         """Should mark expired tokens correctly."""
         # Create an expired token directly in DB
+        plain_token = ApiToken.generate_token()
         token = ApiToken(
             user_id=moderator_user.id,
             name="Expired Token",
+            token_hash=ApiToken.hash_token(plain_token),
+            token_prefix=ApiToken.get_token_prefix(plain_token),
             expires_at=datetime.now(timezone.utc) - timedelta(days=1)
         )
-        token.generate_token()
         db.session.add(token)
         db.session.commit()
 

@@ -12,6 +12,7 @@ class ApiTokenSchema(Schema):
     last_used_at = fields.DateTime(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
     is_active = fields.Boolean(dump_only=True)
+    is_expired = fields.Boolean(dump_only=True)
 
 
 class CreateTokenSchema(Schema):
