@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 
@@ -7,7 +6,6 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
 from app import db
-from .models import EarningsCall
 from . import earnings_call
 from .serializer import EarningsCallchema
 from .earnings_call_services import EarningsCallService

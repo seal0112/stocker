@@ -3,7 +3,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.monthly_valuation.models import MonthlyValuation
-from app.database_setup import BasicInformation
 
 
 @pytest.fixture

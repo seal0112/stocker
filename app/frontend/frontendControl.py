@@ -6,8 +6,9 @@ from datetime import datetime, timedelta
 
 from flask import request, jsonify, make_response
 from sqlalchemy.sql import func
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
+from app.utils.jwt_utils import get_current_user
 from . import frontend
 from app import db
 from app.database_setup import (
@@ -25,7 +26,7 @@ stock_search_count_service = StockSearchCountService()
 @frontend.route('/stock_info_commodity/<stock_id>')
 @jwt_required()
 def getFrontEndStockInfoAndCommodity(stock_id):
-    current_user = get_jwt_identity()
+    current_user = get_current_user()
     stock_search_count_service.increase_stock_search_count(current_user['email'], stock_id)
     resData = {}
 

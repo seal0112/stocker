@@ -4,7 +4,6 @@ from datetime import datetime
 
 from flask import request, jsonify, make_response
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
 from app import db
@@ -18,9 +17,6 @@ from app.database_setup import (
 )
 from app.models import Feed
 from app.monthly_valuation.models import MonthlyValuation
-from app.schemas.feed_schema import FeedSchema
-from app.tasks.test_task.tasks import add
-from app.tasks.feed_task.tasks import analyze_announcement_incomesheet
 
 
 logger = logging.getLogger(__name__)
@@ -129,7 +125,7 @@ class getStockNumber(MethodView):
                         month=payload['month']).all()
             res = [i[0] for i in stockNums]
         except Exception as ex:
-            if ex == KeyError:
+            if isinstance(ex, KeyError):
                 logger.warning(
                     "400 report type %s not found." % (reportType))
                 res = make_response(

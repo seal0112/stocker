@@ -77,6 +77,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or DB_URL
     SQLALCHEMY_ECHO = True
     WTF_CSRF_ENABLED = False
+    JWT_COOKIE_CSRF_PROTECT = False  # Disable CSRF for testing with headers
 
 
 class ProductionConfig(Config):

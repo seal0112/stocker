@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from app import db
 from app.models.user import User
-from app.models.role import Role
 
 
 @pytest.fixture

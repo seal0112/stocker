@@ -82,7 +82,7 @@ class Feed(db.Model):
         try:
             db.session.add(announcement_income_sheet)
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
 
         return announcement_income_sheet

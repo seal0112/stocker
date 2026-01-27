@@ -5,14 +5,20 @@ from flask_jwt_extended import create_access_token
 
 @pytest.fixture
 def auth_headers(test_app, regular_user):
-    """Create JWT auth headers for authenticated requests."""
-    identity = {
-        'id': regular_user.id,
+    """Create JWT auth headers for authenticated requests.
+
+    Flask-JWT-Extended 4.x requires identity to be a string.
+    Additional user info is passed via additional_claims.
+    """
+    additional_claims = {
         'username': regular_user.username,
         'email': regular_user.email,
         'picture': regular_user.profile_pic
     }
-    access_token = create_access_token(identity=identity)
+    access_token = create_access_token(
+        identity=str(regular_user.id),
+        additional_claims=additional_claims
+    )
     return {'Authorization': f'Bearer {access_token}'}
 
 
@@ -54,13 +60,15 @@ def authenticated_client(test_app, auth_headers):
 @pytest.fixture
 def moderator_auth_headers(test_app, moderator_user):
     """Create JWT auth headers for moderator requests."""
-    identity = {
-        'id': moderator_user.id,
+    additional_claims = {
         'username': moderator_user.username,
         'email': moderator_user.email,
         'picture': moderator_user.profile_pic
     }
-    access_token = create_access_token(identity=identity)
+    access_token = create_access_token(
+        identity=str(moderator_user.id),
+        additional_claims=additional_claims
+    )
     return {'Authorization': f'Bearer {access_token}'}
 
 

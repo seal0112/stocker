@@ -4,7 +4,6 @@ import logging
 
 from flask import (request, jsonify, make_response)
 from flask_swagger import swagger
-from flask_swagger_ui import get_swaggerui_blueprint
 
 from app import create_app, db
 from app.utils.slack_manager import SlackManager

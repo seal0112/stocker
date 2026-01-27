@@ -1,5 +1,4 @@
 from ..database_setup import BasicInformation
-from .. import db
 import logging
 
 

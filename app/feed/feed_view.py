@@ -15,7 +15,6 @@ from app.schemas.announcement_income_sheet_analysis_schema import AnnouncementIn
 from app.schemas.feed_schema import FeedSchema
 
 from app.utils.model_utilities import get_current_date
-from app.utils.aws_service import AWSService
 from app.utils.announcement_handler import AnnounceHandler
 
 
@@ -151,7 +150,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
             single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
                 single_season_incomesheet, year, season
             )
-        except Exception as e:
+        except Exception:
             single_season_incomesheet = {}
             single_season_incomesheet['processing_failed'] = True
         finally:
@@ -173,7 +172,7 @@ def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
             income_sheet, year, season)
         single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
             single_season_incomesheet, year, season)
-    except Exception as e:
+    except Exception:
         single_season_incomesheet = {}
         single_season_incomesheet['processing_failed'] = True
     finally:

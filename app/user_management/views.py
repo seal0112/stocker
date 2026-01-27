@@ -2,16 +2,15 @@ import logging
 
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import get_jwt_identity
 from marshmallow import ValidationError
 
 from app import db
 from app.decorators import admin_required
+from app.utils.jwt_utils import get_current_user
 from . import user_management, roles_bp
 from .user_service import UserService
 from .serializer import (
     user_schema,
-    users_schema,
     roles_schema,
     update_user_roles_schema,
     update_user_status_schema
@@ -80,7 +79,7 @@ class UserRolesView(MethodView):
     @admin_required
     def patch(self, user_id):
         """Update user roles."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
 
         # Validate request body
         try:

@@ -1,5 +1,4 @@
 """Tests for BasicInformation API endpoints."""
-import pytest
 import json
 
 from app import db

@@ -4,7 +4,7 @@ from datetime import date
 from sqlalchemy.exc import IntegrityError
 
 from app import db
-from app.database_setup import MonthRevenue, BasicInformation
+from app.database_setup import MonthRevenue
 
 
 class TestMonthRevenueModel:

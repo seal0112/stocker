@@ -7,7 +7,6 @@ from app import db
 from app.models.feed import Feed
 from app.models.feed_tag import FeedTag
 from app.models.feed_feed_tag import FeedFeedTag
-from app.database_setup import BasicInformation
 
 
 class TestFeedModel:

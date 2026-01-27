@@ -6,13 +6,14 @@ from flask import (
 )
 from flask_jwt_extended import (
     jwt_required, create_access_token, create_refresh_token,
-    get_jwt_identity, set_access_cookies, set_refresh_cookies,
+    set_access_cookies, set_refresh_cookies,
     unset_jwt_cookies
 )
 
 from . import auth
 from . import user_service
 from . import login_service
+from app.utils.jwt_utils import get_current_user
 
 
 user_serv = user_service.UserService()
@@ -29,8 +30,12 @@ logger = logging.getLogger(__name__)
 
 #     return User.query.filter_by(id=identity['id']).one_or_none()
 
-def make_jwt_repsonse(identity):
-    access_token = create_access_token(identity=identity)
+def make_jwt_repsonse(user_id, additional_claims=None):
+    """Create JWT response with user_id as identity and additional claims."""
+    access_token = create_access_token(
+        identity=str(user_id),
+        additional_claims=additional_claims or {}
+    )
     response = make_response(
         jsonify(access_token=access_token), 200
     )
@@ -68,14 +73,17 @@ def login():
         # Update last login time
         user_serv.update_last_login(user_id)
 
-        identity = {
-            'id': user.id,
+        # Flask-JWT-Extended 4.x: identity must be string, use additional_claims for extra data
+        additional_claims = {
             'username': user.username,
             'email': user.email,
             'picture': user.profile_pic
         }
-        response = make_jwt_repsonse(identity)
-        refresh_token = create_refresh_token(identity=identity)
+        response = make_jwt_repsonse(user.id, additional_claims)
+        refresh_token = create_refresh_token(
+            identity=str(user.id),
+            additional_claims=additional_claims
+        )
         set_refresh_cookies(response, refresh_token)
 
         return response
@@ -87,8 +95,13 @@ def login():
 @auth.route('/refresh')
 @jwt_required(locations=["cookies"], refresh=True)
 def refresh():
-    identity = get_jwt_identity()
-    response = make_jwt_repsonse(identity)
+    current_user = get_current_user()
+    additional_claims = {
+        'username': current_user['username'],
+        'email': current_user['email'],
+        'picture': current_user['picture']
+    }
+    response = make_jwt_repsonse(current_user['id'], additional_claims)
 
     return response
 
@@ -107,10 +120,10 @@ def logout():
 @auth.route("/user_info")
 @jwt_required()
 def get_user_info():
-    identity = get_jwt_identity()
-    user = user_serv.get_user(identity['id'])
+    current_user = get_current_user()
+    user = user_serv.get_user(current_user['id'])
 
     return jsonify({
-        **identity,
+        **current_user,
         'roles': user.role_names if user else []
     }), 200

@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 from decimal import Decimal
 
-from app.database_setup import DailyInformation, BasicInformation
+from app.database_setup import DailyInformation
 
 
 @pytest.fixture

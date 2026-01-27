@@ -5,7 +5,6 @@ Architecture:
 - Each fixture cleans up ONLY the records it creates
 """
 import pytest
-from datetime import date
 from decimal import Decimal
 from app import db
 from app.monthly_valuation.models import MonthlyValuation

@@ -1,7 +1,7 @@
 import pytest
 from datetime import date
 
-from app.database_setup import BalanceSheet, BasicInformation
+from app.database_setup import BalanceSheet
 
 
 @pytest.fixture

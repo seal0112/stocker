@@ -2,10 +2,10 @@ import logging
 
 from flask import request, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import get_jwt_identity
 from marshmallow import ValidationError
 
 from app import db
+from app.utils.jwt_utils import get_current_user
 from app.models import ApiToken
 from app.decorators import moderator_required
 from . import api_token
@@ -22,14 +22,14 @@ class ApiTokenListView(MethodView):
     @moderator_required
     def get(self):
         """List all tokens for the current user."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
         tokens = token_service.get_user_tokens(current_user['id'])
         return jsonify(api_tokens_schema.dump(tokens)), 200
 
     @moderator_required
     def post(self):
         """Create a new API token. Requires admin or moderator role."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
         user_id = current_user['id']
 
         # Check token limit
@@ -71,7 +71,7 @@ class ApiTokenDetailView(MethodView):
     @moderator_required
     def get(self, token_id):
         """Get a specific token."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
         token_obj = token_service.get_token_by_id(token_id, current_user['id'])
 
         if not token_obj:
@@ -82,7 +82,7 @@ class ApiTokenDetailView(MethodView):
     @moderator_required
     def delete(self, token_id):
         """Revoke/delete a token."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
 
         if not token_service.revoke_token(token_id, current_user['id']):
             return jsonify({"error": "Token not found"}), 404
@@ -96,7 +96,7 @@ class ApiTokenRegenerateView(MethodView):
     @moderator_required
     def post(self, token_id):
         """Regenerate a token with a new value."""
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
 
         try:
             plain_token = token_service.regenerate_token(token_id, current_user['id'])

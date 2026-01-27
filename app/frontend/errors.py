@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, make_response
+from flask import request, make_response
 import json
 import logging
 from . import frontend

@@ -1,7 +1,7 @@
 """API tests for AnnouncementIncomeSheetAnalysis endpoints."""
 import pytest
 import json
-from datetime import date, timedelta
+from datetime import date
 
 from app import db
 from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis

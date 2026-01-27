@@ -2,7 +2,6 @@ import logging
 
 from flask import request, make_response, jsonify
 from flask.views import MethodView
-from flask_jwt_extended import jwt_required
 
 from app import db
 from .monthly_valuation_services import MonthlyValuationService

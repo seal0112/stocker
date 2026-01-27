@@ -1,12 +1,10 @@
 """Unit tests for auth decorators."""
 import pytest
-from unittest.mock import patch, MagicMock
-from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager, create_access_token
+from unittest.mock import patch
+from flask import jsonify
 
 from app import db
 from app.models.user import User
-from app.models.role import Role
 from app.decorators.auth import role_required, admin_required, moderator_required
 
 

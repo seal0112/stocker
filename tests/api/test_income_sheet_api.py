@@ -1,8 +1,6 @@
 """API tests for IncomeSheet endpoints."""
 import pytest
 import json
-from datetime import date
-from decimal import Decimal
 
 from app import db
 from app.database_setup import IncomeSheet, DailyInformation

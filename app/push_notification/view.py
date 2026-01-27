@@ -1,9 +1,10 @@
 import logging
 
 from flask import request, make_response
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 
+from app.utils.jwt_utils import get_current_user
 from . import push_notification
 from .. import db
 from ..database_setup import PushNotification
@@ -14,13 +15,13 @@ class PushNotificationApi(MethodView):
     decorators = [jwt_required()]
 
     def get(self):
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
         user_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
         return PushNotificationSchema().dumps(user_notification)
 
     def put(self):
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
         user_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
 

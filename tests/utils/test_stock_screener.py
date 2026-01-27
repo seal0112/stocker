@@ -11,7 +11,6 @@ from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 from app.utils.stock_screener import StockScreenerManager
-from app.database_setup import BasicInformation
 from app.models.recommended_stock import RecommendedStock
 
 

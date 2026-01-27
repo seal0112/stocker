@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from flask import request
+from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
@@ -51,7 +51,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
         # Order by update_date descending
         results = query.order_by(AnnouncementIncomeSheetAnalysis.update_date.desc()).all()
 
-        return AnnouncementIncomeSheetAnalysisSchema(many=True).dumps(results)
+        return jsonify(AnnouncementIncomeSheetAnalysisSchema(many=True).dump(results))
 
 
 announcement_income_sheet_analysis.add_url_rule('',

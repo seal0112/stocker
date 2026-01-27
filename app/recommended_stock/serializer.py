@@ -70,5 +70,5 @@ class RecommendedStockDetailSchema(ma.Schema):
                 }
 
             return info
-        except:
+        except Exception:
             return None

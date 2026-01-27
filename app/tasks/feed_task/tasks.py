@@ -20,7 +20,7 @@ def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
             income_sheet, year, season)
         single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
             single_season_incomesheet, year, season)
-    except:
+    except Exception:
         single_season_incomesheet = {}
         single_season_incomesheet['processing_failed'] = True
     finally:

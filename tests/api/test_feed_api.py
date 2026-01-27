@@ -2,11 +2,9 @@
 import pytest
 import json
 from datetime import datetime, timedelta
-from unittest.mock import patch
 
 from app import db
 from app.models.feed import Feed
-from app.models.feed_tag import FeedTag
 
 
 def cleanup_feed_by_link(link):
