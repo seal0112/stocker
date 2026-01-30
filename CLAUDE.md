@@ -55,5 +55,12 @@ celery -A celery_worker.celery worker --loglevel=info
 
 ## Work Plans
 
-<!-- 在此記錄進行中的工作和下次要做的事 -->
+詳細待辦事項見 [docs/API_IMPROVEMENT_CHECKLIST.md](docs/API_IMPROVEMENT_CHECKLIST.md)
+
+當前進度：
+- [ ] Phase 1: 安全性修復 (8%) - 加上 `@jwt_required()` 認證
+- [ ] Phase 3: 完成 Stub 實作
+- [ ] Phase 5: AI 功能 - 法說會新聞摘要
+- [ ] Phase 6: Observability - Prometheus/Loki/Grafana
+- [ ] Phase 7: 股票篩選器視覺化
 - [ ] 持續擴充 API 單元測試
