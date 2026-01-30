@@ -115,8 +115,8 @@
 - [x] [app/earnings_call/views.py:34](../app/earnings_call/views.py#L34) - 使用 `{"status": "資料已存在"}` ✅ 2024-12-08 (已在 2.4 修復)
 - [x] [app/income_sheet/view.py:72-74](../app/income_sheet/view.py#L72) - 使用字串錯誤訊息 ✅ 2024-12-09 00:20
 - [x] [app/month_revenue/view.py:49-50](../app/month_revenue/view.py#L49) - `make_response(404)` 沒有訊息 ✅ 2024-12-09 (已在 2.2 修復)
-- [ ] [app/balance_sheet/view.py:36](../app/balance_sheet/view.py#L36) - 回傳純字串 (Stub, 見 3.1)
-- [ ] [app/cash_flow/view.py:37](../app/cash_flow/view.py#L37) - 回傳純字串 (Stub, 見 3.1)
+- [x] [app/balance_sheet/view.py:36](../app/balance_sheet/view.py#L36) - 回傳純字串 (Stub, 見 3.1) ✅ 2026-01-30
+- [x] [app/cash_flow/view.py:37](../app/cash_flow/view.py#L37) - 回傳純字串 (Stub, 見 3.1) ✅ 2026-01-30
 
 ---
 
@@ -171,8 +171,8 @@ if not follow_data:
 
 ### 3.1 完成 Stub 實作
 
-- [ ] [app/balance_sheet/view.py:36-37](../app/balance_sheet/view.py#L36) - GET 回傳字串
-- [ ] [app/cash_flow/view.py:37-38](../app/cash_flow/view.py#L37) - GET 回傳字串
+- [x] [app/balance_sheet/view.py:36-37](../app/balance_sheet/view.py#L36) - GET 回傳字串 ✅ 2026-01-30
+- [x] [app/cash_flow/view.py:37-38](../app/cash_flow/view.py#L37) - GET 回傳字串 ✅ 2026-01-30
 - [ ] [app/earnings_call/views.py:45-47](../app/earnings_call/views.py#L45) - GET detail 是 placeholder
 
 ---
@@ -500,13 +500,13 @@ def get(self):
 | Phase | 總項目 | 已完成 | 完成率 |
 |-------|--------|--------|--------|
 | Phase 1: 安全性 | 25 | 2 | 8% |
-| Phase 2: 一致性 | 18 | 16 | 89% |
-| Phase 3: 品質 | 10 | 7 | 70% |
+| Phase 2: 一致性 | 18 | 18 | 100% |
+| Phase 3: 品質 | 10 | 9 | 90% |
 | Phase 4: 功能 | 14 | 0 | 0% |
 | Phase 5: AI 功能 | 16 | 0 | 0% |
 | Phase 6: Observability | 17 | 2 | 12% |
 | Phase 7: 篩選器視覺化 | 26 | 0 | 0% |
-| **總計** | **126** | **27** | **21%** |
+| **總計** | **126** | **31** | **25%** |
 
 ---
 
@@ -514,6 +514,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-01-30 | 統一所有 API 回傳 JSON 格式，完成 balance_sheet/cash_flow GET 實作 (4項) | Claude |
 | 2026-01-18 | 完成 6.2 structured logging (structlog) 及 request_id 追蹤 (2項) | Claude |
 | 2026-01-15 | 新增 Phase 7: 股票篩選器視覺化 - 拖拉介面、stock_metrics 彙總表 (26項) | Claude |
 | 2026-01-14 | 新增 Phase 6: Observability & Monitoring - Prometheus, Loki, Grafana (17項) | Claude |
