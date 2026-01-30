@@ -1,6 +1,6 @@
 import logging
 
-from flask import request, make_response
+from flask import request, jsonify
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 
@@ -18,7 +18,7 @@ class PushNotificationApi(MethodView):
         current_user = get_current_user()
         user_notification = PushNotification.query.filter_by(
             user_id=current_user['id']).one_or_none()
-        return PushNotificationSchema().dumps(user_notification)
+        return jsonify(PushNotificationSchema().dump(user_notification))
 
     def put(self):
         current_user = get_current_user()
@@ -28,9 +28,9 @@ class PushNotificationApi(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response({"error": "Request body is required"}, 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response({"error": "Invalid JSON format"}, 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         if user_notification is None:
             user_notification = PushNotification()
@@ -53,11 +53,9 @@ class PushNotificationApi(MethodView):
             logging.error(
                 f'Failed to update user {current_user["id"]} push notification: {ex}')
             db.session.rollback()
-            return make_response({
-                "error": "Failed to update push notification"
-            }, 400)
+            return jsonify({"error": "Failed to update push notification"}), 400
         else:
-            return PushNotificationSchema().dumps(user_notification)
+            return jsonify(PushNotificationSchema().dump(user_notification))
 
 
 push_notification.add_url_rule('/',

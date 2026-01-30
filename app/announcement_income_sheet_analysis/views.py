@@ -29,7 +29,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
                 date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
                 query = query.filter(AnnouncementIncomeSheetAnalysis.update_date == date_obj)
             except ValueError:
-                return {"error": "Invalid date format. Use YYYY-MM-DD"}, 400
+                return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
 
         # Filter by date range
         start_date_str = request.args.get('start_date', None)
@@ -38,7 +38,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
                 start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
                 query = query.filter(AnnouncementIncomeSheetAnalysis.update_date >= start_date)
             except ValueError:
-                return {"error": "Invalid start_date format. Use YYYY-MM-DD"}, 400
+                return jsonify({"error": "Invalid start_date format. Use YYYY-MM-DD"}), 400
 
         end_date_str = request.args.get('end_date', None)
         if end_date_str:
@@ -46,7 +46,7 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
                 end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
                 query = query.filter(AnnouncementIncomeSheetAnalysis.update_date <= end_date)
             except ValueError:
-                return {"error": "Invalid end_date format. Use YYYY-MM-DD"}, 400
+                return jsonify({"error": "Invalid end_date format. Use YYYY-MM-DD"}), 400
 
         # Order by update_date descending
         results = query.order_by(AnnouncementIncomeSheetAnalysis.update_date.desc()).all()

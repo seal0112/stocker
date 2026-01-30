@@ -49,7 +49,7 @@ class handleBasicInfo(MethodView):
         if basicInfo is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            return BasicInformationDetailSchema().dumps(basicInfo)
+            return jsonify(BasicInformationDetailSchema().dump(basicInfo))
 
     def post(self, stock_id):
         """
@@ -62,9 +62,9 @@ class handleBasicInfo(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         try:
             if basicInfo is not None:
@@ -122,9 +122,9 @@ class handleBasicInfo(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         try:
             if basicInfo is not None:

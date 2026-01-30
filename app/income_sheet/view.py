@@ -83,10 +83,10 @@ class handleIncomeSheet(MethodView):
 
         if incomeSheet is None:
             return jsonify({"error": "Failed to get %s Income Sheet" % stock_id}), 404
-        elif mode == 'single' or mode == None:
-            return IncomeSheetSchema(many=True).dumps([incomeSheet])
+        elif mode == 'single' or mode is None:
+            return jsonify(IncomeSheetSchema(many=True).dump([incomeSheet]))
         else:
-            return IncomeSheetSchema(many=True).dumps(incomeSheet)
+            return jsonify(IncomeSheetSchema(many=True).dump(incomeSheet))
 
     def post(self, stock_id):
         """
@@ -96,9 +96,9 @@ class handleIncomeSheet(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         incomeSheet = db.session.query(IncomeSheet).filter_by(
             stock_id=stock_id).filter_by(

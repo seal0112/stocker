@@ -35,15 +35,53 @@ class handleCashFlow(MethodView):
     """
 
     def get(self, stock_id):
-        return 'cash_flow: %s' % stock_id
+        mode = request.args.get('mode')
+        if mode is None:
+            cashFlow = db.session.query(CashFlow).filter_by(
+                stock_id=stock_id).order_by(
+                    CashFlow.year.desc()).order_by(
+                        CashFlow.season.desc()).first()
+        elif mode == 'single':
+            year = request.args.get('year', type=int)
+            season = request.args.get('season', type=int)
+
+            if year is None or season is None:
+                return jsonify({"error": "year and season are required for single mode"}), 400
+            if season not in (1, 2, 3, 4):
+                return jsonify({"error": "season must be 1, 2, 3, or 4"}), 400
+
+            cashFlow = db.session.query(CashFlow).filter_by(
+                stock_id=stock_id).filter_by(
+                    year=year).filter_by(
+                        season=season).one_or_none()
+        elif mode == 'multiple':
+            year = request.args.get('year', type=int)
+
+            if year is not None and (year < 1 or year > 100):
+                return jsonify({"error": "Invalid year parameter"}), 400
+
+            season = 4 if year is None else year * 4
+            cashFlow = db.session.query(CashFlow).filter_by(
+                stock_id=stock_id).order_by(
+                    CashFlow.year.desc()).order_by(
+                        CashFlow.season.desc()).limit(season).all()
+        else:
+            cashFlow = None
+
+        if cashFlow is None:
+            return jsonify({"error": "Failed to get %s Cash Flow" % stock_id}), 404
+        elif mode == 'single' or mode is None:
+            return jsonify(cashFlow.serialize if hasattr(cashFlow, 'serialize') else {"stock_id": stock_id, "year": cashFlow.year, "season": cashFlow.season})
+        else:
+            return jsonify([c.serialize if hasattr(c, 'serialize') else {"stock_id": stock_id, "year": c.year, "season": c.season} for c in cashFlow])
 
     def post(self, stock_id):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         cashFlow = db.session.query(CashFlow).filter_by(
             stock_id=stock_id).filter_by(

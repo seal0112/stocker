@@ -1,6 +1,7 @@
-from flask import request, make_response
-import json
 import logging
+
+from flask import request, jsonify
+
 from . import frontend
 
 
@@ -10,10 +11,10 @@ logger = logging.getLogger(__name__)
 @frontend.errorhandler(404)
 def pageNotfound(error):
     logger.info('Page not found: %s', (request.path))
-    return make_response(json.dumps('404 not foundss'), 404)
+    return jsonify({"error": "Not found"}), 404
 
 
 @frontend.errorhandler(500)
 def internalServerError(error):
     logger.error('Server Error: %s', (error))
-    return make_response(json.dumps('500 server error'), 500)
+    return jsonify({"error": "Internal server error"}), 500

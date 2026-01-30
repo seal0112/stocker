@@ -20,7 +20,7 @@ class EarningsCallListApi(MethodView):
         stock = request.args.get('stock', None)
         meeting_date = request.args.get('meeting_date', datetime.now())
         earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
-        return EarningsCallchema(many=True).dumps(earnings_calls)
+        return jsonify(EarningsCallchema(many=True).dump(earnings_calls))
 
     # @jwt_required()
     def post(self):
@@ -46,7 +46,7 @@ class EarningsCallListApi(MethodView):
             logger.error(f"Error creating earnings call: {e}", exc_info=True)
             return jsonify({"error": "Failed to create earnings call"}), 400
         else:
-            return EarningsCallchema().dumps(earnings_call), 201
+            return jsonify(EarningsCallchema().dump(earnings_call)), 201
 
 class EarningsCallDetailApi(MethodView):
     @jwt_required()
@@ -63,12 +63,12 @@ class EarningsCallDetailApi(MethodView):
             return jsonify({"error": "Invalid JSON format"}), 400
 
         earnings_call = earnings_call_service.update_earnings_call(earnings_call_id, earnings_call_data)
-        return EarningsCallchema().dumps(earnings_call)
+        return jsonify(EarningsCallchema().dump(earnings_call))
 
     @jwt_required()
     def delete(self, earnings_call_id):
         earnings_call_service.delete_earnings_call(earnings_call_id)
-        return jsonify({"earnings_call": "DELETE"}, 204)
+        return '', 204
 
 
 earnings_call.add_url_rule('',

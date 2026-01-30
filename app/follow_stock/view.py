@@ -19,7 +19,7 @@ class FollowStockListApi(MethodView):
         show_delete = request.args.get('show_delete', False)
         follow_stocks = follow_stock_service.get_all_follow_stock(
             current_user['id'], show_delete)
-        return FollowStockSchema(many=True).dumps(follow_stocks)
+        return jsonify(FollowStockSchema(many=True).dump(follow_stocks))
 
     @jwt_required()
     def post(self):
@@ -37,7 +37,7 @@ class FollowStockListApi(MethodView):
             payload['long_or_short'],
             payload['comment']
         )
-        return FollowStockSchema().dumps(follow_data)
+        return jsonify(FollowStockSchema().dump(follow_data))
 
 
 class FollowStockDetailApi(MethodView):
@@ -51,7 +51,7 @@ class FollowStockDetailApi(MethodView):
         if not follow_data:
             return jsonify({"error": "Resource not found"}), 404
 
-        return FollowStockSchema().dumps(follow_data)
+        return jsonify(FollowStockSchema().dump(follow_data))
 
     @jwt_required()
     def patch(self, follow_stock_id):
@@ -70,7 +70,7 @@ class FollowStockDetailApi(MethodView):
                 payload['long_or_short'],
                 payload['comment']
             )
-            return FollowStockSchema().dumps(follow_data)
+            return jsonify(FollowStockSchema().dump(follow_data))
         except Exception:
             return jsonify({"error": "Resource not found"}), 404
 

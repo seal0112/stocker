@@ -50,7 +50,7 @@ class handleMonthRevenue(MethodView):
         if monthReve is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            return MonthRevenueSchema(many=True).dumps(monthReve)
+            return jsonify(MonthRevenueSchema(many=True).dump(monthReve))
 
     def post(self, stock_id):
         """
@@ -60,9 +60,9 @@ class handleMonthRevenue(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         monthReve = db.session.query(MonthRevenue).filter_by(
             stock_id=stock_id).filter_by(

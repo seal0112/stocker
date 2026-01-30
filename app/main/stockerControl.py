@@ -31,7 +31,7 @@ logger.addHandler(console)
 
 
 def showMain():
-    return 'Hello'
+    return jsonify({"message": "Hello"})
 
 
 @main.route('screener')
@@ -55,16 +55,14 @@ def get_incomesheet_announcement():
     income_sheet = announce_handler.get_incomesheet_announce()
     single_season_incomesheet = announce_handler.get_single_season_incomesheet(
         income_sheet, payload['year'], payload['season'])
-    return make_response(single_season_incomesheet)
+    return jsonify(single_season_incomesheet)
 
 
 def store_incomesheet_announcement():
     payload = json.loads(request.data)
     feed = Feed.query.filter_by(id=payload['feed_id']).one_or_none()
     if feed is None:
-        res = make_response(json.dumps(
-            'Failed to get %s Daily information.' % (payload['feed_id'])), 404)
-        return res
+        return jsonify({"error": "Failed to get %s Daily information." % (payload['feed_id'])}), 404
 
 
     income_sheet = payload['income_sheet']
@@ -128,15 +126,11 @@ class getStockNumber(MethodView):
             if isinstance(ex, KeyError):
                 logger.warning(
                     "400 report type %s not found." % (reportType))
-                res = make_response(
-                    json.dumps('Failed to fetch stock number'), 400)
+                return jsonify({"error": "Failed to fetch stock number"}), 400
             else:
                 logger.warning(
                     "400 stock id not found. Reason: %s" % (ex))
-                res = make_response(
-                    json.dumps(
-                        'Failed to update basic_information.'), 400)
-            return res
+                return jsonify({"error": "Failed to update basic_information."}), 400
 
         return jsonify(res)
 
@@ -151,9 +145,7 @@ class handleDailyInfo(MethodView):
             stock_id=stock_id).one_or_none()
 
         if dailyInfo is None:
-            res = make_response(json.dumps(
-                'Failed to get %s Daily information.' % (stock_id)), 404)
-            return res
+            return jsonify({"error": "Failed to get %s Daily information." % (stock_id)}), 404
         else:
             return jsonify(dailyInfo.serialize)
 
@@ -184,24 +176,15 @@ class handleDailyInfo(MethodView):
             logging.warning(
                 "400 %s is failed to update Daily price. Reason: %s"
                 % (stock_id, ie))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Daily price.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Daily price." % (stock_id)}), 400
         except Exception as ex:
             db.session.rollback()
             logger.warning(
                 "400 %s is failed to update Daily Information. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Daily Information.'
-                    % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Daily Information." % (stock_id)}), 400
 
-        res = make_response(
-            json.dumps('OK'), 200)
-        return res
+        return jsonify({"message": "OK"})
 
 
 class handleStockCommodity(MethodView):
@@ -229,8 +212,9 @@ class handleStockCommodity(MethodView):
     def get(self, stock_id):
         stockCommodity = db.session.query(StockCommodity).filter_by(
             stock_id=stock_id).one_or_none()
-        return 'Stock Commodity: %s' % stock_id\
-            if stockCommodity is None else stockCommodity.serialize
+        if stockCommodity is None:
+            return jsonify({"error": "Stock Commodity not found for %s" % stock_id}), 404
+        return jsonify(stockCommodity.serialize)
 
     def post(self, stock_id):
         payload = json.loads(request.data)
@@ -253,24 +237,15 @@ class handleStockCommodity(MethodView):
             logging.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
                 % (stock_id, ie))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Stock Commodity.' % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Stock Commodity." % (stock_id)}), 400
         except Exception as ex:
             db.session.rollback()
             logger.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
                 % (stock_id, ex))
-            res = make_response(
-                json.dumps(
-                    'Failed to update %s Stock Commodity.'
-                    % (stock_id)), 400)
-            return res
+            return jsonify({"error": "Failed to update %s Stock Commodity." % (stock_id)}), 400
 
-        res = make_response(
-            json.dumps('OK'), 200)
-        return res
+        return jsonify({"message": "OK"})
 
 
 main.add_url_rule('/',
