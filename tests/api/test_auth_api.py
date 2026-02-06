@@ -7,13 +7,15 @@ from flask_jwt_extended import create_access_token
 @pytest.fixture
 def get_auth_client(client):
     def _auth_client(user):
-        identity = {
-            'id': user.id,
+        additional_claims = {
             'username': user.username,
             'email': user.email,
             'picture': user.profile_pic
         }
-        token = create_access_token(identity=identity)
+        token = create_access_token(
+            identity=str(user.id),
+            additional_claims=additional_claims
+        )
         client.environ_base['HTTP_AUTHORIZATION'] = f'Bearer {token}'
         return client
     return _auth_client

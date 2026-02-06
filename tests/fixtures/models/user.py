@@ -177,13 +177,15 @@ def deleted_user_token(test_app, user_role):
     db.session.commit()
 
     # 2. 產生身份與 Token
-    identity = {
-        'id': user.id,
+    additional_claims = {
         'username': user.username,
         'email': user.email,
         'picture': user.profile_pic
     }
-    token = create_access_token(identity=identity)
+    token = create_access_token(
+        identity=str(user.id),
+        additional_claims=additional_claims
+    )
 
     # 3. 刪除使用者
     db.session.delete(user)

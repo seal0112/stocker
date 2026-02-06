@@ -20,7 +20,7 @@ class TestRoleRequired:
 
         # Mock JWT verification and identity
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': admin_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': admin_user.id, 'username': admin_user.username, 'email': admin_user.email, 'picture': None}):
                 response, status_code = protected_endpoint()
                 assert status_code == 200
                 assert response.get_json()['message'] == 'success'
@@ -32,7 +32,7 @@ class TestRoleRequired:
             return jsonify({'message': 'success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': regular_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': regular_user.id, 'username': regular_user.username, 'email': regular_user.email, 'picture': None}):
                 response, status_code = protected_endpoint()
                 assert status_code == 403
                 assert response.get_json()['error'] == 'Access denied'
@@ -44,7 +44,7 @@ class TestRoleRequired:
             return jsonify({'message': 'success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': 99999}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': 99999, 'username': 'unknown', 'email': 'unknown@test.com', 'picture': None}):
                 response, status_code = protected_endpoint()
                 assert status_code == 404
                 assert response.get_json()['error'] == 'User not found'
@@ -56,7 +56,7 @@ class TestRoleRequired:
             return jsonify({'message': 'success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': moderator_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': moderator_user.id, 'username': moderator_user.username, 'email': moderator_user.email, 'picture': None}):
                 response, status_code = protected_endpoint()
                 assert status_code == 200
                 assert response.get_json()['message'] == 'success'
@@ -68,7 +68,7 @@ class TestRoleRequired:
             return jsonify({'message': 'success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': regular_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': regular_user.id, 'username': regular_user.username, 'email': regular_user.email, 'picture': None}):
                 response, status_code = protected_endpoint()
                 assert status_code == 403
 
@@ -83,7 +83,7 @@ class TestAdminRequired:
             return jsonify({'message': 'admin success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': admin_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': admin_user.id, 'username': admin_user.username, 'email': admin_user.email, 'picture': None}):
                 response, status_code = admin_endpoint()
                 assert status_code == 200
                 assert response.get_json()['message'] == 'admin success'
@@ -95,7 +95,7 @@ class TestAdminRequired:
             return jsonify({'message': 'admin success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': regular_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': regular_user.id, 'username': regular_user.username, 'email': regular_user.email, 'picture': None}):
                 response, status_code = admin_endpoint()
                 assert status_code == 403
                 assert response.get_json()['error'] == 'Access denied'
@@ -108,7 +108,7 @@ class TestAdminRequired:
             return jsonify({'message': 'admin success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': moderator_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': moderator_user.id, 'username': moderator_user.username, 'email': moderator_user.email, 'picture': None}):
                 response, status_code = admin_endpoint()
                 assert status_code == 403
 
@@ -119,7 +119,7 @@ class TestAdminRequired:
             return jsonify({'message': 'admin success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': 99999}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': 99999, 'username': 'unknown', 'email': 'unknown@test.com', 'picture': None}):
                 response, status_code = admin_endpoint()
                 assert status_code == 404
                 assert response.get_json()['error'] == 'User not found'
@@ -135,7 +135,7 @@ class TestModeratorRequired:
             return jsonify({'message': 'moderator success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': admin_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': admin_user.id, 'username': admin_user.username, 'email': admin_user.email, 'picture': None}):
                 response, status_code = moderator_endpoint()
                 assert status_code == 200
                 assert response.get_json()['message'] == 'moderator success'
@@ -147,7 +147,7 @@ class TestModeratorRequired:
             return jsonify({'message': 'moderator success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': moderator_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': moderator_user.id, 'username': moderator_user.username, 'email': moderator_user.email, 'picture': None}):
                 response, status_code = moderator_endpoint()
                 assert status_code == 200
                 assert response.get_json()['message'] == 'moderator success'
@@ -159,7 +159,7 @@ class TestModeratorRequired:
             return jsonify({'message': 'moderator success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': regular_user.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': regular_user.id, 'username': regular_user.username, 'email': regular_user.email, 'picture': None}):
                 response, status_code = moderator_endpoint()
                 assert status_code == 403
                 assert response.get_json()['error'] == 'Access denied'
@@ -172,7 +172,7 @@ class TestModeratorRequired:
             return jsonify({'message': 'moderator success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': 99999}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': 99999, 'username': 'unknown', 'email': 'unknown@test.com', 'picture': None}):
                 response, status_code = moderator_endpoint()
                 assert status_code == 404
                 assert response.get_json()['error'] == 'User not found'
@@ -184,7 +184,7 @@ class TestModeratorRequired:
             return jsonify({'message': 'moderator success'}), 200
 
         with patch('app.decorators.auth.verify_jwt_in_request'):
-            with patch('app.decorators.auth.get_jwt_identity', return_value={'id': user_no_roles.id}):
+            with patch('app.decorators.auth.get_current_user', return_value={'id': user_no_roles.id, 'username': user_no_roles.username, 'email': user_no_roles.email, 'picture': None}):
                 response, status_code = moderator_endpoint()
                 assert status_code == 403
 
