@@ -111,7 +111,7 @@ class handleCashFlow(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Cash Flow. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Cash Flow" % stock_id}), 400

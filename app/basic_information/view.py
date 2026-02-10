@@ -97,7 +97,7 @@ class handleBasicInfo(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Basic Info. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Basic Info" % stock_id}), 400

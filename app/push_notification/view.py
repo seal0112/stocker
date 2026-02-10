@@ -10,6 +10,8 @@ from .. import db
 from ..database_setup import PushNotification
 from .serializer import PushNotificationSchema
 
+logger = logging.getLogger(__name__)
+
 
 class PushNotificationApi(MethodView):
     decorators = [jwt_required()]
@@ -50,7 +52,7 @@ class PushNotificationApi(MethodView):
             db.session.add(user_notification)
             db.session.commit()
         except Exception as ex:
-            logging.error(
+            logger.error(
                 f'Failed to update user {current_user["id"]} push notification: {ex}')
             db.session.rollback()
             return jsonify({"error": "Failed to update push notification"}), 400

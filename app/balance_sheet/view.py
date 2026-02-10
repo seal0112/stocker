@@ -110,7 +110,7 @@ class handleBalanceSheet(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Balance Sheet. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Balance Sheet" % stock_id}), 400

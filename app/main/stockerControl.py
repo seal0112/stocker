@@ -173,7 +173,7 @@ class handleDailyInfo(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Daily price. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Daily price." % (stock_id)}), 400
@@ -234,7 +234,7 @@ class handleStockCommodity(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Stock Commodity. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Stock Commodity." % (stock_id)}), 400

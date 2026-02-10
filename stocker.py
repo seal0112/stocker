@@ -44,7 +44,7 @@ def spec():
 
 @app.errorhandler(404)
 def pageNotfound(error):
-    logging.info('Page not found: %s', (request.path))
+    logger.info('Page not found: %s', (request.path))
     return make_response(json.dumps('404 not found'), 404)
 
 

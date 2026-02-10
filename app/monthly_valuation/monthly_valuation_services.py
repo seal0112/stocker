@@ -7,6 +7,8 @@ from .models import MonthlyValuation
 from .serializer import MonthlyValuationSchema
 from .. import db
 
+logger = logging.getLogger(__name__)
+
 
 class MonthlyValuationService():
 
@@ -26,7 +28,7 @@ class MonthlyValuationService():
         try:
             validated_data = MonthlyValuationSchema().load(monthly_valuation_data)
         except ValidationError as err:
-            logging.error(err.messages)
+            logger.error(err.messages)
             return None
 
         new_monthly_valuation = self.get_stock_monthly_valuation(
