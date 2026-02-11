@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 
 from app import db
 from app.utils.model_utilities import get_current_date

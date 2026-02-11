@@ -1,10 +1,10 @@
 from ..database_setup import DataUpdateDate
-import logging
+from app.log_config import get_logger
 from datetime import date
 from .. import db
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DataUpdateDateService:

@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 from datetime import datetime, timedelta
 
 from ..database_setup import StockSearchCounts
@@ -6,7 +6,7 @@ from .. import db
 from .. import redis_client
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class StockSearchCountService:

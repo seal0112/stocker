@@ -1,5 +1,5 @@
 import json
-import logging
+from app.log_config import get_logger
 
 from flask import (
     request, make_response, jsonify
@@ -18,7 +18,7 @@ from app.utils.jwt_utils import get_current_user
 
 user_serv = user_service.UserService()
 login_serv = login_service.LoginService()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # @jwt.user_lookup_loader

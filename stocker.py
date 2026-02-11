@@ -1,6 +1,6 @@
 import os
 import json
-import logging
+from app.log_config import get_logger
 
 from flask import (request, jsonify, make_response)
 from flask_swagger import swagger
@@ -16,7 +16,7 @@ PORT = os.environ.get('PORT')
 app.config['JSON_AS_ASCII'] = False
 
 # Logger setup
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
 DATE_FORMAT = '%Y-%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)

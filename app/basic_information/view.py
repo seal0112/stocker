@@ -1,5 +1,5 @@
 import json
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from flask import request, jsonify, make_response
@@ -13,7 +13,7 @@ from . import basic_information
 from .serializer import BasicInformationDetailSchema
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 

@@ -1,8 +1,8 @@
-import logging
+from app.log_config import get_logger
 
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # @main.errorhandler(404)

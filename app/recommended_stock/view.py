@@ -1,6 +1,6 @@
 """API endpoints for recommended stocks."""
 import json
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from flask import request, make_response, jsonify
@@ -11,7 +11,7 @@ from .services import RecommendedStockService
 from .serializer import RecommendedStockSchema, RecommendedStockDetailSchema
 from . import recommended_stock
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 recommended_stock_service = RecommendedStockService()
 
 

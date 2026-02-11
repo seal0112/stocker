@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 import pytz
 import re
@@ -19,7 +19,7 @@ from app.models import Feed
 from app.schemas.feed_schema import FeedSchema
 from app.utils.stock_search_count_service import StockSearchCountService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 

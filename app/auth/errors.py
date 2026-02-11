@@ -1,11 +1,11 @@
-import logging
+from app.log_config import get_logger
 
 from flask import jsonify, request
 
 from . import auth
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @auth.errorhandler(404)

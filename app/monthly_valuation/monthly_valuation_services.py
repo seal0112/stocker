@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
 from marshmallow import ValidationError
 
@@ -7,7 +7,7 @@ from .models import MonthlyValuation
 from .serializer import MonthlyValuationSchema
 from .. import db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class MonthlyValuationService():

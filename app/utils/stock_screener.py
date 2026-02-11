@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import math
 from pathlib import Path
-import logging
+from app.log_config import get_logger
 
 from sqlalchemy import text
 from app.database_setup import BasicInformation
@@ -10,7 +10,7 @@ from app.models.recommended_stock import RecommendedStock
 
 from .. import db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class StockScreenerManager:

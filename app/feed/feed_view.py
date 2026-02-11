@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import re
 from datetime import datetime, timedelta, date
 
@@ -18,7 +18,7 @@ from app.utils.model_utilities import get_current_date
 from app.utils.announcement_handler import AnnounceHandler
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 feed_services = FeedServices()
 
 

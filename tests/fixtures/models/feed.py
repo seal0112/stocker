@@ -1,12 +1,12 @@
 """Feed model fixtures for testing."""
-import logging
+from app.log_config import get_logger
 import pytest
 from datetime import datetime
 from sqlalchemy import text
 from app import db
 from app.models.feed import Feed
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @pytest.fixture

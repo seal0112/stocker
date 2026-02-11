@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
 from .models import Follow_Stock
 # from ..database_setup import DailyInformation

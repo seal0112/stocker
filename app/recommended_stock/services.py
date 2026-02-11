@@ -1,5 +1,5 @@
 """Business logic for recommended stocks."""
-import logging
+from app.log_config import get_logger
 from datetime import date, timedelta
 from typing import List, Optional, Dict
 
@@ -8,7 +8,7 @@ from app.models.recommended_stock import RecommendedStock
 from app.database_setup import BasicInformation
 from app.utils.model_utilities import get_current_date
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class RecommendedStockService:

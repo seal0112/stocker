@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required
@@ -10,7 +10,7 @@ from .. import db
 from ..database_setup import PushNotification
 from .serializer import PushNotificationSchema
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class PushNotificationApi(MethodView):

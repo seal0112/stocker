@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 
 from flask import request, jsonify
 from flask.views import MethodView
@@ -16,7 +16,7 @@ from .serializer import (
     update_user_status_schema
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 user_service = UserService()
 
 

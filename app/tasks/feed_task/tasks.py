@@ -3,10 +3,10 @@ from app.utils.announcement_handler import AnnounceHandler
 from app.utils.model_utilities import get_current_date
 from app.models import AnnouncementIncomeSheetAnalysis
 
-import logging
+from app.log_config import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # rate_limit='10/m' means 10 tasks per minute

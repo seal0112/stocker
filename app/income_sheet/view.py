@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 from datetime import datetime
 
@@ -15,7 +15,7 @@ from . import income_sheet
 from .serializer import IncomeSheetSchema
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 data_update_date_service = DataUpdateDateService()
 
 

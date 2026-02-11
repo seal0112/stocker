@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from app.models import Feed, FeedTag
@@ -7,7 +7,7 @@ from app.utils.data_update_date_service import DataUpdateDateService
 from app import db
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 basic_info_services = BasicInformationServices()
 data_update_date_service = DataUpdateDateService()
 

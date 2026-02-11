@@ -6,13 +6,13 @@ Architecture:
 - Child fixtures (month_revenue, income_sheet, etc.) clean up before this fixture
 - Pytest handles teardown in reverse dependency order automatically
 """
-import logging
+from app.log_config import get_logger
 import pytest
 from sqlalchemy import text
 from app import db
 from app.database_setup import BasicInformation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @pytest.fixture

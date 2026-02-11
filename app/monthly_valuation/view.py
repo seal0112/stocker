@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 
 from flask import request, jsonify
 from flask.views import MethodView
@@ -8,7 +8,7 @@ from .monthly_valuation_services import MonthlyValuationService
 from .serializer import MonthlyValuationSchema
 from . import monthly_valuation
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 monthly_valuation_service = MonthlyValuationService()
 

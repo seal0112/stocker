@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 
 from flask import request, jsonify
 from flask.views import MethodView
@@ -12,7 +12,7 @@ from . import api_token
 from .token_service import TokenService
 from .serializer import api_token_schema, api_tokens_schema, create_token_schema
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 token_service = TokenService()
 
 

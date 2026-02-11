@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 from datetime import datetime
 
@@ -19,7 +19,7 @@ from app.models import Feed
 from app.monthly_valuation.models import MonthlyValuation
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 DATE_FORMAT = '%m-%d %H:%M'
 formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)

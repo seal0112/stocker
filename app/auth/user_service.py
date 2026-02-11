@@ -1,11 +1,11 @@
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from app.models import User
 from app import db
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UserService():

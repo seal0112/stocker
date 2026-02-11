@@ -6,9 +6,9 @@ from . import balance_sheet
 import json
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class handleBalanceSheet(MethodView):
