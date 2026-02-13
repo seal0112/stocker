@@ -8,13 +8,13 @@ from app import db
 
 
 logger = get_logger(__name__)
-basic_info_services = BasicInformationServices()
-data_update_date_service = DataUpdateDateService()
 
 
 class FeedServices():
     def __init__(self):
         self.feed_size = 15
+        self.basic_info_services = BasicInformationServices()
+        self.data_update_date_service = DataUpdateDateService()
 
     def get_feed(self, feed_id):
         return Feed.query.filter_by(id=feed_id).one_or_none()
@@ -58,20 +58,20 @@ class FeedServices():
             else:
                 stock_id = feed_data.get('stock_id', None)
 
-            stock = basic_info_services.get_basic_information(stock_id)
+            stock = self.basic_info_services.get_basic_information(stock_id)
             feed.stock = stock
 
             if stock:
                 if feed_data['feedType'] == 'news':
-                    data_update_date_service.update_news_update_date(stock_id)
+                    self.data_update_date_service.update_news_update_date(stock_id)
                 else:
                     if len(feed_data['tags']):
-                        data_update_date_service.update_announcement_update_date(stock_id)
+                        self.   data_update_date_service.update_announcement_update_date(stock_id)
 
             db.session.add(feed)
             db.session.commit()
         except Exception as ex:
-            logging.exception(ex)
+            logger.exception(ex)
             db.session.rollback()
             return None
         else:

@@ -17,10 +17,6 @@ app.config['JSON_AS_ASCII'] = False
 
 # Logger setup
 logger = get_logger(__name__)
-BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
-DATE_FORMAT = '%Y-%m-%d %H:%M'
-formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
-
 
 @app.route("/spec")
 def spec():

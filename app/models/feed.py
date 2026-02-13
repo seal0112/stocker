@@ -6,6 +6,9 @@ from app.utils.model_utilities import get_current_date
 from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
 
 
+logger = get_logger(__name__)
+
+
 class Feed(db.Model):
     __tablename__ = 'feed'
 
@@ -68,7 +71,7 @@ class Feed(db.Model):
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                logging.exception(e)
+                logger.exception(e)
 
         return self.announcement_income_sheet_analysis
 

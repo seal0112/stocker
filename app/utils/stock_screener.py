@@ -91,7 +91,11 @@ class StockScreenerManager:
             dict: Statistics with keys 'added', 'skipped', 'total'
         """
         if not stocks:
-            logger.warning("No stocks to save")
+            logger.warning(
+                "stock_screener_empty_result",
+                module="StockScreenerManager.save_recommended_stock",
+                reason="No stocks to save"
+            )
             return {"added": 0, "skipped": 0, "total": 0}
 
         try:

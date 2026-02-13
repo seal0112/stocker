@@ -176,7 +176,7 @@ def checkFourSeasonEPS(stock_id):
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
-            logging.exception(ex)
+            logger.exception(ex)
 
 
 income_sheet.add_url_rule('/<stock_id>',

@@ -99,7 +99,7 @@ class HandleFeed(MethodView):
 
             return jsonify({'message': 'Created'}), 201
         except Exception as ex:
-            logging.exception(ex)
+            logger.exception(ex)
             db.session.rollback()
             return jsonify({'error': str(ex)}), 500
 

@@ -20,14 +20,6 @@ from app.monthly_valuation.models import MonthlyValuation
 
 
 logger = get_logger(__name__)
-BASIC_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-DATE_FORMAT = '%m-%d %H:%M'
-formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
-
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console.setFormatter(formatter)
-logger.addHandler(console)
 
 
 def showMain():
