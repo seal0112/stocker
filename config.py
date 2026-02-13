@@ -7,9 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-with open('{}/critical_file/client_secret.json'.format(
-        basedir)) as clientSecretReader:
-    client_secret = json.loads(clientSecretReader.read())
+_client_secret_path = os.path.join(basedir, 'critical_file', 'client_secret.json')
+try:
+    with open(_client_secret_path) as clientSecretReader:
+        client_secret = json.loads(clientSecretReader.read())
+except FileNotFoundError:
+    client_secret = {}
 
 DB_URL = (
     'mysql+pymysql://'
