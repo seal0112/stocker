@@ -1,5 +1,5 @@
 import os
-from app.log_config import get_logger
+import logging
 import gzip
 import shutil
 
