@@ -44,6 +44,8 @@ class UserService():
 
         try:
             db.session.add(new_user)
+            db.session.flush()
+            new_user.assign_default_role()
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
