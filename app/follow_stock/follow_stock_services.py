@@ -1,5 +1,5 @@
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
 from .models import Follow_Stock
 # from ..database_setup import DailyInformation
@@ -46,7 +46,7 @@ class FollowStockService():
             return new_follow_stock
         except Exception as ex:
             db.session.rollback()
-            logging.exception(
+            logger.exception(
                 f'fail create user-stock: {user_id}-{stock_id}, ex: {ex}')
             return None
 
@@ -63,7 +63,7 @@ class FollowStockService():
             return follow_data
         except Exception as ex:
             db.session.rollback()
-            logging.exception(
+            logger.exception(
                 f'fail update user-stock: {user_id}-{self.stock_id}, ex: {ex}')
             return None
 
@@ -79,6 +79,6 @@ class FollowStockService():
             return None
         except Exception as ex:
             db.session.rollback()
-            logging.exception(
+            logger.exception(
                 f'fail delete user-stock: {user_id}-{follow_stock.stock_id}, ex: {ex}')
             return None

@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 from datetime import datetime
 
@@ -13,7 +13,7 @@ from . import month_revenue
 from .serializer import MonthRevenueSchema
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 data_update_date_service = DataUpdateDateService()
 
 
@@ -50,7 +50,7 @@ class handleMonthRevenue(MethodView):
         if monthReve is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            return MonthRevenueSchema(many=True).dumps(monthReve)
+            return jsonify(MonthRevenueSchema(many=True).dump(monthReve))
 
     def post(self, stock_id):
         """
@@ -60,9 +60,9 @@ class handleMonthRevenue(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         monthReve = db.session.query(MonthRevenue).filter_by(
             stock_id=stock_id).filter_by(
@@ -97,16 +97,14 @@ class handleMonthRevenue(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
-                "400 %s is failed to update Month Revenue. Reason: %s"
-                % (stock_id, ie))
-            return jsonify({"error": "Failed to update %s Month Revenue" % stock_id}), 400
+            logger.warning(
+                f"400 {stock_id} is failed to update Month Revenue. Reason: {ie}")
+            return jsonify({"error": f"Failed to update {stock_id} Month Revenue"}), 400
         except Exception as ex:
             db.session.rollback()
-            logging.warning(
-                "400 %s is failed to update Month Revenue. Reason: %s"
-                % (stock_id, ex))
-            return jsonify({"error": "Failed to update %s Month Revenue" % stock_id}), 400
+            logger.warning(
+                f"400 {stock_id} is failed to update Month Revenue. Reason: {ex}")
+            return jsonify({"error": f"Failed to update {stock_id} Month Revenue"}), 400
 
         return jsonify({"message": "Created"}), 201
 

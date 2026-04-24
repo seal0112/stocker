@@ -1,10 +1,11 @@
 from marshmallow import fields
 
 from app import ma
+from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
 from app.schemas.feed_schema import FeedSchema
 
 
-class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
+class AnnouncementIncomeSheetAnalysisSchema(ma.SQLAlchemyAutoSchema):
     update_date = fields.Date(format='%Y-%m-%d')
     feed = fields.Nested(FeedSchema, only=('title', 'link'))
     營業收入合計年增率 = fields.Decimal(as_string=True, allow_none=True)
@@ -20,6 +21,7 @@ class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
     本業佔比 = fields.Decimal(as_string=True, allow_none=True)
 
     class Meta:
+        model = AnnouncementIncomeSheetAnalysis
         fields = (
             "feed_id", "stock_id", "update_date", "year", "season",
             "營業收入合計", "營業收入合計年增率",
@@ -30,3 +32,5 @@ class AnnouncementIncomeSheetAnalysisSchema(ma.Schema):
             "母公司業主淨利", "基本每股盈餘", "基本每股盈餘年增率",
             '本業佔比', 'feed'
         )
+        load_instance = False
+        include_fk = True

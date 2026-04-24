@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import re
 from datetime import datetime, timedelta, date
 
@@ -15,11 +15,10 @@ from app.schemas.announcement_income_sheet_analysis_schema import AnnouncementIn
 from app.schemas.feed_schema import FeedSchema
 
 from app.utils.model_utilities import get_current_date
-from app.utils.aws_service import AWSService
 from app.utils.announcement_handler import AnnounceHandler
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 feed_services = FeedServices()
 
 
@@ -100,7 +99,7 @@ class HandleFeed(MethodView):
 
             return jsonify({'message': 'Created'}), 201
         except Exception as ex:
-            logging.exception(ex)
+            logger.exception(ex)
             db.session.rollback()
             return jsonify({'error': str(ex)}), 500
 
@@ -151,7 +150,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
             single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
                 single_season_incomesheet, year, season
             )
-        except Exception as e:
+        except Exception:
             single_season_incomesheet = {}
             single_season_incomesheet['processing_failed'] = True
         finally:
@@ -162,7 +161,7 @@ class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
 
         announcement_income_sheet_analysis = feed.create_announcement_income_sheet_analysis(single_season_incomesheet)
 
-        return AnnouncementIncomeSheetAnalysisSchema().dumps(announcement_income_sheet_analysis), 200
+        return jsonify(AnnouncementIncomeSheetAnalysisSchema().dump(announcement_income_sheet_analysis)), 200
 
 
 def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
@@ -173,7 +172,7 @@ def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
             income_sheet, year, season)
         single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
             single_season_incomesheet, year, season)
-    except Exception as e:
+    except Exception:
         single_season_incomesheet = {}
         single_season_incomesheet['processing_failed'] = True
     finally:

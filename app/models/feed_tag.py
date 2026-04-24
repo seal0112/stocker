@@ -1,5 +1,4 @@
 from app import db
-from app.utils.model_utilities import get_current_date
 
 
 class FeedTag(db.Model):

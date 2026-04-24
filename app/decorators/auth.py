@@ -1,10 +1,11 @@
 from functools import wraps
 
 from flask import jsonify, request, g
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import verify_jwt_in_request
 
 from app import db
 from app.models import User, ApiToken
+from app.utils.jwt_utils import get_current_user
 
 
 def role_required(*required_roles):
@@ -30,7 +31,7 @@ def role_required(*required_roles):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             verify_jwt_in_request()
-            current_user = get_jwt_identity()
+            current_user = get_current_user()
 
             user = db.session.query(User).filter_by(id=current_user['id']).first()
             if not user:
@@ -61,7 +62,7 @@ def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
 
         user = db.session.query(User).filter_by(id=current_user['id']).first()
         if not user:
@@ -89,7 +90,7 @@ def moderator_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         verify_jwt_in_request()
-        current_user = get_jwt_identity()
+        current_user = get_current_user()
 
         user = db.session.query(User).filter_by(id=current_user['id']).first()
         if not user:
@@ -128,7 +129,7 @@ def permission_required(*required_permissions):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             verify_jwt_in_request()
-            current_user = get_jwt_identity()
+            current_user = get_current_user()
 
             user = db.session.query(User).filter_by(id=current_user['id']).first()
             if not user:
@@ -209,7 +210,7 @@ def api_auth_required(fn):
         # Fall back to JWT authentication
         try:
             verify_jwt_in_request()
-            g.current_user = get_jwt_identity()
+            g.current_user = get_current_user()
             g.auth_type = 'jwt'
             return fn(*args, **kwargs)
         except Exception:

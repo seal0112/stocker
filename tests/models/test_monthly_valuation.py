@@ -3,12 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 
 from app.monthly_valuation.models import MonthlyValuation
-from app.database_setup import BasicInformation
 
 
 @pytest.fixture
 def mock_monthly_valuation():
-    """Fixture to create a MonthlyValuation instance."""
+    """Fixture to create a MonthlyValuation instance (not persisted to DB)."""
     return MonthlyValuation(
         stock_id='2330',
         year=2024,
@@ -20,7 +19,7 @@ def mock_monthly_valuation():
     )
 
 
-@pytest.mark.usefixtures('test_app')
+@pytest.mark.usefixtures('app_context')
 class TestMonthlyValuation:
     """Test suite for MonthlyValuation model."""
 
@@ -55,171 +54,186 @@ class TestMonthlyValuation:
         assert mock_monthly_valuation.本益比 == Decimal('20.00')
         assert mock_monthly_valuation.均價 == Decimal('550.00')
 
-    def test_database_operations(self, test_app, sample_basic_info):
+    def test_database_operations(self, sample_basic_info):
         """Test database CRUD operations."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
-            # Create
-            valuation = MonthlyValuation(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                month='10',
-                本益比=Decimal('18.50'),
-                均價=Decimal('520.50')
-            )
-            db.session.add(valuation)
-            db.session.commit()
+        # Cleanup first to ensure clean state
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
 
-            # Read
-            retrieved = MonthlyValuation.query.filter_by(
-                stock_id='2330',
-                year=2024,
-                month='10'
-            ).first()
-            assert retrieved is not None
-            assert retrieved.本益比 == Decimal('18.50')
+        # Create
+        valuation = MonthlyValuation(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            month='10',
+            本益比=Decimal('18.50'),
+            均價=Decimal('520.50')
+        )
+        db.session.add(valuation)
+        db.session.commit()
 
-            # Update
-            retrieved.本益比 = Decimal('19.00')
-            db.session.commit()
+        # Read
+        retrieved = MonthlyValuation.query.filter_by(
+            stock_id='2330',
+            year=2024,
+            month='10'
+        ).first()
+        assert retrieved is not None
+        assert retrieved.本益比 == Decimal('18.50')
 
-            updated = MonthlyValuation.query.filter_by(
-                stock_id='2330',
-                year=2024,
-                month='10'
-            ).first()
-            assert updated.本益比 == Decimal('19.00')
+        # Update
+        retrieved.本益比 = Decimal('19.00')
+        db.session.commit()
 
-            # Cleanup
-            db.session.delete(retrieved)
-            db.session.commit()
+        updated = MonthlyValuation.query.filter_by(
+            stock_id='2330',
+            year=2024,
+            month='10'
+        ).first()
+        assert updated.本益比 == Decimal('19.00')
 
-    def test_unique_constraint(self, test_app, sample_basic_info):
+        # Cleanup
+        db.session.delete(retrieved)
+        db.session.commit()
+
+    def test_unique_constraint(self, sample_basic_info):
         """Test unique constraint on stock_id, year, month."""
-        with test_app.app_context():
-            from app import db
-            from sqlalchemy.exc import IntegrityError
+        from app import db
+        from sqlalchemy.exc import IntegrityError
 
-            # Create first record
-            val1 = MonthlyValuation(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                month='10',
-                本益比=Decimal('18.50')
-            )
-            db.session.add(val1)
+        # Cleanup first to ensure clean state
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
+
+        # Create first record
+        val1 = MonthlyValuation(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            month='10',
+            本益比=Decimal('18.50')
+        )
+        db.session.add(val1)
+        db.session.commit()
+
+        # Try to create duplicate
+        val2 = MonthlyValuation(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            month='10',
+            本益比=Decimal('19.00')
+        )
+        db.session.add(val2)
+
+        with pytest.raises(IntegrityError):
             db.session.commit()
 
-            # Try to create duplicate
-            val2 = MonthlyValuation(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                month='10',
-                本益比=Decimal('19.00')
-            )
-            db.session.add(val2)
+        db.session.rollback()
 
-            with pytest.raises(IntegrityError):
-                db.session.commit()
+        # Cleanup
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
 
-            db.session.rollback()
-
-            # Cleanup
-            MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
-            db.session.commit()
-
-    def test_query_by_year(self, test_app, sample_basic_info):
+    def test_query_by_year(self, sample_basic_info):
         """Test querying all months for a specific year."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
-            # Create data for multiple months
-            for month in range(1, 13):
-                valuation = MonthlyValuation(
-                    stock_id=sample_basic_info.id,
-                    year=2024,
-                    month=str(month),
-                    本益比=Decimal('18.00') + Decimal(str(month * 0.1)),
-                    均價=Decimal('500.00') + Decimal(str(month * 5))
-                )
-                db.session.add(valuation)
-            db.session.commit()
+        # Cleanup first to ensure clean state
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
 
-            # Query all months for 2024
-            all_months = MonthlyValuation.query.filter_by(
-                stock_id='2330',
-                year=2024
-            ).order_by(MonthlyValuation.month).all()
-
-            assert len(all_months) == 12
-            assert all_months[0].month == '1'
-            assert all_months[11].month == '12'
-
-            # Cleanup
-            MonthlyValuation.query.filter_by(stock_id='2330').delete()
-            db.session.commit()
-
-    def test_query_recent_months(self, test_app, sample_basic_info):
-        """Test querying recent N months."""
-        with test_app.app_context():
-            from app import db
-
-            # Create data for 12 months
-            for month in range(1, 13):
-                valuation = MonthlyValuation(
-                    stock_id=sample_basic_info.id,
-                    year=2024,
-                    month=str(month),
-                    本益比=Decimal('18.00'),
-                    均價=Decimal('500.00')
-                )
-                db.session.add(valuation)
-            db.session.commit()
-
-            # Query recent 6 months
-            recent = MonthlyValuation.query.filter_by(
-                stock_id='2330',
-                year=2024
-            ).order_by(
-                MonthlyValuation.year.desc(),
-                MonthlyValuation.month.desc()
-            ).limit(6).all()
-
-            assert len(recent) == 6
-            assert recent[0].month == '9'  # Most recent (excluding 10, 11, 12 as strings)
-
-            # Cleanup
-            MonthlyValuation.query.filter_by(stock_id='2330').delete()
-            db.session.commit()
-
-    def test_create_time_auto_set(self, test_app, sample_basic_info):
-        """Test that create_time is automatically set."""
-        with test_app.app_context():
-            from app import db
-
+        # Create data for multiple months
+        for month in range(1, 13):
             valuation = MonthlyValuation(
                 stock_id=sample_basic_info.id,
                 year=2024,
-                month='10',
-                本益比=Decimal('18.50')
+                month=str(month),
+                本益比=Decimal('18.00') + Decimal(str(month * 0.1)),
+                均價=Decimal('500.00') + Decimal(str(month * 5))
             )
             db.session.add(valuation)
-            db.session.commit()
+        db.session.commit()
 
-            # Retrieve and check create_time
-            retrieved = MonthlyValuation.query.filter_by(
-                stock_id='2330',
+        # Query all months for 2024
+        all_months = MonthlyValuation.query.filter_by(
+            stock_id='2330',
+            year=2024
+        ).order_by(MonthlyValuation.month).all()
+
+        assert len(all_months) == 12
+        assert all_months[0].month == '1'
+        assert all_months[11].month == '12'
+
+        # Cleanup
+        MonthlyValuation.query.filter_by(stock_id='2330').delete()
+        db.session.commit()
+
+    def test_query_recent_months(self, sample_basic_info):
+        """Test querying recent N months."""
+        from app import db
+
+        # Cleanup first to ensure clean state
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
+
+        # Create data for 12 months
+        for month in range(1, 13):
+            valuation = MonthlyValuation(
+                stock_id=sample_basic_info.id,
                 year=2024,
-                month='10'
-            ).first()
+                month=str(month),
+                本益比=Decimal('18.00'),
+                均價=Decimal('500.00')
+            )
+            db.session.add(valuation)
+        db.session.commit()
 
-            assert retrieved.create_time is not None
-            assert isinstance(retrieved.create_time, datetime)
+        # Query recent 6 months
+        recent = MonthlyValuation.query.filter_by(
+            stock_id='2330',
+            year=2024
+        ).order_by(
+            MonthlyValuation.year.desc(),
+            MonthlyValuation.month.desc()
+        ).limit(6).all()
 
-            # Cleanup
-            db.session.delete(retrieved)
-            db.session.commit()
+        assert len(recent) == 6
+        assert recent[0].month == '12'  # Most recent month in descending order
+
+        # Cleanup
+        MonthlyValuation.query.filter_by(stock_id='2330').delete()
+        db.session.commit()
+
+    def test_create_time_auto_set(self, sample_basic_info):
+        """Test that create_time is automatically set."""
+        from app import db
+
+        # Cleanup first to ensure clean state
+        MonthlyValuation.query.filter_by(stock_id=sample_basic_info.id).delete()
+        db.session.commit()
+
+        valuation = MonthlyValuation(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            month='10',
+            本益比=Decimal('18.50')
+        )
+        db.session.add(valuation)
+        db.session.commit()
+
+        # Retrieve and check create_time
+        retrieved = MonthlyValuation.query.filter_by(
+            stock_id='2330',
+            year=2024,
+            month='10'
+        ).first()
+
+        assert retrieved.create_time is not None
+        assert isinstance(retrieved.create_time, datetime)
+
+        # Cleanup
+        db.session.delete(retrieved)
+        db.session.commit()
 
     def test_valuation_metrics(self, mock_monthly_valuation):
         """Test that valuation metrics are within reasonable ranges."""

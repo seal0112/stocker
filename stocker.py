@@ -1,10 +1,9 @@
 import os
 import json
-import logging
+from app.log_config import get_logger
 
 from flask import (request, jsonify, make_response)
 from flask_swagger import swagger
-from flask_swagger_ui import get_swaggerui_blueprint
 
 from app import create_app, db
 from app.utils.slack_manager import SlackManager
@@ -17,11 +16,7 @@ PORT = os.environ.get('PORT')
 app.config['JSON_AS_ASCII'] = False
 
 # Logger setup
-logger = logging.getLogger(__name__)
-BASIC_FORMAT = '%(asctime)s %(levelname)- 8s in %(module)s: %(message)s'
-DATE_FORMAT = '%Y-%m-%d %H:%M'
-formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
-
+logger = get_logger(__name__)
 
 @app.route("/spec")
 def spec():
@@ -45,7 +40,7 @@ def spec():
 
 @app.errorhandler(404)
 def pageNotfound(error):
-    logging.info('Page not found: %s', (request.path))
+    logger.info('Page not found: %s', (request.path))
     return make_response(json.dumps('404 not found'), 404)
 
 

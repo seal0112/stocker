@@ -1,9 +1,8 @@
 from ..database_setup import BasicInformation
-from .. import db
-import logging
+from app.log_config import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class BasicInformationServices:

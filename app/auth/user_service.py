@@ -1,11 +1,11 @@
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from app.models import User
 from app import db
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UserService():
@@ -24,7 +24,7 @@ class UserService():
             return None
 
     def get_user(self, user_id):
-        user = db.session.query(User).filter_by(id=user_id).one()
+        user = db.session.query(User).filter_by(id=user_id).one_or_none()
         return user
 
     def create_user(self, personal_data, external_type):
@@ -44,6 +44,8 @@ class UserService():
 
         try:
             db.session.add(new_user)
+            db.session.flush()
+            new_user.assign_default_role()
             db.session.commit()
         except Exception as ex:
             db.session.rollback()

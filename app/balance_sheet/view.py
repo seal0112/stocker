@@ -6,9 +6,9 @@ from . import balance_sheet
 import json
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class handleBalanceSheet(MethodView):
@@ -34,15 +34,53 @@ class handleBalanceSheet(MethodView):
     """
 
     def get(self, stock_id):
-        return 'balance_sheet: %s' % stock_id
+        mode = request.args.get('mode')
+        if mode is None:
+            balanceSheet = db.session.query(BalanceSheet).filter_by(
+                stock_id=stock_id).order_by(
+                    BalanceSheet.year.desc()).order_by(
+                        BalanceSheet.season.desc()).first()
+        elif mode == 'single':
+            year = request.args.get('year', type=int)
+            season = request.args.get('season', type=int)
+
+            if year is None or season is None:
+                return jsonify({"error": "year and season are required for single mode"}), 400
+            if season not in (1, 2, 3, 4):
+                return jsonify({"error": "season must be 1, 2, 3, or 4"}), 400
+
+            balanceSheet = db.session.query(BalanceSheet).filter_by(
+                stock_id=stock_id).filter_by(
+                    year=year).filter_by(
+                        season=season).one_or_none()
+        elif mode == 'multiple':
+            year = request.args.get('year', type=int)
+
+            if year is not None and (year < 1 or year > 100):
+                return jsonify({"error": "Invalid year parameter"}), 400
+
+            season = 4 if year is None else year * 4
+            balanceSheet = db.session.query(BalanceSheet).filter_by(
+                stock_id=stock_id).order_by(
+                    BalanceSheet.year.desc()).order_by(
+                        BalanceSheet.season.desc()).limit(season).all()
+        else:
+            balanceSheet = None
+
+        if balanceSheet is None:
+            return jsonify({"error": "Failed to get %s Balance Sheet" % stock_id}), 404
+        elif mode == 'single' or mode is None:
+            return jsonify(balanceSheet.serialize if hasattr(balanceSheet, 'serialize') else {"stock_id": stock_id, "year": balanceSheet.year, "season": balanceSheet.season})
+        else:
+            return jsonify([b.serialize if hasattr(b, 'serialize') else {"stock_id": stock_id, "year": b.year, "season": b.season} for b in balanceSheet])
 
     def post(self, stock_id):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         balanceSheet = db.session.query(BalanceSheet).filter_by(
             stock_id=stock_id).filter_by(
@@ -72,7 +110,7 @@ class handleBalanceSheet(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Balance Sheet. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Balance Sheet" % stock_id}), 400

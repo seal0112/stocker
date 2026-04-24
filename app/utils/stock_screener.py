@@ -1,9 +1,8 @@
-from string import Template
 from datetime import datetime
 import json
 import math
 from pathlib import Path
-import logging
+from app.log_config import get_logger
 
 from sqlalchemy import text
 from app.database_setup import BasicInformation
@@ -11,7 +10,7 @@ from app.models.recommended_stock import RecommendedStock
 
 from .. import db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class StockScreenerManager:
@@ -92,7 +91,11 @@ class StockScreenerManager:
             dict: Statistics with keys 'added', 'skipped', 'total'
         """
         if not stocks:
-            logger.warning("No stocks to save")
+            logger.warning(
+                "stock_screener_empty_result",
+                module="StockScreenerManager.save_recommended_stock",
+                reason="No stocks to save"
+            )
             return {"added": 0, "skipped": 0, "total": 0}
 
         try:

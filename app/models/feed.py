@@ -1,9 +1,12 @@
-import logging
+from app.log_config import get_logger
 
 from app import db
 from app.utils.model_utilities import get_current_date
 
 from app.models.announcement_income_sheet_analysis import AnnouncementIncomeSheetAnalysis
+
+
+logger = get_logger(__name__)
 
 
 class Feed(db.Model):
@@ -26,7 +29,8 @@ class Feed(db.Model):
         'FeedTag',
         secondary='feed_feedTag',
         backref=db.backref('feeds', lazy='dynamic'),
-        lazy='joined'
+        lazy='joined',
+        passive_deletes=True
     )
     announcement_income_sheet_analysis = db.relationship(
         'AnnouncementIncomeSheetAnalysis',
@@ -67,7 +71,7 @@ class Feed(db.Model):
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                logging.exception(e)
+                logger.exception(e)
 
         return self.announcement_income_sheet_analysis
 
@@ -81,5 +85,7 @@ class Feed(db.Model):
         try:
             db.session.add(announcement_income_sheet)
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
+
+        return announcement_income_sheet

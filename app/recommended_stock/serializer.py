@@ -44,7 +44,7 @@ class RecommendedStockDetailSchema(ma.Schema):
     def get_stock_info(self, obj):
         """Get detailed stock information."""
         try:
-            from app.database_setup import BasicInformation, DailyInformation
+            from app.database_setup import BasicInformation
 
             stock = BasicInformation.query.filter_by(id=obj.stock_id).first()
             if not stock:
@@ -70,5 +70,5 @@ class RecommendedStockDetailSchema(ma.Schema):
                 }
 
             return info
-        except Exception as e:
+        except Exception:
             return None

@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 from logging.config import fileConfig
 
 from flask import current_app
@@ -13,6 +13,7 @@ config = context.config
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
+logger = get_logger('alembic.env')
 
 
 def get_engine():

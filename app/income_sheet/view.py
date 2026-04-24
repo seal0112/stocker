@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 from datetime import datetime
 
@@ -15,7 +15,7 @@ from . import income_sheet
 from .serializer import IncomeSheetSchema
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 data_update_date_service = DataUpdateDateService()
 
 
@@ -83,10 +83,10 @@ class handleIncomeSheet(MethodView):
 
         if incomeSheet is None:
             return jsonify({"error": "Failed to get %s Income Sheet" % stock_id}), 404
-        elif mode == 'single' or mode == None:
-            return IncomeSheetSchema(many=True).dumps([incomeSheet])
+        elif mode == 'single' or mode is None:
+            return jsonify(IncomeSheetSchema(many=True).dump([incomeSheet]))
         else:
-            return IncomeSheetSchema(many=True).dumps(incomeSheet)
+            return jsonify(IncomeSheetSchema(many=True).dump(incomeSheet))
 
     def post(self, stock_id):
         """
@@ -96,9 +96,9 @@ class handleIncomeSheet(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         incomeSheet = db.session.query(IncomeSheet).filter_by(
             stock_id=stock_id).filter_by(
@@ -129,7 +129,7 @@ class handleIncomeSheet(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Income Sheet. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Income Sheet" % stock_id}), 400
@@ -176,7 +176,7 @@ def checkFourSeasonEPS(stock_id):
             db.session.commit()
         except Exception as ex:
             db.session.rollback()
-            logging.exception(ex)
+            logger.exception(ex)
 
 
 income_sheet.add_url_rule('/<stock_id>',

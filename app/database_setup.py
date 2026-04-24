@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import time
 
 from . import db
 from .utils.model_utilities import get_current_date
@@ -35,6 +35,26 @@ class BasicInformation(db.Model):
         'DailyInformation',
         backref='basic_information',
         uselist=False,
+        cascade='all, delete-orphan'
+    )
+    balance_sheets = db.relationship(
+        'BalanceSheet',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    income_sheets = db.relationship(
+        'IncomeSheet',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    month_revenues = db.relationship(
+        'MonthRevenue',
+        backref='basic_information',
+        cascade='all, delete-orphan'
+    )
+    stock_search_counts = db.relationship(
+        'StockSearchCounts',
+        backref='basic_information',
         cascade='all, delete-orphan'
     )
     公司名稱 = db.Column(db.Text, nullable=False)
@@ -95,7 +115,6 @@ class BasicInformation(db.Model):
 
     def get_newest_season_income_sheet(self):
         """Get the newest income sheet for this stock."""
-        from app.database_setup import IncomeSheet
         return IncomeSheet.query.filter_by(stock_id=self.id).order_by(
             IncomeSheet.year.desc(),
             IncomeSheet.season.desc()
@@ -266,6 +285,9 @@ class CashFlow(db.Model):
 # prototype done
 class IncomeSheet(db.Model):
     __tablename__ = 'income_sheet'
+    __table_args__ = (
+        db.UniqueConstraint('stock_id', 'year', 'season', name='uix_income_sheet_stock_year_season'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     update_date = db.Column(
@@ -326,6 +348,9 @@ class IncomeSheet(db.Model):
 # done
 class MonthRevenue(db.Model):
     __tablename__ = 'month_revenue'
+    __table_args__ = (
+        db.UniqueConstraint('stock_id', 'year', 'month', name='uix_month_revenue_stock_year_month'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     stock_id = db.Column(
@@ -347,7 +372,6 @@ class MonthRevenue(db.Model):
     去年累計營收 = db.Column(db.BigInteger)
     前期比較增減 = db.Column(db.Float)
     備註 = db.Column(db.Text)
-    basic_information = db.relationship(BasicInformation)
 
     # Add add a decorator property to serialize data from the datadb.Model
     @property

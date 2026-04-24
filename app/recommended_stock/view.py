@@ -1,18 +1,17 @@
 """API endpoints for recommended stocks."""
 import json
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from flask import request, make_response, jsonify
 from flask.views import MethodView
-from marshmallow import ValidationError
 
 from app import db
 from .services import RecommendedStockService
 from .serializer import RecommendedStockSchema, RecommendedStockDetailSchema
 from . import recommended_stock
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 recommended_stock_service = RecommendedStockService()
 
 
@@ -51,7 +50,7 @@ class RecommendedStockListApi(MethodView):
 
             # Get recommendations
             recommendations = recommended_stock_service.get_recommended_stocks(
-                date=target_date,
+                target_date=target_date,
                 filter_model=filter_model,
                 limit=limit
             )
@@ -245,7 +244,7 @@ class RecommendedStockStatisticsApi(MethodView):
                         "error": "Invalid date format. Use YYYY-MM-DD"
                     }), 400)
 
-            stats = recommended_stock_service.get_statistics(date=target_date)
+            stats = recommended_stock_service.get_statistics(target_date=target_date)
 
             return make_response(jsonify(stats), 200)
 

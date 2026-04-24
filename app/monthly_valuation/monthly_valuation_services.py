@@ -1,11 +1,13 @@
 from datetime import datetime
-import logging
+from app.log_config import get_logger
 
 from marshmallow import ValidationError
 
 from .models import MonthlyValuation
 from .serializer import MonthlyValuationSchema
 from .. import db
+
+logger = get_logger(__name__)
 
 
 class MonthlyValuationService():
@@ -26,7 +28,7 @@ class MonthlyValuationService():
         try:
             validated_data = MonthlyValuationSchema().load(monthly_valuation_data)
         except ValidationError as err:
-            logging.error(err.messages)
+            logger.error(err.messages)
             return None
 
         new_monthly_valuation = self.get_stock_monthly_valuation(

@@ -7,9 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-with open('{}/critical_file/client_secret.json'.format(
-        basedir)) as clientSecretReader:
-    client_secret = json.loads(clientSecretReader.read())
+_client_secret_path = os.path.join(basedir, 'critical_file', 'client_secret.json')
+try:
+    with open(_client_secret_path) as clientSecretReader:
+        client_secret = json.loads(clientSecretReader.read())
+except FileNotFoundError:
+    client_secret = {}
 
 DB_URL = (
     'mysql+pymysql://'
@@ -77,6 +80,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or DB_URL
     SQLALCHEMY_ECHO = True
     WTF_CSRF_ENABLED = False
+    JWT_COOKIE_CSRF_PROTECT = False  # Disable CSRF for testing with headers
 
 
 class ProductionConfig(Config):

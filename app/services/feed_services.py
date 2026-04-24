@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from app.models import Feed, FeedTag
@@ -7,23 +7,23 @@ from app.utils.data_update_date_service import DataUpdateDateService
 from app import db
 
 
-logger = logging.getLogger(__name__)
-basic_info_services = BasicInformationServices()
-data_update_date_service = DataUpdateDateService()
+logger = get_logger(__name__)
 
 
 class FeedServices():
     def __init__(self):
         self.feed_size = 15
+        self.basic_info_services = BasicInformationServices()
+        self.data_update_date_service = DataUpdateDateService()
 
     def get_feed(self, feed_id):
         return Feed.query.filter_by(id=feed_id).one_or_none()
 
     def get_feeds(self, stock_id, time):
-        stock = basic_info_services.get_basic_information(stock_id)
-        feeds = stock.feeds.filter(
-            Feed.releaseTime<time).order_by(
-                Feed.releaseTime.desc()).limit(self.feed_size).all()
+        feeds = Feed.query.filter(
+            Feed.stock_id == stock_id,
+            Feed.releaseTime < time
+        ).order_by(Feed.releaseTime.desc()).limit(self.feed_size).all()
         return feeds
 
     def get_feeds_by_time_range(self, start_time, end_time):
@@ -38,7 +38,7 @@ class FeedServices():
             link=feed_data['link']
         ).one_or_none()
 
-        if feed == None:
+        if feed is None:
             feed = Feed()
 
         try:
@@ -58,20 +58,20 @@ class FeedServices():
             else:
                 stock_id = feed_data.get('stock_id', None)
 
-            stock = basic_info_services.get_basic_information(stock_id)
+            stock = self.basic_info_services.get_basic_information(stock_id)
             feed.stock = stock
 
             if stock:
                 if feed_data['feedType'] == 'news':
-                    data_update_date_service.update_news_update_date(stock_id)
+                    self.data_update_date_service.update_news_update_date(stock_id)
                 else:
                     if len(feed_data['tags']):
-                        data_update_date_service.update_announcement_update_date(stock_id)
+                        self.   data_update_date_service.update_announcement_update_date(stock_id)
 
             db.session.add(feed)
             db.session.commit()
         except Exception as ex:
-            logging.exception(ex)
+            logger.exception(ex)
             db.session.rollback()
             return None
         else:
@@ -79,7 +79,7 @@ class FeedServices():
 
     def get_feed_tag(self, tag_name):
         tag = FeedTag.query.filter_by(name=tag_name).one_or_none()
-        if tag == None:
+        if tag is None:
             return FeedTag(name=tag_name)
         else:
             return tag

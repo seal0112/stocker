@@ -3,10 +3,10 @@ from app.utils.announcement_handler import AnnounceHandler
 from app.utils.model_utilities import get_current_date
 from app.models import AnnouncementIncomeSheetAnalysis
 
-import logging
+from app.log_config import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # rate_limit='10/m' means 10 tasks per minute
@@ -20,7 +20,7 @@ def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
             income_sheet, year, season)
         single_season_incomesheet = announce_handler.calculate_income_sheet_annual_growth_rate(
             single_season_incomesheet, year, season)
-    except Exception as e:
+    except Exception:
         single_season_incomesheet = {}
         single_season_incomesheet['processing_failed'] = True
     finally:

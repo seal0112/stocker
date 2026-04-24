@@ -1,4 +1,4 @@
-import logging
+from app.log_config import get_logger
 import json
 import pytz
 import re
@@ -6,8 +6,9 @@ from datetime import datetime, timedelta
 
 from flask import request, jsonify, make_response
 from sqlalchemy.sql import func
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
+from app.utils.jwt_utils import get_current_user
 from . import frontend
 from app import db
 from app.database_setup import (
@@ -18,14 +19,14 @@ from app.models import Feed
 from app.schemas.feed_schema import FeedSchema
 from app.utils.stock_search_count_service import StockSearchCountService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 
 @frontend.route('/stock_info_commodity/<stock_id>')
 @jwt_required()
 def getFrontEndStockInfoAndCommodity(stock_id):
-    current_user = get_jwt_identity()
+    current_user = get_current_user()
     stock_search_count_service.increase_stock_search_count(current_user['email'], stock_id)
     resData = {}
 
@@ -141,6 +142,7 @@ def getFrontEndMonthRevenue(stock_id):
 @frontend.route('/eps/<stock_id>')
 @jwt_required()
 def getFrontEndEPS(stock_id):
+    year = min(int(request.args.get('year', default=5)), 10)
     EPS = db.session\
         .query()\
         .with_entities(
@@ -149,7 +151,7 @@ def getFrontEndEPS(stock_id):
                     "Year/Season"),
             IncomeSheet.基本每股盈餘)\
         .filter_by(stock_id=stock_id)\
-        .filter(IncomeSheet.year >= datetime.now().year-5)\
+        .filter(IncomeSheet.year >= datetime.now().year-year)\
         .order_by(IncomeSheet.year.desc())\
         .order_by(IncomeSheet.season.desc())\
         .all()
@@ -160,6 +162,7 @@ def getFrontEndEPS(stock_id):
 @frontend.route('/income_sheet/<stock_id>')
 @jwt_required()
 def getFrontEndIncomeSheet(stock_id):
+    year = min(int(request.args.get('year', default=5)), 10)
     incomeSheet = db.session\
         .query()\
         .with_entities(
@@ -173,7 +176,7 @@ def getFrontEndIncomeSheet(stock_id):
             IncomeSheet.本期淨利,
             IncomeSheet.母公司業主淨利)\
         .filter_by(stock_id=stock_id)\
-        .filter(IncomeSheet.year >= datetime.now().year-5)\
+        .filter(IncomeSheet.year >= datetime.now().year-year)\
         .order_by(IncomeSheet.year.desc())\
         .order_by(IncomeSheet.season.desc())\
         .all()
@@ -184,6 +187,7 @@ def getFrontEndIncomeSheet(stock_id):
 @frontend.route('/profit_analysis/<stock_id>')
 @jwt_required()
 def getFrontEndProfitAnalysis(stock_id):
+    year = min(int(request.args.get('year', default=5)), 10)
     profit = db.session\
         .query()\
         .with_entities(
@@ -195,7 +199,7 @@ def getFrontEndProfitAnalysis(stock_id):
             IncomeSheet.稅前淨利率,
             IncomeSheet.本期淨利率)\
         .filter_by(stock_id=stock_id)\
-        .filter(IncomeSheet.year >= datetime.now().year-5)\
+        .filter(IncomeSheet.year >= datetime.now().year-year)\
         .order_by(IncomeSheet.year.desc())\
         .order_by(IncomeSheet.season.desc())\
         .all()
@@ -206,6 +210,7 @@ def getFrontEndProfitAnalysis(stock_id):
 @frontend.route('/op_expense_analysis/<stock_id>')
 @jwt_required()
 def getFrontEndOperationExpenseAnalysis(stock_id):
+    year = min(int(request.args.get('year', default=5)), 10)
     operationExpense = db.session\
         .query()\
         .with_entities(
@@ -221,7 +226,7 @@ def getFrontEndOperationExpenseAnalysis(stock_id):
             IncomeSheet.管理費用,
             IncomeSheet.研究發展費用)\
         .filter_by(stock_id=stock_id)\
-        .filter(IncomeSheet.year >= datetime.now().year-5)\
+        .filter(IncomeSheet.year >= datetime.now().year-year)\
         .order_by(IncomeSheet.year.desc())\
         .order_by(IncomeSheet.season.desc())\
         .all()

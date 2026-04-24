@@ -1,5 +1,5 @@
 import json
-import logging
+from app.log_config import get_logger
 from datetime import datetime
 
 from flask import request, jsonify, make_response
@@ -13,7 +13,7 @@ from . import basic_information
 from .serializer import BasicInformationDetailSchema
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 stock_search_count_service = StockSearchCountService()
 
 
@@ -49,7 +49,7 @@ class handleBasicInfo(MethodView):
         if basicInfo is None:
             return jsonify({"error": "Resource not found"}), 404
         else:
-            return BasicInformationDetailSchema().dumps(basicInfo)
+            return jsonify(BasicInformationDetailSchema().dump(basicInfo))
 
     def post(self, stock_id):
         """
@@ -62,9 +62,9 @@ class handleBasicInfo(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         try:
             if basicInfo is not None:
@@ -97,7 +97,7 @@ class handleBasicInfo(MethodView):
             db.session.commit()
         except IntegrityError as ie:
             db.session.rollback()
-            logging.warning(
+            logger.warning(
                 "400 %s is failed to update Basic Info. Reason: %s"
                 % (stock_id, ie))
             return jsonify({"error": "Failed to update %s Basic Info" % stock_id}), 400
@@ -122,9 +122,9 @@ class handleBasicInfo(MethodView):
         try:
             payload = request.get_json()
             if not payload:
-                return make_response(json.dumps("Request body is required"), 400)
+                return jsonify({"error": "Request body is required"}), 400
         except Exception:
-            return make_response(json.dumps("Invalid JSON format"), 400)
+            return jsonify({"error": "Invalid JSON format"}), 400
 
         try:
             if basicInfo is not None:

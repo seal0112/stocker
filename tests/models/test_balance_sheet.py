@@ -1,12 +1,12 @@
 import pytest
 from datetime import date
 
-from app.database_setup import BalanceSheet, BasicInformation
+from app.database_setup import BalanceSheet
 
 
 @pytest.fixture
 def mock_balance_sheet():
-    """Fixture to create a BalanceSheet instance."""
+    """Fixture to create a BalanceSheet instance (not persisted to DB)."""
     return BalanceSheet(
         stock_id='2330',
         year=2024,
@@ -47,7 +47,7 @@ def mock_balance_sheet():
     )
 
 
-@pytest.mark.usefixtures('test_app')
+@pytest.mark.usefixtures('app_context')
 class TestBalanceSheet:
     """Test suite for BalanceSheet model."""
 
@@ -97,42 +97,41 @@ class TestBalanceSheet:
         mock_balance_sheet['現金及約當現金'] = 2000000000000
         assert mock_balance_sheet.現金及約當現金 == 2000000000000
 
-    def test_database_operations(self, test_app, sample_basic_info):
+    def test_database_operations(self, sample_basic_info):
         """Test database CRUD operations."""
-        with test_app.app_context():
-            from app import db
+        from app import db
 
-            # Create
-            balance = BalanceSheet(
-                stock_id=sample_basic_info.id,
-                year=2024,
-                season='3',
-                資產總計=9500000000000,
-                負債總計=2200000000000,
-                權益總計=7300000000000
-            )
-            db.session.add(balance)
-            db.session.commit()
+        # Create
+        balance = BalanceSheet(
+            stock_id=sample_basic_info.id,
+            year=2024,
+            season='3',
+            資產總計=9500000000000,
+            負債總計=2200000000000,
+            權益總計=7300000000000
+        )
+        db.session.add(balance)
+        db.session.commit()
 
-            # Read
-            retrieved = BalanceSheet.query.filter_by(
-                stock_id='2330',
-                year=2024,
-                season='3'
-            ).first()
-            assert retrieved is not None
-            assert retrieved.資產總計 == 9500000000000
+        # Read
+        retrieved = BalanceSheet.query.filter_by(
+            stock_id='2330',
+            year=2024,
+            season='3'
+        ).first()
+        assert retrieved is not None
+        assert retrieved.資產總計 == 9500000000000
 
-            # Update
-            retrieved.資產總計 = 10000000000000
-            db.session.commit()
+        # Update
+        retrieved.資產總計 = 10000000000000
+        db.session.commit()
 
-            updated = BalanceSheet.query.filter_by(stock_id='2330').first()
-            assert updated.資產總計 == 10000000000000
+        updated = BalanceSheet.query.filter_by(stock_id='2330').first()
+        assert updated.資產總計 == 10000000000000
 
-            # Cleanup
-            db.session.delete(retrieved)
-            db.session.commit()
+        # Cleanup
+        db.session.delete(retrieved)
+        db.session.commit()
 
     def test_financial_ratios(self, mock_balance_sheet):
         """Test calculation of common financial ratios."""

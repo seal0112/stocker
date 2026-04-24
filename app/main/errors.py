@@ -1,11 +1,8 @@
-import logging
-import json
-
-from flask import make_response
-from . import main
+from app.log_config import get_logger
 
 
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
 
 
 # @main.errorhandler(404)

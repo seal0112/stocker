@@ -429,13 +429,15 @@ disable=raw-checker-failed,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead,
+        logging-fstring-interpolation,
         C0114,
         C0115,
         C0116,
         C0413,
         R0401,
         broad-exception-caught,
-        broad-exception-raised
+        broad-exception-raised,
+        non-ascii-name,C,R
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

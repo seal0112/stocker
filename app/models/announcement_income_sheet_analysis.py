@@ -65,12 +65,21 @@ class AnnouncementIncomeSheetAnalysis(db.Model):
         RATIO_KEYS = ['營業毛利', '營業利益', '稅前淨利', '本期淨利']
 
         for ratio_key in RATIO_KEYS:
-            if self.營業收入合計 == 0:
+            if self.營業收入合計 is None or self.營業收入合計 == 0:
                 setattr(self, ratio_key + '率', None)
             else:
-                setattr(self, ratio_key + '率', round(
-                    getattr(self, ratio_key) / self.營業收入合計 * 100, 2))
+                value = getattr(self, ratio_key)
+                if value is None:
+                    setattr(self, ratio_key + '率', None)
+                else:
+                    setattr(self, ratio_key + '率', round(
+                        value / self.營業收入合計 * 100, 2))
 
-        setattr(self, '本業佔比', 0 if self.稅前淨利率 == 0 else round(
-            self.營業利益率 / self.稅前淨利率 * 100, 2)
-        )
+        # 本業佔比: 營業利益率 / 稅前淨利率 * 100
+        # Handle None and zero cases
+        if self.營業利益率 is None or self.稅前淨利率 is None:
+            self.本業佔比 = None
+        elif self.稅前淨利率 == 0:
+            self.本業佔比 = None
+        else:
+            self.本業佔比 = round(self.營業利益率 / self.稅前淨利率 * 100, 2)
