@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import math
+import os
 from pathlib import Path
 from app.log_config import get_logger
 
@@ -29,10 +30,13 @@ class StockScreenerManager:
         }
 
     def get_screener_format(self, option):
-        # Get the project root directory (assuming this file is in app/utils/)
-        current_file = Path(__file__)
-        project_root = current_file.parent.parent.parent
-        config_path = project_root / 'critical_file' / 'screener_format.json'
+        override = os.environ.get('SCREENER_FORMAT_PATH')
+        if override:
+            config_path = Path(override)
+        else:
+            current_file = Path(__file__)
+            project_root = current_file.parent.parent.parent
+            config_path = project_root / 'critical_file' / 'screener_format.json'
 
         try:
             with open(config_path, 'r', encoding='utf-8') as reader:
