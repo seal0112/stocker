@@ -17,7 +17,7 @@ def temp_recommendation(sample_basic_info):
     rec = RecommendedStock(
         stock_id=sample_basic_info.id,
         update_date=date.today(),
-        filter_model='月營收近一年次高'
+        filter_model='test_filter_model'
     )
     db.session.add(rec)
     db.session.commit()
@@ -35,7 +35,7 @@ def temp_recommendations_multiple_filters(sample_basic_info):
     rec1 = RecommendedStock(
         stock_id=sample_basic_info.id,
         update_date=date.today(),
-        filter_model='月營收近一年次高'
+        filter_model='test_filter_model'
     )
     rec2 = RecommendedStock(
         stock_id=sample_basic_info.id,
@@ -61,12 +61,12 @@ def temp_recommendations_multiple_dates(sample_basic_info):
     rec1 = RecommendedStock(
         stock_id=sample_basic_info.id,
         update_date=date.today(),
-        filter_model='月營收近一年次高'
+        filter_model='test_filter_model'
     )
     rec2 = RecommendedStock(
         stock_id=sample_basic_info.id,
         update_date=yesterday,
-        filter_model='月營收近一年次高_yesterday'
+        filter_model='test_filter_model_yesterday'
     )
     db.session.add_all([rec1, rec2])
     db.session.commit()
@@ -87,7 +87,7 @@ def temp_recommendations_multiple_stocks(sample_basic_info_list):
         rec = RecommendedStock(
             stock_id=stock.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         recs.append(rec)
         db.session.add(rec)
@@ -128,11 +128,11 @@ class TestRecommendedStockGetAPI:
 
     def test_get_recommended_stocks_with_filter(self, client, temp_recommendations_multiple_filters):
         """Test filtering recommendations by filter_model."""
-        response = client.get('/api/v0/recommended_stock?filter_model=月營收近一年次高')
+        response = client.get('/api/v0/recommended_stock?filter_model=test_filter_model')
 
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert all(r['filter_model'] == '月營收近一年次高' for r in data)
+        assert all(r['filter_model'] == 'test_filter_model' for r in data)
 
     def test_get_recommended_stocks_with_date(self, client, temp_recommendations_multiple_dates):
         """Test filtering recommendations by date."""

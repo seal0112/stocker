@@ -12,7 +12,7 @@ def mock_recommended_stock():
     return RecommendedStock(
         stock_id='2330',
         update_date=date.today(),
-        filter_model='月營收近一年次高'
+        filter_model='test_filter_model'
     )
 
 
@@ -23,14 +23,14 @@ class TestRecommendedStock:
         """Test creation of RecommendedStock instance."""
         assert mock_recommended_stock.stock_id == '2330'
         assert mock_recommended_stock.update_date == date.today()
-        assert mock_recommended_stock.filter_model == '月營收近一年次高'
+        assert mock_recommended_stock.filter_model == 'test_filter_model'
 
     def test_repr(self, mock_recommended_stock):
         """Test __repr__ method."""
         repr_str = repr(mock_recommended_stock)
         assert 'RecommendedStock' in repr_str
         assert '2330' in repr_str
-        assert '月營收近一年次高' in repr_str
+        assert 'test_filter_model' in repr_str
 
     def test_database_operations(self, sample_basic_info):
         """Test database CRUD operations."""
@@ -38,7 +38,7 @@ class TestRecommendedStock:
         rec_stock = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add(rec_stock)
         db.session.commit()
@@ -46,7 +46,7 @@ class TestRecommendedStock:
         # Read
         retrieved = RecommendedStock.query.filter_by(
             stock_id='2330',
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         ).first()
         assert retrieved is not None
         assert retrieved.stock_id == '2330'
@@ -73,7 +73,7 @@ class TestRecommendedStock:
         rec1 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add(rec1)
         db.session.commit()
@@ -82,7 +82,7 @@ class TestRecommendedStock:
         rec2 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add(rec2)
 
@@ -104,12 +104,12 @@ class TestRecommendedStock:
         rec1 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=today,
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         rec2 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=yesterday,
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add_all([rec1, rec2])
         db.session.commit()
@@ -117,7 +117,7 @@ class TestRecommendedStock:
         # Query both
         all_recs = RecommendedStock.query.filter_by(
             stock_id='2330',
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         ).all()
 
         assert len(all_recs) == 2
@@ -132,7 +132,7 @@ class TestRecommendedStock:
         rec1 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         rec2 = RecommendedStock(
             stock_id=sample_basic_info.id,
@@ -150,7 +150,7 @@ class TestRecommendedStock:
 
         assert len(all_recs) == 2
         filter_models = {rec.filter_model for rec in all_recs}
-        assert '月營收近一年次高' in filter_models
+        assert 'test_filter_model' in filter_models
         assert '本益比低於平均' in filter_models
 
         # Cleanup
@@ -165,12 +165,12 @@ class TestRecommendedStock:
         rec1 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=today,
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         rec2 = RecommendedStock(
             stock_id=sample_basic_info_2.id,
             update_date=today,
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add_all([rec1, rec2])
         db.session.commit()
@@ -197,19 +197,19 @@ class TestRecommendedStock:
         rec1 = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         rec2 = RecommendedStock(
             stock_id=sample_basic_info_2.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add_all([rec1, rec2])
         db.session.commit()
 
         # Query by filter model
         filter_recs = RecommendedStock.query.filter_by(
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         ).all()
 
         assert len(filter_recs) >= 2
@@ -225,7 +225,7 @@ class TestRecommendedStock:
         rec = RecommendedStock(
             stock_id=sample_basic_info.id,
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_filter_model'
         )
         db.session.add(rec)
         db.session.commit()
