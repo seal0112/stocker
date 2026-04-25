@@ -1,0 +1,12 @@
+{
+  "月營收近一年次高": {
+    "sqlSyntax": "SELECT id, '其他' AS 產業類別, 0 AS 最新營收 FROM basic_information WHERE 1=0",
+    "title": "{date} {year}年{month}月 {option} 第{page}頁",
+    "content": "{} {} 營收: {}"
+  },
+  "財報偏多選股": {
+    "sqlSyntax": "SELECT id, 0 AS eps, 0 AS last_eps, 0 AS growth FROM basic_information WHERE 1=0",
+    "title": "{date} {year}年Q{season} {option} 第{page}頁",
+    "content": "{} EPS: {}, 去年EPS: {}, YOY: {}%"
+  }
+}
