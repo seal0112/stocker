@@ -34,9 +34,9 @@ class TestStockScreenerManager:
 
     def test_init_with_default_date(self, app_context):
         """Test StockScreenerManager initialization with default date."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
 
-        assert screener.option == "月營收近一年次高"
+        assert screener.option == "test_screener_option"
         assert screener.now is not None
         assert 'date' in screener.query_condition
         assert 'season' in screener.query_condition
@@ -47,7 +47,7 @@ class TestStockScreenerManager:
     def test_init_with_custom_date(self, app_context):
         """Test StockScreenerManager initialization with custom date."""
         custom_date = datetime(2025, 8, 8)
-        screener = StockScreenerManager("月營收近一年次高", custom_date)
+        screener = StockScreenerManager("test_screener_option", custom_date)
 
         assert screener.now == custom_date
         assert screener.query_condition['date'] == '2025-08-08'
@@ -56,7 +56,7 @@ class TestStockScreenerManager:
 
     def test_get_screener_format_valid_option(self, app_context):
         """Test get_screener_format with valid option."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
 
         assert screener.screener_format is not None
         assert 'sqlSyntax' in screener.screener_format
@@ -72,7 +72,7 @@ class TestStockScreenerManager:
 
     def test_check_stock_valuation_valid_stock(self, complete_stock_data):
         """Test check_stock_valuation with a valid stock that passes all checks."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.check_stock_valuation('2330')
 
         # This should pass because shared fixtures have:
@@ -82,7 +82,7 @@ class TestStockScreenerManager:
 
     def test_check_stock_valuation_nonexistent_stock(self, app_context):
         """Test check_stock_valuation with non-existent stock."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.check_stock_valuation('9999')
 
         assert result is False
@@ -91,7 +91,7 @@ class TestStockScreenerManager:
         self, sample_basic_info, sample_income_sheet, sample_monthly_valuation_list
     ):
         """Test check_stock_valuation when daily_information is missing."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.check_stock_valuation(sample_basic_info.id)
 
         assert result is False
@@ -106,7 +106,7 @@ class TestStockScreenerManager:
         income.基本每股盈餘 = 0.2
         db.session.commit()
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.check_stock_valuation('2330')
 
         assert result is False
@@ -125,7 +125,7 @@ class TestStockScreenerManager:
         income.營業利益率 = Decimal('5.0')  # ratio = 5/43.33 = 0.115 < 0.7
         db.session.commit()
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.check_stock_valuation('2330')
 
         assert result is False
@@ -136,7 +136,7 @@ class TestStockScreenerManager:
 
     def test_save_recommended_stock_empty_list(self, app_context):
         """Test save_recommended_stock with empty stock list."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         result = screener.save_recommended_stock([])
 
         assert result == {"added": 0, "skipped": 0, "total": 0}
@@ -145,7 +145,7 @@ class TestStockScreenerManager:
         """Test save_recommended_stock with new stocks."""
         from app import db
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         stocks = [('2330', '台積電', 500.0)]
 
         result = screener.save_recommended_stock(stocks)
@@ -157,7 +157,7 @@ class TestStockScreenerManager:
         # Verify in database
         saved = RecommendedStock.query.filter_by(
             stock_id='2330',
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         ).first()
         assert saved is not None
 
@@ -169,7 +169,7 @@ class TestStockScreenerManager:
         """Test save_recommended_stock with duplicate stocks."""
         from app import db
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         stocks = [('2330', '台積電', 500.0)]
 
         # First save
@@ -184,7 +184,7 @@ class TestStockScreenerManager:
         # Cleanup
         RecommendedStock.query.filter_by(
             stock_id='2330',
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         ).delete()
         db.session.commit()
 
@@ -192,7 +192,7 @@ class TestStockScreenerManager:
         """Test save_recommended_stock with multiple stocks (bulk insert)."""
         from app import db
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
         stocks = [
             ('2330', '台積電', 500.0),
             ('2317', '鴻海', 100.0)
@@ -217,7 +217,7 @@ class TestStockScreenerManager:
         rec = RecommendedStock(
             stock_id='2330',
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         )
         db.session.add(rec)
         db.session.commit()
@@ -240,7 +240,7 @@ class TestStockScreenerManager:
         rec1 = RecommendedStock(
             stock_id='2330',
             update_date=date.today(),
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         )
         rec2 = RecommendedStock(
             stock_id='2330',
@@ -252,10 +252,10 @@ class TestStockScreenerManager:
 
         # Query with filter
         results = StockScreenerManager.get_recommended_stocks(
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         )
 
-        assert all(r.filter_model == '月營收近一年次高' for r in results)
+        assert all(r.filter_model == 'test_screener_option' for r in results)
 
         # Cleanup
         db.session.delete(rec1)
@@ -273,12 +273,12 @@ class TestStockScreenerManager:
         old_rec = RecommendedStock(
             stock_id='2330',
             update_date=old_date,
-            filter_model='月營收近一年次高'
+            filter_model='test_screener_option'
         )
         recent_rec = RecommendedStock(
             stock_id='2330',
             update_date=recent_date,
-            filter_model='月營收近一年次高_recent'
+            filter_model='test_screener_option_recent'
         )
         db.session.add_all([old_rec, recent_rec])
         db.session.commit()
@@ -300,7 +300,7 @@ class TestStockScreenerManager:
 
     def test_format_screener_message(self, app_context):
         """Test format_screener_message method."""
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
 
         # Create sample stock data (tuples matching SQL result format)
         stocks = [
@@ -318,7 +318,7 @@ class TestStockScreenerManager:
     def test_run_and_save_no_stocks(self, app_context):
         """Test run_and_save when no stocks are found."""
         # Using a filter that likely returns no results
-        screener = StockScreenerManager("月營收近一年次高", datetime(2099, 1, 1))
+        screener = StockScreenerManager("test_screener_option", datetime(2099, 1, 1))
 
         result = screener.run_and_save()
 
@@ -335,7 +335,7 @@ class TestStockScreenerIntegration:
         """Test the complete screener workflow end-to-end."""
         from app import db
 
-        screener = StockScreenerManager("月營收近一年次高")
+        screener = StockScreenerManager("test_screener_option")
 
         # Test valuation check
         is_valid = screener.check_stock_valuation('2330')
