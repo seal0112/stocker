@@ -119,7 +119,7 @@ def getFrontEndDailyInfo(stock_id):
 @frontend.route('/month_revenue/<stock_id>')
 @jwt_required()
 def getFrontEndMonthRevenue(stock_id):
-    year = request.args.get('year', default=5)
+    year = int(request.args.get('year', default=5))
     monthlyReve = db.session\
         .query()\
         .with_entities(
