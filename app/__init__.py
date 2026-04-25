@@ -39,6 +39,22 @@ def create_app(config_name):
     migrate.init_app(app, db)
     jwt.init_app(app)
     ma.init_app(app)
+
+    from flask import jsonify
+    from flask_jwt_extended import unset_jwt_cookies
+
+    @jwt.invalid_token_loader
+    def invalid_token_callback(error_string):
+        response = jsonify({'error': 'Invalid token', 'message': error_string})
+        unset_jwt_cookies(response)
+        response.status_code = 401
+        return response
+
+    @jwt.unauthorized_loader
+    def unauthorized_callback(error_string):
+        response = jsonify({'error': 'Missing token', 'message': error_string})
+        response.status_code = 401
+        return response
     celery.conf.update(app.config)
     RequestID(app)
 
