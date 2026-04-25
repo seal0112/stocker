@@ -33,10 +33,10 @@ class StockScreenerManager:
         override = os.environ.get('SCREENER_FORMAT_PATH')
         if override:
             config_path = Path(override)
+            if not config_path.is_absolute():
+                config_path = Path(__file__).parent.parent.parent / config_path
         else:
-            current_file = Path(__file__)
-            project_root = current_file.parent.parent.parent
-            config_path = project_root / 'critical_file' / 'screener_format.json'
+            config_path = Path(__file__).parent.parent.parent / 'critical_file' / 'screener_format.json'
 
         try:
             with open(config_path, 'r', encoding='utf-8') as reader:
