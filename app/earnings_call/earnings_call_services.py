@@ -15,17 +15,21 @@ class EarningsCallService():
     def __init__(self):
         self.earnings_call_data_size = 20
 
-    def get_stock_all_earnings_call(self, stock_id, meeting_date):
+    def get_stock_all_earnings_call(self, stock_id, meeting_date=None):
+        from datetime import date
         earning_call_query = EarningsCall.query
         if stock_id:
             earning_call_query = earning_call_query.filter_by(stock_id=stock_id)
 
         if meeting_date:
             earning_call_query = earning_call_query.filter(
-                EarningsCall.meeting_date <= meeting_date)
+                EarningsCall.meeting_date == meeting_date)
+        else:
+            earning_call_query = earning_call_query.filter(
+                EarningsCall.meeting_date >= date.today())
 
         return earning_call_query.order_by(
-                    EarningsCall.meeting_date.desc()).limit(self.earnings_call_data_size).all()
+                    EarningsCall.meeting_date.asc()).limit(self.earnings_call_data_size).all()
 
     def get_stock_earnings_call_by_date(self, stock_id, meeting_date):
         earning_call_query = EarningsCall.query
@@ -39,6 +43,7 @@ class EarningsCallService():
         return earning_call_query.all()
 
     def create_earnings_call(self, earnings_call_data):
+        from datetime import date
         earnings_call = EarningsCall()
         earnings_call.stock_id = earnings_call_data['stock_id']
         earnings_call.meeting_date = earnings_call_data['meeting_date']
@@ -54,9 +59,15 @@ class EarningsCallService():
             db.session.rollback()
             logger.error(ex)
             raise ex
-        else:
+
+        meeting_date = earnings_call_data['meeting_date']
+        if isinstance(meeting_date, str):
+            from datetime import datetime
+            meeting_date = datetime.strptime(meeting_date, '%Y-%m-%d').date()
+        if meeting_date == date.today():
             data_update_date_service.update_earnings_call_update_date(earnings_call.stock_id)
-            return earnings_call
+
+        return earnings_call
 
     def get_earnings_call(self, earnings_call_id=None):
         return EarningsCall.query.filter_by(id=earnings_call_id).one_or_none()

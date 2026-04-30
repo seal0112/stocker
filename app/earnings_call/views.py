@@ -18,7 +18,7 @@ class EarningsCallListApi(MethodView):
     @jwt_required()
     def get(self):
         stock = request.args.get('stock', None)
-        meeting_date = request.args.get('meeting_date', datetime.now())
+        meeting_date = request.args.get('meeting_date', None)
         earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
         return jsonify(EarningsCallchema(many=True).dump(earnings_calls))
 
