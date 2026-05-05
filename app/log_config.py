@@ -122,7 +122,7 @@ def get_logger(name=None):
 
 
 class GZipTimedRotatingFileHandler(TimedRotatingFileHandler):
-    """TimedRotatingFileHandler with gzip compression for rotated files."""
+    """TimedRotatingFileHandler with gzip compression and proper old-file cleanup."""
 
     def rotate(self, source, dest):
         super().rotate(source, dest)
@@ -134,6 +134,27 @@ class GZipTimedRotatingFileHandler(TimedRotatingFileHandler):
                         shutil.copyfileobj(f_in, f_out)
                 os.remove(dest)
             except Exception as e:
-                # Use structlog for error logging
                 logger = get_logger(__name__)
                 logger.error('log_rotation_error', error=str(e))
+
+    def getFilesToDelete(self):
+        # Parent looks for files without .gz suffix and misses compressed files.
+        # Override to include .gz files so backupCount cleanup works correctly.
+        dir_name, base_name = os.path.split(self.baseFilename)
+        file_names = os.listdir(dir_name)
+        prefix = base_name + '.'
+        result = []
+        for file_name in file_names:
+            name = file_name
+            if name.endswith('.gz'):
+                name = name[:-3]
+            if name.startswith(prefix):
+                suffix = name[len(prefix):]
+                if self.extMatch.match(suffix):
+                    result.append(os.path.join(dir_name, file_name))
+        result.sort()
+        if len(result) < self.backupCount:
+            result = []
+        else:
+            result = result[:len(result) - self.backupCount]
+        return result
