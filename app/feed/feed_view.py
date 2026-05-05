@@ -24,10 +24,17 @@ feed_services = FeedServices()
 
 @feed.route('/<stock_id>', methods=['GET'])
 def get_stock_feed(stock_id) -> Response:
-    time = request.args.get('time', default=None)
-    time = time if time else datetime.now()
-    feeds = feed_services.get_feeds(stock_id, time)
-    return FeedSchema(many=True).jsonify(feeds), 200
+    page = request.args.get('page', default=1, type=int)
+    page_size = min(request.args.get('page_size', default=15, type=int), 50)
+    pagination = feed_services.get_feeds_by_stock(stock_id, page, page_size)
+    return jsonify({
+        'feeds': FeedSchema(many=True).dump(pagination.items),
+        'total': pagination.total,
+        'page': pagination.page,
+        'pages': pagination.pages,
+        'has_next': pagination.has_next,
+        'has_prev': pagination.has_prev,
+    }), 200
 
 
 class HandleFeed(MethodView):
