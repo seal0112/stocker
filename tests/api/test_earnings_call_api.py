@@ -120,10 +120,11 @@ class TestEarningsCallPost:
 
     def test_create_duplicate_409(self, test_app, client, sample_earnings_call):
         """Should return 409 when earnings call already exists for same stock/date."""
+        meeting_date_str = sample_earnings_call.meeting_date.isoformat()
         payload = {
             'stock_id': '2330',
-            'meeting_date': '2024-04-18',
-            'meeting_end_date': '2024-04-18',
+            'meeting_date': meeting_date_str,
+            'meeting_end_date': meeting_date_str,
             'location': '台北市',
             'description': '重複',
             'file_name_chinese': '重複'
@@ -159,7 +160,8 @@ class TestEarningsCallPending:
 
     def test_valid_date(self, test_app, client, sample_earnings_call):
         """Should return pending earnings calls for a given date."""
-        response = client.get('/api/v0/earnings_call/pending?meeting_date=2024-04-18')
+        meeting_date_str = sample_earnings_call.meeting_date.isoformat()
+        response = client.get(f'/api/v0/earnings_call/pending?meeting_date={meeting_date_str}')
         assert response.status_code == 200
         data = response.get_json()
         assert isinstance(data, list)
