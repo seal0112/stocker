@@ -52,11 +52,12 @@ class TestGetStockFeedAPI:
 
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert isinstance(data, list)
-        assert len(data) >= 1
+        assert 'feeds' in data
+        assert isinstance(data['feeds'], list)
+        assert len(data['feeds']) >= 1
 
     def test_get_stock_feed_with_time_param(self, client, app_context, sample_basic_info):
-        """Test retrieval with time parameter."""
+        """Test retrieval with page/page_size parameters."""
         feed = Feed(
             stock_id=sample_basic_info.id,
             releaseTime=datetime(2024, 3, 15, 10, 0, 0),
@@ -69,12 +70,13 @@ class TestGetStockFeedAPI:
 
         try:
             response = client.get(
-                f'/api/v0/feed/{sample_basic_info.id}?time=2024-03-16T00:00:00'
+                f'/api/v0/feed/{sample_basic_info.id}?page=1&page_size=10'
             )
 
             assert response.status_code == 200
             data = json.loads(response.data)
-            assert isinstance(data, list)
+            assert 'feeds' in data
+            assert isinstance(data['feeds'], list)
         finally:
             cleanup_feed(feed)
 
@@ -105,19 +107,20 @@ class TestGetStockFeedAPI:
 
             assert response.status_code == 200
             data = json.loads(response.data)
+            feeds = data['feeds']
 
             # Verify ordering (newest first)
-            if len(data) >= 2:
-                for i in range(len(data) - 1):
+            if len(feeds) >= 2:
+                for i in range(len(feeds) - 1):
                     current_time = datetime.fromisoformat(
-                        data[i]['releaseTime'].replace('Z', '+00:00')
-                    ) if 'Z' in data[i]['releaseTime'] else datetime.fromisoformat(
-                        data[i]['releaseTime']
+                        feeds[i]['releaseTime'].replace('Z', '+00:00')
+                    ) if 'Z' in feeds[i]['releaseTime'] else datetime.fromisoformat(
+                        feeds[i]['releaseTime']
                     )
                     next_time = datetime.fromisoformat(
-                        data[i + 1]['releaseTime'].replace('Z', '+00:00')
-                    ) if 'Z' in data[i + 1]['releaseTime'] else datetime.fromisoformat(
-                        data[i + 1]['releaseTime']
+                        feeds[i + 1]['releaseTime'].replace('Z', '+00:00')
+                    ) if 'Z' in feeds[i + 1]['releaseTime'] else datetime.fromisoformat(
+                        feeds[i + 1]['releaseTime']
                     )
                     assert current_time >= next_time
         finally:
@@ -440,7 +443,7 @@ class TestFeedAPIIntegration:
             assert get_response.status_code == 200
 
             data = json.loads(get_response.data)
-            matching = [d for d in data if d['title'] == 'Integration Test Feed']
+            matching = [d for d in data['feeds'] if d['title'] == 'Integration Test Feed']
             assert len(matching) >= 1
         finally:
             cleanup_feed_by_link('https://example.com/feed/integration-test')
@@ -494,9 +497,10 @@ class TestFeedSerializer:
 
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert len(data) >= 1
+        feeds = data['feeds']
+        assert len(feeds) >= 1
 
-        item = data[0]
+        item = feeds[0]
         expected_fields = [
             'id', 'update_date', 'releaseTime',
             'title', 'link', 'feedType', 'source'
@@ -511,10 +515,11 @@ class TestFeedSerializer:
 
         assert response.status_code == 200
         data = json.loads(response.data)
+        feeds = data['feeds']
 
-        if data:
+        if feeds:
             # releaseTime should be datetime format
-            release_time = data[0].get('releaseTime')
+            release_time = feeds[0].get('releaseTime')
             assert release_time is not None
             # Should contain date separator
             assert 'T' in release_time or '-' in release_time
