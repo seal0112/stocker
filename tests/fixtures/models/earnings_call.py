@@ -6,9 +6,11 @@ Architecture:
 - Teardown runs before sample_basic_info teardown (pytest handles this)
 """
 import pytest
-from datetime import date
+from datetime import date, timedelta
 from app import db
 from app.earnings_call.models import EarningsCall
+
+FUTURE_MEETING_DATE = date.today() + timedelta(days=30)
 
 
 @pytest.fixture
@@ -19,11 +21,11 @@ def sample_earnings_call(sample_basic_info):
     """
     earnings_call = EarningsCall(
         stock_id=sample_basic_info.id,
-        meeting_date=date(2024, 4, 18),
-        meeting_end_date=date(2024, 4, 18),
+        meeting_date=FUTURE_MEETING_DATE,
+        meeting_end_date=FUTURE_MEETING_DATE,
         location='台北市中山區松江路',
-        description='2024年第一季法人說明會',
-        file_name_chinese='2330_2024Q1法說會'
+        description='法人說明會',
+        file_name_chinese='2330_法說會'
     )
     db.session.add(earnings_call)
     db.session.commit()
@@ -33,7 +35,7 @@ def sample_earnings_call(sample_basic_info):
     # Explicit cleanup
     EarningsCall.query.filter_by(
         stock_id=sample_basic_info.id,
-        meeting_date=date(2024, 4, 18)
+        meeting_date=FUTURE_MEETING_DATE
     ).delete()
     db.session.commit()
 
