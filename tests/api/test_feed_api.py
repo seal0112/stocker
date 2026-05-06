@@ -107,20 +107,20 @@ class TestGetStockFeedAPI:
 
             assert response.status_code == 200
             data = json.loads(response.data)
-            feeds = data['feeds']
+            response_feeds = data['feeds']
 
             # Verify ordering (newest first)
-            if len(feeds) >= 2:
-                for i in range(len(feeds) - 1):
+            if len(response_feeds) >= 2:
+                for i in range(len(response_feeds) - 1):
                     current_time = datetime.fromisoformat(
-                        feeds[i]['releaseTime'].replace('Z', '+00:00')
-                    ) if 'Z' in feeds[i]['releaseTime'] else datetime.fromisoformat(
-                        feeds[i]['releaseTime']
+                        response_feeds[i]['releaseTime'].replace('Z', '+00:00')
+                    ) if 'Z' in response_feeds[i]['releaseTime'] else datetime.fromisoformat(
+                        response_feeds[i]['releaseTime']
                     )
                     next_time = datetime.fromisoformat(
-                        feeds[i + 1]['releaseTime'].replace('Z', '+00:00')
-                    ) if 'Z' in feeds[i + 1]['releaseTime'] else datetime.fromisoformat(
-                        feeds[i + 1]['releaseTime']
+                        response_feeds[i + 1]['releaseTime'].replace('Z', '+00:00')
+                    ) if 'Z' in response_feeds[i + 1]['releaseTime'] else datetime.fromisoformat(
+                        response_feeds[i + 1]['releaseTime']
                     )
                     assert current_time >= next_time
         finally:
