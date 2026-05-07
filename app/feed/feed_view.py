@@ -33,7 +33,8 @@ def get_stock_feed(stock_id) -> Response:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
         except ValueError:
             return jsonify({"error": "Invalid start_date format. Use YYYY-MM-DD"}), 400
-    pagination = feed_services.get_feeds_by_stock(stock_id, page, page_size, start_date)
+    sources = request.args.getlist('source') or None
+    pagination = feed_services.get_feeds_by_stock(stock_id, page, page_size, start_date, sources)
     return jsonify({
         'feeds': FeedSchema(many=True).dump(pagination.items),
         'total': pagination.total,

@@ -26,10 +26,12 @@ class FeedServices():
         ).order_by(Feed.releaseTime.desc()).limit(self.feed_size).all()
         return feeds
 
-    def get_feeds_by_stock(self, stock_id, page, page_size, start_date=None):
+    def get_feeds_by_stock(self, stock_id, page, page_size, start_date=None, sources=None):
         query = Feed.query.filter(Feed.stock_id == stock_id)
         if start_date:
             query = query.filter(Feed.releaseTime <= start_date)
+        if sources:
+            query = query.filter(Feed.source.in_(sources))
         pagination = query.order_by(Feed.releaseTime.desc()).paginate(
             page=page, per_page=page_size, error_out=False
         )
