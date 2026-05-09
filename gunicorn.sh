@@ -17,7 +17,11 @@ fi
 
 # 沒有現有服務，直接啟動
 echo "Starting new service..."
-gunicorn wsgi:app
+mkdir -p log
+gunicorn wsgi:app \
+  --pid "$PIDFILE" \
+  --access-logfile log/gunicorn-access.log \
+  --error-logfile log/gunicorn-error.log
 
 sleep 2
 if [ -f "$PIDFILE" ]; then

@@ -50,7 +50,10 @@ class UserService():
         except Exception as ex:
             db.session.rollback()
             logger.exception(
-                f'fail create User: {personal_data.name}, exception: {ex}'
+                'fail create user',
+                username=personal_data.get('username'),
+                external_type=external_type,
+                error=str(ex)
             )
             return None
         user_id = self.get_user_id(new_user['external_id'], external_type)
