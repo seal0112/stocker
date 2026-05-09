@@ -47,6 +47,7 @@ def get_stock_feed(stock_id) -> Response:
 
 
 class HandleFeed(MethodView):
+    decorators = [api_auth_required]
     """
     Description:
         this api is used to handle Stock Feed request.
