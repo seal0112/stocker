@@ -59,9 +59,11 @@ class FeedServices():
             feed.source = feed_data['source']
             feed.description = feed_data.get('description', None)
             feed.feedType = feed_data['feedType']
+            existing_tag_names = {t.name for t in feed.tags}
             for tag_name in feed_data['tags']:
-                tag = self.get_feed_tag(tag_name)
-                feed.tags.append(tag)
+                if tag_name not in existing_tag_names:
+                    tag = self.get_feed_tag(tag_name)
+                    feed.tags.append(tag)
 
             stocks = feed_data.get('stocks')
             if isinstance(stocks, list) and stocks:
