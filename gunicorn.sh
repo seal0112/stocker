@@ -17,12 +17,14 @@ fi
 
 # 沒有現有服務，直接啟動
 echo "Starting new service..."
-mkdir -p log
+APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+mkdir -p "$APP_DIR/log"
 gunicorn wsgi:app \
   --daemon \
+  --chdir "$APP_DIR" \
   --pid "$PIDFILE" \
-  --access-logfile log/gunicorn-access.log \
-  --error-logfile log/gunicorn-error.log
+  --access-logfile "$APP_DIR/log/gunicorn-access.log" \
+  --error-logfile "$APP_DIR/log/gunicorn-error.log"
 
 sleep 2
 if [ -f "$PIDFILE" ]; then

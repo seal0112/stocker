@@ -17,7 +17,11 @@ def add_request_id(logger, method_name, event_dict):
     return event_dict
 
 
-def setup_logging(log_dir='log', log_filename='app.log'):
+def setup_logging(log_dir=None, log_filename='app.log'):
+    if log_dir is None:
+        # Absolute path so daemonized gunicorn (CWD='/') still finds it
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        log_dir = os.path.join(base_dir, 'log')
     """
     Set up structured logging with structlog.
 
