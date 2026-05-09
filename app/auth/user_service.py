@@ -14,14 +14,10 @@ class UserService():
         pass
 
     def get_user_id(self, external_id, external_type):
-        try:
-            user = db.session.query(User).filter_by(
-                external_id=external_id).filter_by(
-                    external_type=external_type).one()
-            return user.id
-        except Exception as ex:
-            logger.exception('Failed to get user id: %s', ex)
-            return None
+        user = db.session.query(User).filter_by(
+            external_id=external_id).filter_by(
+                external_type=external_type).one_or_none()
+        return user.id if user else None
 
     def get_user(self, user_id):
         user = db.session.query(User).filter_by(id=user_id).one_or_none()
