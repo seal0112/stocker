@@ -19,6 +19,7 @@ fi
 echo "Starting new service..."
 mkdir -p log
 gunicorn wsgi:app \
+  --daemon \
   --pid "$PIDFILE" \
   --access-logfile log/gunicorn-access.log \
   --error-logfile log/gunicorn-error.log
