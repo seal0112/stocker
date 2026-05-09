@@ -58,11 +58,12 @@ def setup_logging(log_dir=None, log_filename='app.log'):
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
-    # Configure root logger
+    # Configure root logger (guard against duplicate handlers across workers)
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(file_handler)
-    root_logger.addHandler(console_handler)
+    if not root_logger.handlers:
+        root_logger.addHandler(file_handler)
+        root_logger.addHandler(console_handler)
 
     # SQLAlchemy only logs warnings and above
     sqlalchemy_logger = logging.getLogger('sqlalchemy.engine')
