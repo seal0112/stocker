@@ -16,6 +16,7 @@ from app.schemas.feed_schema import FeedSchema
 
 from app.utils.model_utilities import get_current_date
 from app.utils.announcement_handler import AnnounceHandler
+from app.decorators.auth import api_auth_required
 
 
 logger = get_logger(__name__)
@@ -145,6 +146,8 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
 
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
+    decorators = [api_auth_required]
+
     def put(self, feed_id) -> Response:
         try:
             anouncement_income_sheet_data = request.get_json()

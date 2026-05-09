@@ -11,6 +11,7 @@ from ..utils.stock_search_count_service import StockSearchCountService
 from .. import db
 from . import basic_information
 from .serializer import BasicInformationDetailSchema
+from app.decorators.auth import api_auth_required
 
 
 logger = get_logger(__name__)
@@ -18,6 +19,7 @@ stock_search_count_service = StockSearchCountService()
 
 
 class handleBasicInfo(MethodView):
+    decorators = [api_auth_required]
     """
     Discription:
         this api is used to handle basic information request.

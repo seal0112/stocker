@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from app import db
 from app.main import main
 from app.utils.stock_screener import StockScreenerManager
+from app.decorators.auth import api_auth_required
 from app.utils.discord_bot import DiscordBot
 from app.utils.announcement_handler import AnnounceHandler
 from app.database_setup import (
@@ -27,6 +28,7 @@ def showMain():
 
 
 @main.route('screener')
+@api_auth_required
 def use_screener():
     option = request.args.get('option')
     stock_screener = StockScreenerManager(option)
@@ -74,7 +76,7 @@ def store_incomesheet_announcement():
     return make_response('', 204)
 
 class getStockNumber(MethodView):
-    decorators = []
+    decorators = [api_auth_required]
 
     def get(self):
         query = db.session.query(BasicInformation.id)

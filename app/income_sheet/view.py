@@ -13,6 +13,7 @@ from app.database_setup import (
 from .. import db
 from . import income_sheet
 from .serializer import IncomeSheetSchema
+from app.decorators.auth import api_auth_required
 
 
 logger = get_logger(__name__)
@@ -20,6 +21,7 @@ data_update_date_service = DataUpdateDateService()
 
 
 class handleIncomeSheet(MethodView):
+    decorators = [api_auth_required]
     """
     Description:
         this api is used to handle income sheet request.

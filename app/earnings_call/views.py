@@ -9,6 +9,7 @@ from app import db
 from . import earnings_call
 from .serializer import EarningsCallchema, EarningsCallSummarySchema
 from .earnings_call_services import EarningsCallService
+from app.decorators.auth import api_auth_required
 
 logger = get_logger(__name__)
 earnings_call_service = EarningsCallService()
@@ -22,7 +23,7 @@ class EarningsCallListApi(MethodView):
         earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
         return jsonify(EarningsCallchema(many=True).dump(earnings_calls))
 
-    # @jwt_required()
+    @api_auth_required
     def post(self):
         try:
             earnings_call_data = request.get_json()
@@ -82,6 +83,7 @@ class EarningsCallSummaryApi(MethodView):
 
         return jsonify(EarningsCallSummarySchema().dump(summary))
 
+    @api_auth_required
     def put(self, earnings_call_id):
         """Update summary with AI-generated content (Lambda callback)."""
         try:
@@ -102,6 +104,7 @@ class EarningsCallSummaryApi(MethodView):
 
         return jsonify(EarningsCallSummarySchema().dump(summary))
 
+    @api_auth_required
     def post(self, earnings_call_id):
         """Trigger AI summary generation (creates pending record)."""
         earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
@@ -123,6 +126,7 @@ class EarningsCallSummaryApi(MethodView):
 class EarningsCallPendingApi(MethodView):
     """API to get earnings calls pending AI summary."""
 
+    @api_auth_required
     def get(self):
         """Get earnings calls that need AI summary processing."""
         meeting_date_str = request.args.get('meeting_date')
@@ -149,6 +153,7 @@ earnings_call.add_url_rule('',
 class EarningsCallFeedsApi(MethodView):
     """API to get related feeds for an earnings call."""
 
+    @api_auth_required
     def get(self, earnings_call_id):
         """Get related news feeds after an earnings call."""
         from app.schemas.feed_schema import FeedSchema
