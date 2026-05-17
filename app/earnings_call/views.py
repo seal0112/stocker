@@ -186,11 +186,15 @@ class EarningsCallFeedsApi(MethodView):
         if not earnings_call:
             return jsonify({"error": "Earnings call not found"}), 404
 
-        days_after = request.args.get('days_after', 3, type=int)
+        days_after = request.args.get('days_after', 1, type=int)
+        keywords_str = request.args.get('keywords', None)
+        keywords = [kw.strip() for kw in keywords_str.split(',') if kw.strip()] if keywords_str else None
+
         feeds = earnings_call_service.get_related_feeds(
             earnings_call.stock_id,
             earnings_call.meeting_date,
-            days_after
+            days_after=days_after,
+            keywords=keywords,
         )
 
         return jsonify({

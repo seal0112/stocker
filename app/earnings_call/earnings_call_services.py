@@ -161,16 +161,24 @@ class EarningsCallService():
 
         return summary
 
-    def get_related_feeds(self, stock_id, meeting_date, days_after=3):
+    def get_related_feeds(self, stock_id, meeting_date, days_after=1, keywords=None):
         """Get related news feeds after the earnings call."""
         from datetime import timedelta
+        from sqlalchemy import or_
         end_date = meeting_date + timedelta(days=days_after)
 
-        return Feed.query.filter(
+        query = Feed.query.filter(
             Feed.stock_id == stock_id,
             Feed.releaseTime >= meeting_date,
-            Feed.releaseTime <= end_date
-        ).order_by(Feed.releaseTime.desc()).all()
+            Feed.releaseTime <= end_date,
+        )
+
+        if keywords:
+            query = query.filter(
+                or_(*[Feed.title.contains(kw) for kw in keywords])
+            )
+
+        return query.order_by(Feed.releaseTime.desc()).limit(15).all()
 
     def get_pending_earnings_calls(self, meeting_date):
         """Get earnings calls that need AI summary processing."""
