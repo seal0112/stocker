@@ -77,3 +77,25 @@ def moderator_authenticated_client(test_app, moderator_auth_headers):
     """Create a test client wrapper with moderator auth."""
     client = test_app.test_client()
     return AuthenticatedClient(client, moderator_auth_headers)
+
+
+@pytest.fixture
+def admin_auth_headers(test_app, admin_user):
+    """Create JWT auth headers for admin requests."""
+    additional_claims = {
+        'username': admin_user.username,
+        'email': admin_user.email,
+        'picture': admin_user.profile_pic
+    }
+    access_token = create_access_token(
+        identity=str(admin_user.id),
+        additional_claims=additional_claims
+    )
+    return {'Authorization': f'Bearer {access_token}'}
+
+
+@pytest.fixture
+def admin_authenticated_client(test_app, admin_auth_headers):
+    """Create a test client wrapper with admin auth."""
+    client = test_app.test_client()
+    return AuthenticatedClient(client, admin_auth_headers)

@@ -19,7 +19,12 @@ def earnings_call_summary(test_app, sample_earnings_call):
         capex_industry='半導體',
         outlook='正面展望',
         concerns_and_risks='地緣政治風險',
-        key_points=['營收成長', '產能擴張'],
+        score=3,
+        sentiment='Buy',
+        impact_duration='Long',
+        source_reliability='Official',
+        reasoning='官方確認長期資本支出計畫',
+        news_contributions=[{'feed_id': 1, 'title': '法說', 'score_delta': 3, 'key_insight': '利多'}],
         source_feed_ids=[1, 2, 3]
     )
     db.session.add(summary)
@@ -93,7 +98,7 @@ class TestEarningsCallListGet:
 class TestEarningsCallPost:
     """Tests for POST /api/v0/earnings_call"""
 
-    def test_create_201(self, test_app, client, sample_basic_info):
+    def test_create_201(self, test_app, authenticated_client, sample_basic_info):
         """Should create a new earnings call and return 201."""
         payload = {
             'stock_id': '2330',
@@ -103,7 +108,7 @@ class TestEarningsCallPost:
             'description': '2025年第一季法說會',
             'file_name_chinese': '2330_2025Q1法說會'
         }
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/earnings_call',
             data=json.dumps(payload),
             content_type='application/json'
@@ -118,7 +123,7 @@ class TestEarningsCallPost:
             stock_id='2330', meeting_date=date(2025, 1, 15)).delete()
         db.session.commit()
 
-    def test_create_duplicate_409(self, test_app, client, sample_earnings_call):
+    def test_create_duplicate_409(self, test_app, authenticated_client, sample_earnings_call):
         """Should return 409 when earnings call already exists for same stock/date."""
         meeting_date_str = sample_earnings_call.meeting_date.isoformat()
         payload = {
@@ -129,7 +134,7 @@ class TestEarningsCallPost:
             'description': '重複',
             'file_name_chinese': '重複'
         }
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/earnings_call',
             data=json.dumps(payload),
             content_type='application/json'
@@ -137,52 +142,64 @@ class TestEarningsCallPost:
         assert response.status_code == 409
         assert 'already exists' in response.get_json()['error'].lower()
 
-    def test_create_missing_body_400(self, test_app, client):
+    def test_create_missing_body_400(self, test_app, authenticated_client):
         """POST with empty body should return 400."""
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/earnings_call',
             content_type='application/json'
         )
         assert response.status_code == 400
 
-    def test_create_invalid_json_400(self, test_app, client):
+    def test_create_invalid_json_400(self, test_app, authenticated_client):
         """POST with invalid JSON should return 400."""
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/earnings_call',
             data='not json',
             content_type='application/json'
         )
         assert response.status_code == 400
 
+    def test_create_unauthenticated_401(self, test_app, client):
+        """POST without auth should return 401."""
+        response = client.post(
+            '/api/v0/earnings_call',
+            data=json.dumps({'stock_id': '2330'}),
+            content_type='application/json'
+        )
+        assert response.status_code == 401
+
 
 class TestEarningsCallPending:
     """Tests for GET /api/v0/earnings_call/pending"""
 
-    def test_valid_date(self, test_app, client, sample_earnings_call):
+    def test_unauthenticated_401(self, test_app, client):
+        response = client.get('/api/v0/earnings_call/pending?meeting_date=2024-06-15')
+        assert response.status_code == 401
+
+    def test_valid_date(self, test_app, authenticated_client, sample_earnings_call):
         """Should return pending earnings calls for a given date."""
         meeting_date_str = sample_earnings_call.meeting_date.isoformat()
-        response = client.get(f'/api/v0/earnings_call/pending?meeting_date={meeting_date_str}')
+        response = authenticated_client.get(f'/api/v0/earnings_call/pending?meeting_date={meeting_date_str}')
         assert response.status_code == 200
         data = response.get_json()
         assert isinstance(data, list)
-        # The sample_earnings_call has no summary, so it should be pending
         assert len(data) >= 1
 
-    def test_missing_date_400(self, test_app, client):
+    def test_missing_date_400(self, test_app, authenticated_client):
         """Should return 400 when meeting_date is missing."""
-        response = client.get('/api/v0/earnings_call/pending')
+        response = authenticated_client.get('/api/v0/earnings_call/pending')
         assert response.status_code == 400
         assert 'required' in response.get_json()['error'].lower()
 
-    def test_invalid_format_400(self, test_app, client):
+    def test_invalid_format_400(self, test_app, authenticated_client):
         """Should return 400 for invalid date format."""
-        response = client.get('/api/v0/earnings_call/pending?meeting_date=20240418')
+        response = authenticated_client.get('/api/v0/earnings_call/pending?meeting_date=20240418')
         assert response.status_code == 400
         assert 'format' in response.get_json()['error'].lower()
 
-    def test_no_results_empty_list(self, test_app, client):
+    def test_no_results_empty_list(self, test_app, authenticated_client):
         """Should return empty list when no pending calls on date."""
-        response = client.get('/api/v0/earnings_call/pending?meeting_date=2000-01-01')
+        response = authenticated_client.get('/api/v0/earnings_call/pending?meeting_date=2000-01-01')
         assert response.status_code == 200
         data = response.get_json()
         assert isinstance(data, list)
@@ -201,6 +218,12 @@ class TestEarningsCallSummaryApi:
         assert data['earnings_call_id'] == ec_id
         assert data['processing_status'] == 'completed'
         assert data['capex'] == '100億'
+        assert data['score'] == 3
+        assert data['sentiment'] == 'Buy'
+        assert data['impact_duration'] == 'Long'
+        assert data['source_reliability'] == 'Official'
+        assert data['reasoning'] == '官方確認長期資本支出計畫'
+        assert isinstance(data['news_contributions'], list)
 
     def test_get_404(self, test_app, client, sample_earnings_call):
         """Should return 404 when no summary exists."""
@@ -213,10 +236,22 @@ class TestEarningsCallSummaryApi:
         response = client.get('/api/v0/earnings_call/99999/summary')
         assert response.status_code == 404
 
-    def test_post_creates_pending_201(self, test_app, client, sample_earnings_call):
-        """POST should create a pending summary record."""
+    def test_post_requires_admin_401(self, test_app, client, sample_earnings_call):
+        """POST without auth should return 401."""
         ec_id = sample_earnings_call.id
         response = client.post(f'/api/v0/earnings_call/{ec_id}/summary')
+        assert response.status_code == 401
+
+    def test_post_requires_admin_403(self, test_app, authenticated_client, sample_earnings_call):
+        """POST with regular user should return 403."""
+        ec_id = sample_earnings_call.id
+        response = authenticated_client.post(f'/api/v0/earnings_call/{ec_id}/summary')
+        assert response.status_code == 403
+
+    def test_post_creates_pending_201(self, test_app, admin_authenticated_client, sample_earnings_call):
+        """POST by admin should create a pending summary record."""
+        ec_id = sample_earnings_call.id
+        response = admin_authenticated_client.post(f'/api/v0/earnings_call/{ec_id}/summary')
         assert response.status_code == 201
         data = response.get_json()
         assert data['earnings_call_id'] == ec_id
@@ -226,28 +261,30 @@ class TestEarningsCallSummaryApi:
         EarningsCallSummary.query.filter_by(earnings_call_id=ec_id).delete()
         db.session.commit()
 
-    def test_post_returns_existing_idempotent(self, test_app, client, sample_earnings_call, earnings_call_summary):
+    def test_post_returns_existing_idempotent(self, test_app, admin_authenticated_client, sample_earnings_call, earnings_call_summary):
         """POST should return existing summary if one already exists (idempotent)."""
         ec_id = sample_earnings_call.id
-        response = client.post(f'/api/v0/earnings_call/{ec_id}/summary')
+        response = admin_authenticated_client.post(f'/api/v0/earnings_call/{ec_id}/summary')
         assert response.status_code == 201
         data = response.get_json()
         assert data['id'] == earnings_call_summary.id
 
-    def test_post_404_ec_not_found(self, test_app, client):
+    def test_post_404_ec_not_found(self, test_app, admin_authenticated_client):
         """POST should return 404 when earnings call doesn't exist."""
-        response = client.post('/api/v0/earnings_call/99999/summary')
+        response = admin_authenticated_client.post('/api/v0/earnings_call/99999/summary')
         assert response.status_code == 404
 
-    def test_put_success(self, test_app, client, sample_earnings_call, earnings_call_summary):
+    def test_put_success(self, test_app, authenticated_client, sample_earnings_call, earnings_call_summary):
         """PUT should update summary with AI content."""
         ec_id = sample_earnings_call.id
         payload = {
             'capex': '200億',
             'outlook': '非常正面',
-            'processing_status': 'completed'
+            'processing_status': 'completed',
+            'score': 4,
+            'sentiment': 'Strong Buy',
         }
-        response = client.put(
+        response = authenticated_client.put(
             f'/api/v0/earnings_call/{ec_id}/summary',
             data=json.dumps(payload),
             content_type='application/json'
@@ -256,45 +293,61 @@ class TestEarningsCallSummaryApi:
         data = response.get_json()
         assert data['capex'] == '200億'
         assert data['outlook'] == '非常正面'
+        assert data['score'] == 4
+        assert data['sentiment'] == 'Strong Buy'
 
-    def test_put_404(self, test_app, client, sample_earnings_call):
+    def test_put_404(self, test_app, authenticated_client, sample_earnings_call):
         """PUT should return 404 when no summary exists."""
         ec_id = sample_earnings_call.id
         payload = {'capex': '100億'}
-        response = client.put(
+        response = authenticated_client.put(
             f'/api/v0/earnings_call/{ec_id}/summary',
             data=json.dumps(payload),
             content_type='application/json'
         )
         assert response.status_code == 404
 
-    def test_put_missing_body_400(self, test_app, client, sample_earnings_call, earnings_call_summary):
+    def test_put_missing_body_400(self, test_app, authenticated_client, sample_earnings_call, earnings_call_summary):
         """PUT with no body should return 400."""
         ec_id = sample_earnings_call.id
-        response = client.put(
+        response = authenticated_client.put(
             f'/api/v0/earnings_call/{ec_id}/summary',
             content_type='application/json'
         )
         assert response.status_code == 400
 
-    def test_put_invalid_json_400(self, test_app, client, sample_earnings_call, earnings_call_summary):
+    def test_put_invalid_json_400(self, test_app, authenticated_client, sample_earnings_call, earnings_call_summary):
         """PUT with invalid JSON should return 400."""
         ec_id = sample_earnings_call.id
-        response = client.put(
+        response = authenticated_client.put(
             f'/api/v0/earnings_call/{ec_id}/summary',
             data='not json',
             content_type='application/json'
         )
         assert response.status_code == 400
 
+    def test_put_unauthenticated_401(self, test_app, client, sample_earnings_call, earnings_call_summary):
+        """PUT without auth should return 401."""
+        ec_id = sample_earnings_call.id
+        response = client.put(
+            f'/api/v0/earnings_call/{ec_id}/summary',
+            data=json.dumps({'capex': '100億'}),
+            content_type='application/json'
+        )
+        assert response.status_code == 401
+
 
 class TestEarningsCallFeeds:
     """Tests for GET /api/v0/earnings_call/<id>/feeds"""
 
-    def test_success_with_feeds(self, test_app, client, sample_earnings_call, feed_near_earnings_call):
+    def test_unauthenticated_401(self, test_app, client, sample_earnings_call):
+        response = client.get(f'/api/v0/earnings_call/{sample_earnings_call.id}/feeds')
+        assert response.status_code == 401
+
+    def test_success_with_feeds(self, test_app, authenticated_client, sample_earnings_call, feed_near_earnings_call):
         """Should return feeds related to the earnings call."""
         ec_id = sample_earnings_call.id
-        response = client.get(f'/api/v0/earnings_call/{ec_id}/feeds')
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds')
         assert response.status_code == 200
         data = response.get_json()
         assert data['earnings_call_id'] == ec_id
@@ -302,24 +355,84 @@ class TestEarningsCallFeeds:
         assert data['feeds_count'] >= 1
         assert isinstance(data['feeds'], list)
 
-    def test_ec_not_found_404(self, test_app, client):
+    def test_ec_not_found_404(self, test_app, authenticated_client):
         """Should return 404 for non-existent earnings call."""
-        response = client.get('/api/v0/earnings_call/99999/feeds')
+        response = authenticated_client.get('/api/v0/earnings_call/99999/feeds')
         assert response.status_code == 404
 
-    def test_empty_feeds(self, test_app, client, sample_earnings_call):
+    def test_empty_feeds(self, test_app, authenticated_client, sample_earnings_call):
         """Should return empty feeds list when no feeds near meeting date."""
         ec_id = sample_earnings_call.id
-        response = client.get(f'/api/v0/earnings_call/{ec_id}/feeds')
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds')
         assert response.status_code == 200
         data = response.get_json()
         assert data['feeds_count'] == 0
         assert data['feeds'] == []
 
-    def test_custom_days_after_param(self, test_app, client, sample_earnings_call, feed_near_earnings_call):
+    def test_custom_days_after_param(self, test_app, authenticated_client, sample_earnings_call, feed_near_earnings_call):
         """Should respect custom days_after parameter."""
         ec_id = sample_earnings_call.id
-        response = client.get(f'/api/v0/earnings_call/{ec_id}/feeds?days_after=7')
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds?days_after=7')
         assert response.status_code == 200
         data = response.get_json()
         assert data['feeds_count'] >= 1
+
+    def test_keyword_filter_match(self, test_app, authenticated_client, sample_earnings_call, feed_near_earnings_call):
+        """Should return feeds matching keyword in title."""
+        ec_id = sample_earnings_call.id
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds?keywords=法說會')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['feeds_count'] >= 1
+
+    def test_keyword_filter_no_match(self, test_app, authenticated_client, sample_earnings_call, feed_near_earnings_call):
+        """Should return empty list when no feeds match keyword."""
+        ec_id = sample_earnings_call.id
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds?keywords=不存在的關鍵字xyz')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['feeds_count'] == 0
+
+    def test_multiple_keywords_or_logic(self, test_app, authenticated_client, sample_earnings_call, feed_near_earnings_call):
+        """Multiple keywords should use OR logic."""
+        ec_id = sample_earnings_call.id
+        response = authenticated_client.get(f'/api/v0/earnings_call/{ec_id}/feeds?keywords=不存在xyz,法說會')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['feeds_count'] >= 1
+
+
+class TestEarningsCallListScoreFilter:
+    """Tests for score_min/score_max filtering in GET /api/v0/earnings_call."""
+
+    def test_score_filter_returns_matching(self, test_app, authenticated_client,
+                                           sample_earnings_call, earnings_call_summary):
+        """Should return earnings calls within score range."""
+        response = authenticated_client.get('/api/v0/earnings_call?stock=2330&score_min=2&score_max=4')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        # summary has score=3, should match range 2-4
+        assert len(data) >= 1
+
+    def test_score_filter_excludes_non_matching(self, test_app, authenticated_client,
+                                                 sample_earnings_call, earnings_call_summary):
+        """Should exclude earnings calls outside score range."""
+        response = authenticated_client.get('/api/v0/earnings_call?stock=2330&score_min=4&score_max=5')
+        assert response.status_code == 200
+        data = response.get_json()
+        # summary has score=3, should not match range 4-5
+        assert len(data) == 0
+
+    def test_list_includes_summary_fields(self, test_app, authenticated_client,
+                                          sample_earnings_call, earnings_call_summary):
+        """List response should inline summary score/sentiment/status."""
+        response = authenticated_client.get('/api/v0/earnings_call?stock=2330')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert len(data) >= 1
+        item = data[0]
+        assert 'summary' in item
+        assert item['summary']['score'] == 3
+        assert item['summary']['sentiment'] == 'Buy'
+        assert item['summary']['processing_status'] == 'completed'
