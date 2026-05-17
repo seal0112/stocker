@@ -15,21 +15,40 @@ class EarningsCallService():
     def __init__(self):
         self.earnings_call_data_size = 20
 
-    def get_stock_all_earnings_call(self, stock_id, meeting_date=None):
-        from datetime import date
-        earning_call_query = EarningsCall.query
+    def get_stock_all_earnings_call(
+        self, stock_id=None, meeting_date=None,
+        date_from=None, date_to=None,
+        score_min=None, score_max=None
+    ):
+        from datetime import date, timedelta
+        from sqlalchemy.orm import joinedload
+
+        query = EarningsCall.query.options(joinedload(EarningsCall.summary))
+
         if stock_id:
-            earning_call_query = earning_call_query.filter_by(stock_id=stock_id)
+            query = query.filter(EarningsCall.stock_id == stock_id)
 
         if meeting_date:
-            earning_call_query = earning_call_query.filter(
-                EarningsCall.meeting_date == meeting_date)
+            query = query.filter(EarningsCall.meeting_date == meeting_date)
         else:
-            earning_call_query = earning_call_query.filter(
-                EarningsCall.meeting_date >= date.today())
+            start = date_from or (date.today() - timedelta(days=90))
+            end = date_to or (date.today() + timedelta(days=60))
+            query = query.filter(
+                EarningsCall.meeting_date >= start,
+                EarningsCall.meeting_date <= end,
+            )
 
-        return earning_call_query.order_by(
-                    EarningsCall.meeting_date.asc()).limit(self.earnings_call_data_size).all()
+        if score_min is not None or score_max is not None:
+            query = query.join(
+                EarningsCallSummary,
+                EarningsCall.id == EarningsCallSummary.earnings_call_id
+            )
+            if score_min is not None:
+                query = query.filter(EarningsCallSummary.score >= score_min)
+            if score_max is not None:
+                query = query.filter(EarningsCallSummary.score <= score_max)
+
+        return query.order_by(EarningsCall.meeting_date.desc()).limit(100).all()
 
     def get_stock_earnings_call_by_date(self, stock_id, meeting_date):
         earning_call_query = EarningsCall.query

@@ -73,6 +73,7 @@ def create_app(config_name):
     from app.announcement_income_sheet_analysis import announcement_income_sheet_analysis
     from app.api_token import api_token
     from app.user_management import user_management, roles_bp
+    from app.ai_prompt import ai_prompt
 
     app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
     app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
@@ -90,6 +91,7 @@ def create_app(config_name):
     app.register_blueprint(api_token, url_prefix='/api/v1/token')
     app.register_blueprint(user_management, url_prefix='/api/v1/users')
     app.register_blueprint(roles_bp, url_prefix='/api/v1/roles')
+    app.register_blueprint(ai_prompt, url_prefix='/api/v0/ai_prompt')
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')

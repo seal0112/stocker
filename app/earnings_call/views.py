@@ -20,8 +20,32 @@ class EarningsCallListApi(MethodView):
     def get(self):
         stock = request.args.get('stock', None)
         meeting_date = request.args.get('meeting_date', None)
-        earnings_calls = earnings_call_service.get_stock_all_earnings_call(stock, meeting_date)
-        return jsonify(EarningsCallchema(many=True).dump(earnings_calls))
+        date_from = request.args.get('date_from', None)
+        date_to = request.args.get('date_to', None)
+        score_min = request.args.get('score_min', None, type=int)
+        score_max = request.args.get('score_max', None, type=int)
+
+        earnings_calls = earnings_call_service.get_stock_all_earnings_call(
+            stock_id=stock,
+            meeting_date=meeting_date,
+            date_from=date_from,
+            date_to=date_to,
+            score_min=score_min,
+            score_max=score_max,
+        )
+
+        result = []
+        for ec in earnings_calls:
+            item = EarningsCallchema().dump(ec)
+            s = ec.summary
+            item['summary'] = {
+                'processing_status': s.processing_status if s else None,
+                'score': s.score if s else None,
+                'sentiment': s.sentiment if s else None,
+            }
+            result.append(item)
+
+        return jsonify(result)
 
     @api_auth_required
     def post(self):

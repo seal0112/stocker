@@ -44,12 +44,19 @@ class EarningsCallSummary(db.Model):
     stock_id = db.Column(
         db.String(6), db.ForeignKey('basic_information.id'), nullable=False)
 
-    # AI 摘要欄位
-    capex = db.Column(db.Text)  # 資本支出金額與計畫
-    capex_industry = db.Column(db.Text)  # 資本支出投入的產業領域
-    outlook = db.Column(db.Text)  # 公司前景與展望
-    concerns_and_risks = db.Column(db.Text)  # 隱憂與風險
-    key_points = db.Column(db.JSON)  # 其他重點 (list)
+    # AI 摘要欄位（質化分析）
+    capex = db.Column(db.Text)
+    capex_industry = db.Column(db.Text)
+    outlook = db.Column(db.Text)
+    concerns_and_risks = db.Column(db.Text)
+
+    # 評分系統
+    score = db.Column(db.Integer)                   # -5 to +5
+    sentiment = db.Column(db.String(20))            # Strong Buy/Buy/Neutral/Sell/Strong Sell
+    impact_duration = db.Column(db.String(20))      # Short/Medium/Long
+    source_reliability = db.Column(db.String(20))   # Official/Analyst/Media
+    reasoning = db.Column(db.Text)
+    news_contributions = db.Column(db.JSON)         # 每篇新聞的分數貢獻
 
     # 元資料
     source_feed_ids = db.Column(db.JSON)  # 來源新聞 IDs
