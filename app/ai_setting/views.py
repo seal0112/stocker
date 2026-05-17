@@ -11,6 +11,19 @@ logger = get_logger(__name__)
 
 VALID_PROVIDERS = {'gemini', 'claude'}
 
+VALID_MODELS = {
+    'gemini': {
+        'gemini-2.5-flash-preview-05-20',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+    },
+    'claude': {
+        'claude-opus-4-7',
+        'claude-sonnet-4-6',
+        'claude-haiku-4-5-20251001',
+    },
+}
+
 
 def _get_setting():
     setting = AiSetting.query.first()
@@ -42,6 +55,10 @@ class AiSettingApi(MethodView):
         if provider not in VALID_PROVIDERS:
             return jsonify({'error': f'Invalid provider. Must be one of: {", ".join(VALID_PROVIDERS)}'}), 400
 
+        model = data.get('model') or None
+        if model and model not in VALID_MODELS.get(provider, set()):
+            return jsonify({'error': f'Invalid model for provider {provider}'}), 400
+
         from app.utils.jwt_utils import get_current_user
         try:
             current_user = get_current_user()
@@ -51,6 +68,7 @@ class AiSettingApi(MethodView):
 
         setting = _get_setting()
         setting.provider = provider
+        setting.model = model
         setting.updated_by = updated_by
 
         try:
