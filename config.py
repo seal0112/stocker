@@ -63,6 +63,7 @@ class Config:
 
     AWS_SQS_URL = os.environ.get('AWS_SQS_URL')
     AWS_REGION = os.environ.get('AWS_REGION')
+    EARNINGS_CALL_SUMMARY_QUEUE_URL = os.environ.get('EARNINGS_CALL_SUMMARY_QUEUE_URL')
 
     @staticmethod
     def init_app(app):

@@ -9,7 +9,7 @@ from app import db
 from . import earnings_call
 from .serializer import EarningsCallchema, EarningsCallSummarySchema
 from .earnings_call_services import EarningsCallService
-from app.decorators.auth import api_auth_required
+from app.decorators.auth import api_auth_required, admin_required
 
 logger = get_logger(__name__)
 earnings_call_service = EarningsCallService()
@@ -128,9 +128,9 @@ class EarningsCallSummaryApi(MethodView):
 
         return jsonify(EarningsCallSummarySchema().dump(summary))
 
-    @api_auth_required
+    @admin_required
     def post(self, earnings_call_id):
-        """Trigger AI summary generation (creates pending record)."""
+        """Trigger AI summary generation (creates pending record and sends to SQS)."""
         earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
         if not earnings_call:
             return jsonify({"error": "Earnings call not found"}), 404
@@ -142,7 +142,28 @@ class EarningsCallSummaryApi(MethodView):
             logger.error(f"Error creating summary: {e}", exc_info=True)
             return jsonify({"error": "Failed to create summary"}), 400
 
-        # TODO: Send to SQS for Lambda processing
+        try:
+            import json
+            import boto3
+            from flask import current_app
+            queue_url = current_app.config.get('EARNINGS_CALL_SUMMARY_QUEUE_URL')
+            if queue_url:
+                sqs = boto3.client('sqs', region_name=current_app.config.get('AWS_REGION', 'ap-northeast-1'))
+                sqs.send_message(
+                    QueueUrl=queue_url,
+                    MessageBody=json.dumps({
+                        'earnings_call_id': earnings_call_id,
+                        'stock_id': earnings_call.stock_id,
+                        'meeting_date': earnings_call.meeting_date.isoformat(),
+                        'days_after': 2,
+                    })
+                )
+                logger.info(f"Sent earnings call {earnings_call_id} to SQS for AI processing")
+            else:
+                logger.warning("EARNINGS_CALL_SUMMARY_QUEUE_URL not configured, skipping SQS")
+        except Exception as e:
+            logger.error(f"Failed to send to SQS: {e}", exc_info=True)
+            # Don't fail the request; record is created, Lambda trigger can pick it up
 
         return jsonify(EarningsCallSummarySchema().dump(summary)), 201
 
