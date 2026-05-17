@@ -77,13 +77,13 @@ class TestAiSettingPut:
     def test_put_admin_switch_to_gemini(self, test_app, admin_authenticated_client):
         response = admin_authenticated_client.put(
             '/api/v0/ai_setting',
-            data=json.dumps({'provider': 'gemini', 'model': 'gemini-2.0-flash'}),
+            data=json.dumps({'provider': 'gemini', 'model': 'gemini-2.5-flash'}),
             content_type='application/json'
         )
         assert response.status_code == 200
         data = response.get_json()
         assert data['provider'] == 'gemini'
-        assert data['model'] == 'gemini-2.0-flash'
+        assert data['model'] == 'gemini-2.5-flash'
 
     def test_put_null_model_allowed(self, test_app, admin_authenticated_client):
         """model=None should clear the model (use provider default)."""
@@ -109,7 +109,7 @@ class TestAiSettingPut:
         """Gemini model name should not be accepted for claude provider."""
         response = admin_authenticated_client.put(
             '/api/v0/ai_setting',
-            data=json.dumps({'provider': 'claude', 'model': 'gemini-2.5-flash-preview-05-20'}),
+            data=json.dumps({'provider': 'claude', 'model': 'gemini-2.5-flash'}),
             content_type='application/json'
         )
         assert response.status_code == 400
