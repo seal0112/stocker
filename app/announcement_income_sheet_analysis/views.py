@@ -59,32 +59,24 @@ class AnnouncementIncomeSheetAnalysisTriggerApi(MethodView):
 
     @jwt_required()
     def post(self):
-        date_str = request.args.get('date') or (request.get_json(silent=True) or {}).get('date')
-        if not date_str:
-            return jsonify({"error": "date is required"}), 400
+        feed_id = request.args.get('feed_id') or (request.get_json(silent=True) or {}).get('feed_id')
+        if not feed_id:
+            return jsonify({"error": "feed_id is required"}), 400
+
+        feed = Feed.query.get(int(feed_id))
+        if not feed:
+            return jsonify({"error": "Feed not found"}), 404
+
         try:
-            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+            analysis = feed.create_default_announcement_income_sheet_analysis()
+            db.session.flush()
+            analysis.analysis_announcement_income_sheet()
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": str(e)}), 500
 
-        feeds = Feed.query.filter(
-            db.func.date(Feed.releaseTime) == date_obj,
-            Feed.feed_kind == 'announcement'
-        ).all()
-
-        triggered = 0
-        for feed in feeds:
-            try:
-                analysis = feed.create_default_announcement_income_sheet_analysis()
-                db.session.flush()
-                analysis.analysis_announcement_income_sheet()
-                triggered += 1
-            except Exception:
-                db.session.rollback()
-                continue
-
-        db.session.commit()
-        return jsonify({"triggered": triggered, "date": date_str})
+        return jsonify({"feed_id": feed.id})
 
 
 announcement_income_sheet_analysis.add_url_rule('',
