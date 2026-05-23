@@ -22,6 +22,11 @@ class AnnounceHandler:
         for param_name in ('co_id', 'stock_id', 'StockID'):
             if param_name in params:
                 return params[param_name][0]
+        # t05st02 format: stock_id is at h{i*10+1} (e.g. i=47 → h471, i=30 → h301)
+        if 'i' in params:
+            h_key = f'h{int(params["i"][0]) * 10 + 1}'
+            if h_key in params:
+                return params[h_key][0]
         raise ValueError(f"Cannot extract stock_id from link: {self.announce_link}")
 
     def _parse_value(self, raw):
