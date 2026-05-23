@@ -10,6 +10,7 @@ from app.utils.request_id import RequestID
 
 from config import config
 from app.log_config import setup_logging
+from app.utils.request_logger import register_request_logging
 from app.tasks import celery_init_app
 
 db = SQLAlchemy()
@@ -57,6 +58,7 @@ def create_app(config_name):
         return response
     celery.conf.update(app.config)
     RequestID(app)
+    register_request_logging(app)
 
     from app.basic_information import basic_information
     from app.income_sheet import income_sheet
