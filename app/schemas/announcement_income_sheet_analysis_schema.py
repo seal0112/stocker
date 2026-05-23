@@ -24,6 +24,7 @@ class AnnouncementIncomeSheetAnalysisSchema(ma.SQLAlchemyAutoSchema):
         model = AnnouncementIncomeSheetAnalysis
         fields = (
             "feed_id", "stock_id", "update_date", "year", "season",
+            "processing_failed",
             "營業收入合計", "營業收入合計年增率",
             "營業毛利", "營業毛利率", "營業毛利率年增率",
             "營業利益", "營業利益率", "營業利益率年增率",
