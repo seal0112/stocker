@@ -14,8 +14,11 @@ class AnnounceHandler:
         self.data_key = ['營業收入合計', '營業毛利', '營業利益', '稅前淨利', '本期淨利', '母公司業主淨利', '基本每股盈餘']
         self.ratio_key = ['營業毛利', '營業利益', '稅前淨利', '本期淨利']
         self.annual_growth_rate_key = ['營業收入合計', '營業毛利率', '營業利益率', '稅前淨利率', '本期淨利率', '基本每股盈餘']
-        # 各公司公告用字不同，'收入' 可 match '營業收入合計'、'累計收入'、'1月1日累計至本期止營業收入'
-        self._search_alias = {'營業收入合計': '收入'}
+        # 各公司公告用字不同，以 partial match 涵蓋不同格式
+        self._search_alias = {
+            '營業收入合計': '收入',        # '營業收入合計' / '累計收入' / '1月1日累計至本期止營業收入'
+            '母公司業主淨利': '母公司',     # '母公司業主淨利' / '歸屬母公司淨利'
+        }
 
     def _extract_stock_id(self):
         params = parse_qs(urlparse(self.announce_link).query)
