@@ -34,9 +34,17 @@ class EarningsCallListApi(MethodView):
             score_max=score_max,
         )
 
+        from app.database_setup import BasicInformation
+        stock_ids = {ec.stock_id for ec in earnings_calls}
+        name_map = {
+            b.id: getattr(b, '公司簡稱', None)
+            for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
+        }
+
         result = []
         for ec in earnings_calls:
             item = EarningsCallchema().dump(ec)
+            item['company_name'] = name_map.get(ec.stock_id)
             s = ec.summary
             item['summary'] = {
                 'processing_status': s.processing_status if s else None,
