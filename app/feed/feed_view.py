@@ -224,6 +224,8 @@ def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
     announcement_income_sheet = AnnouncementIncomeSheetAnalysis.query.filter_by(feed_id=feed_id).one_or_none()
     if announcement_income_sheet:
         for key in single_season_incomesheet:
+            if key == 'update_date':
+                continue
             announcement_income_sheet[key] = single_season_incomesheet[key]
     else:
         announcement_income_sheet = AnnouncementIncomeSheetAnalysis(**single_season_incomesheet)

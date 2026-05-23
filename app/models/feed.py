@@ -76,9 +76,12 @@ class Feed(db.Model):
         return self.announcement_income_sheet_analysis
 
     def create_announcement_income_sheet_analysis(self, announcement_income_sheet_analysis: dict):
+        is_new = self.announcement_income_sheet_analysis is None
         announcement_income_sheet = self.create_default_announcement_income_sheet_analysis()
 
         for key, value in announcement_income_sheet_analysis.items():
+            if key == 'update_date' and not is_new:
+                continue
             if hasattr(announcement_income_sheet, key):
                 setattr(announcement_income_sheet, key, value)
 
