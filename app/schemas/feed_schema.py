@@ -7,7 +7,7 @@ class FeedSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Feed
         fields = (
-            "id", "update_date", "releaseTime",
+            "id", "stock_id", "update_date", "releaseTime",
             "title", "link", "description", "feedType", "source"
         )
         load_instance = False
