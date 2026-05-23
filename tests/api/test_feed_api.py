@@ -132,7 +132,7 @@ class TestGetStockFeedAPI:
 class TestHandleFeedGetAPI:
     """Tests for GET /feed endpoint (HandleFeed class)."""
 
-    def test_get_feeds_default_time_range(self, client, app_context, sample_basic_info):
+    def test_get_feeds_default_time_range(self, authenticated_client, app_context, sample_basic_info):
         """Test GET feeds with default time range."""
         recent_feed = Feed(
             stock_id=sample_basic_info.id,
@@ -145,7 +145,7 @@ class TestHandleFeedGetAPI:
         db.session.commit()
 
         try:
-            response = client.get('/api/v0/feed')
+            response = authenticated_client.get('/api/v0/feed')
 
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -153,7 +153,7 @@ class TestHandleFeedGetAPI:
         finally:
             cleanup_feed(recent_feed)
 
-    def test_get_feeds_with_time_range(self, client, app_context, sample_basic_info):
+    def test_get_feeds_with_time_range(self, authenticated_client, app_context, sample_basic_info):
         """Test GET feeds with specific time range."""
         feed = Feed(
             stock_id=sample_basic_info.id,
@@ -166,7 +166,7 @@ class TestHandleFeedGetAPI:
         db.session.commit()
 
         try:
-            response = client.get(
+            response = authenticated_client.get(
                 '/api/v0/feed?starttime=2024-03-01&endtime=2024-03-31'
             )
 
@@ -176,18 +176,18 @@ class TestHandleFeedGetAPI:
         finally:
             cleanup_feed(feed)
 
-    def test_get_feeds_invalid_starttime_format(self, client, app_context):
+    def test_get_feeds_invalid_starttime_format(self, authenticated_client, app_context):
         """Test GET feeds with invalid starttime format."""
-        response = client.get('/api/v0/feed?starttime=invalid-date')
+        response = authenticated_client.get('/api/v0/feed?starttime=invalid-date')
 
         assert response.status_code == 400
         data = json.loads(response.data)
         assert 'error' in data
         assert 'starttime' in data['error'].lower()
 
-    def test_get_feeds_invalid_endtime_format(self, client, app_context):
+    def test_get_feeds_invalid_endtime_format(self, authenticated_client, app_context):
         """Test GET feeds with invalid endtime format."""
-        response = client.get('/api/v0/feed?endtime=invalid-date')
+        response = authenticated_client.get('/api/v0/feed?endtime=invalid-date')
 
         assert response.status_code == 400
         data = json.loads(response.data)
@@ -199,7 +199,7 @@ class TestHandleFeedGetAPI:
 class TestHandleFeedPostAPI:
     """Tests for POST /feed endpoint."""
 
-    def test_create_feed_success(self, client, app_context, sample_basic_info):
+    def test_create_feed_success(self, authenticated_client, app_context, sample_basic_info):
         """Test successful creation of feed."""
         payload = {
             'stock_id': sample_basic_info.id,
@@ -212,7 +212,7 @@ class TestHandleFeedPostAPI:
             'tags': ['earnings']
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -232,7 +232,7 @@ class TestHandleFeedPostAPI:
         # Cleanup
         cleanup_feed(saved)
 
-    def test_create_feed_news_type(self, client, app_context, sample_basic_info):
+    def test_create_feed_news_type(self, authenticated_client, app_context, sample_basic_info):
         """Test creating news type feed."""
         payload = {
             'stock_id': sample_basic_info.id,
@@ -244,7 +244,7 @@ class TestHandleFeedPostAPI:
             'tags': ['news']
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -255,7 +255,7 @@ class TestHandleFeedPostAPI:
         # Cleanup
         cleanup_feed_by_link('https://example.com/feed/news-test')
 
-    def test_create_feed_with_stocks_array(self, client, app_context, sample_basic_info):
+    def test_create_feed_with_stocks_array(self, authenticated_client, app_context, sample_basic_info):
         """Test creating feed with stocks array instead of stock_id."""
         payload = {
             'stocks': [sample_basic_info.id],  # Array format
@@ -267,7 +267,7 @@ class TestHandleFeedPostAPI:
             'tags': []
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -284,9 +284,9 @@ class TestHandleFeedPostAPI:
         # Cleanup
         cleanup_feed(saved)
 
-    def test_create_feed_missing_body(self, client, app_context):
+    def test_create_feed_missing_body(self, authenticated_client, app_context):
         """Test POST without request body returns 400."""
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             content_type='application/json'
         )
@@ -295,9 +295,9 @@ class TestHandleFeedPostAPI:
         data = json.loads(response.data)
         assert 'error' in data
 
-    def test_create_feed_invalid_json(self, client, app_context):
+    def test_create_feed_invalid_json(self, authenticated_client, app_context):
         """Test POST with invalid JSON returns 400."""
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data='not valid json',
             content_type='application/json'
@@ -307,7 +307,7 @@ class TestHandleFeedPostAPI:
         data = json.loads(response.data)
         assert 'error' in data
 
-    def test_create_feed_with_tags(self, client, app_context, sample_basic_info):
+    def test_create_feed_with_tags(self, authenticated_client, app_context, sample_basic_info):
         """Test creating feed with multiple tags."""
         payload = {
             'stock_id': sample_basic_info.id,
@@ -319,7 +319,7 @@ class TestHandleFeedPostAPI:
             'tags': ['earnings', 'dividend', 'announcement']
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -338,7 +338,7 @@ class TestHandleFeedPostAPI:
         cleanup_feed(saved)
 
     def test_create_feed_triggers_analysis_for_financial_report(
-        self, client, app_context, sample_basic_info, mocker
+        self, authenticated_client, app_context, sample_basic_info, mocker
     ):
         """Test that financial report feeds trigger analysis creation."""
         # Mock AWS SQS to avoid actual AWS calls in tests
@@ -354,7 +354,7 @@ class TestHandleFeedPostAPI:
             'tags': ['earnings']
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -370,7 +370,7 @@ class TestHandleFeedPostAPI:
         # Cleanup (cleanup_feed handles all related records including AnnouncementIncomeSheetAnalysis)
         cleanup_feed(saved)
 
-    def test_update_existing_feed_by_link(self, client, app_context, sample_basic_info):
+    def test_update_existing_feed_by_link(self, authenticated_client, app_context, sample_basic_info):
         """Test that POST with existing link updates the feed."""
         # Create initial feed
         initial_feed = Feed(
@@ -396,7 +396,7 @@ class TestHandleFeedPostAPI:
                 'tags': []
             }
 
-            response = client.post(
+            response = authenticated_client.post(
                 '/api/v0/feed',
                 data=json.dumps(payload),
                 content_type='application/json'
@@ -418,7 +418,7 @@ class TestHandleFeedPostAPI:
 class TestFeedAPIIntegration:
     """Integration tests for Feed API."""
 
-    def test_create_then_get_by_stock(self, client, app_context, sample_basic_info):
+    def test_create_then_get_by_stock(self, authenticated_client, app_context, sample_basic_info):
         """Test creating a feed then retrieving it by stock_id."""
         payload = {
             'stock_id': sample_basic_info.id,
@@ -430,7 +430,7 @@ class TestFeedAPIIntegration:
             'tags': []
         }
 
-        create_response = client.post(
+        create_response = authenticated_client.post(
             '/api/v0/feed',
             data=json.dumps(payload),
             content_type='application/json'
@@ -438,8 +438,8 @@ class TestFeedAPIIntegration:
         assert create_response.status_code == 201
 
         try:
-            # Get
-            get_response = client.get(f'/api/v0/feed/{sample_basic_info.id}')
+            # Get by stock_id (unprotected endpoint)
+            get_response = authenticated_client.get(f'/api/v0/feed/{sample_basic_info.id}')
             assert get_response.status_code == 200
 
             data = json.loads(get_response.data)
@@ -448,7 +448,7 @@ class TestFeedAPIIntegration:
         finally:
             cleanup_feed_by_link('https://example.com/feed/integration-test')
 
-    def test_create_then_get_by_time_range(self, client, app_context, sample_basic_info):
+    def test_create_then_get_by_time_range(self, authenticated_client, app_context, sample_basic_info):
         """Test creating feeds then retrieving by time range."""
         feeds_created = []
         for day in [5, 10, 15]:
@@ -462,7 +462,7 @@ class TestFeedAPIIntegration:
                 'tags': []
             }
 
-            response = client.post(
+            response = authenticated_client.post(
                 '/api/v0/feed',
                 data=json.dumps(payload),
                 content_type='application/json'
@@ -471,8 +471,8 @@ class TestFeedAPIIntegration:
             feeds_created.append(payload['link'])
 
         try:
-            # Get by time range
-            get_response = client.get(
+            # Get by time range (protected endpoint)
+            get_response = authenticated_client.get(
                 '/api/v0/feed?starttime=2024-04-01&endtime=2024-04-20'
             )
             assert get_response.status_code == 200

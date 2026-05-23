@@ -10,4 +10,5 @@ class FeedSchema(ma.SQLAlchemyAutoSchema):
             "id", "stock_id", "update_date", "releaseTime",
             "title", "link", "description", "feedType", "source"
         )
+        include_fk = True
         load_instance = False

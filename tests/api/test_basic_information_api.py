@@ -8,18 +8,18 @@ from app.database_setup import BasicInformation
 class TestGetBasicInformation:
     """Tests for GET /api/v0/basic_information/<stock_id>"""
 
-    def test_get_existing_stock(self, test_app, client, sample_basic_info):
+    def test_get_existing_stock(self, test_app, authenticated_client, sample_basic_info):
         """Should return stock info when stock exists."""
-        response = client.get(f'/api/v0/basic_information/{sample_basic_info.id}')
+        response = authenticated_client.get(f'/api/v0/basic_information/{sample_basic_info.id}')
 
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['id'] == sample_basic_info.id
         assert data['公司名稱'] == sample_basic_info.公司名稱
 
-    def test_get_nonexistent_stock(self, test_app, client):
+    def test_get_nonexistent_stock(self, test_app, authenticated_client):
         """Should return 404 when stock does not exist."""
-        response = client.get('/api/v0/basic_information/999999')
+        response = authenticated_client.get('/api/v0/basic_information/999999')
 
         assert response.status_code == 404
         data = response.get_json()
@@ -29,7 +29,7 @@ class TestGetBasicInformation:
 class TestPostBasicInformation:
     """Tests for POST /api/v0/basic_information/<stock_id>"""
 
-    def test_create_new_stock(self, test_app, client):
+    def test_create_new_stock(self, test_app, authenticated_client):
         """Should create new stock and return 201."""
         payload = {
             '公司名稱': '新測試公司',
@@ -37,7 +37,7 @@ class TestPostBasicInformation:
             'exchange_type': 'sii'
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/basic_information/8888',
             data=json.dumps(payload),
             content_type='application/json'
@@ -56,7 +56,7 @@ class TestPostBasicInformation:
         db.session.delete(stock)
         db.session.commit()
 
-    def test_update_existing_stock(self, test_app, client, sample_basic_info):
+    def test_update_existing_stock(self, test_app, authenticated_client, sample_basic_info):
         """Should update existing stock and return 201."""
         payload = {
             '公司名稱': '更新後的公司名稱',
@@ -64,7 +64,7 @@ class TestPostBasicInformation:
             'exchange_type': sample_basic_info.exchange_type
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data=json.dumps(payload),
             content_type='application/json'
@@ -76,7 +76,7 @@ class TestPostBasicInformation:
         db.session.refresh(sample_basic_info)
         assert sample_basic_info.公司名稱 == '更新後的公司名稱'
 
-    def test_no_change_returns_200(self, test_app, client, sample_basic_info):
+    def test_no_change_returns_200(self, test_app, authenticated_client, sample_basic_info):
         """Should return 200 when no data changed."""
         payload = {
             '公司名稱': sample_basic_info.公司名稱,
@@ -84,7 +84,7 @@ class TestPostBasicInformation:
             'exchange_type': sample_basic_info.exchange_type
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data=json.dumps(payload),
             content_type='application/json'
@@ -94,7 +94,7 @@ class TestPostBasicInformation:
         data = response.get_json()
         assert data['message'] == 'OK'
 
-    def test_type_conversion_bigint_fields(self, test_app, client):
+    def test_type_conversion_bigint_fields(self, test_app, authenticated_client):
         """Should convert string to BigInteger for specific fields."""
         payload = {
             '公司名稱': '型別轉換測試',
@@ -106,7 +106,7 @@ class TestPostBasicInformation:
             '特別股': '0'
         }
 
-        response = client.post(
+        response = authenticated_client.post(
             '/api/v0/basic_information/7777',
             data=json.dumps(payload),
             content_type='application/json'
@@ -124,9 +124,9 @@ class TestPostBasicInformation:
         db.session.delete(stock)
         db.session.commit()
 
-    def test_empty_body_returns_400(self, test_app, client, sample_basic_info):
+    def test_empty_body_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when request body is empty."""
-        response = client.post(
+        response = authenticated_client.post(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data=json.dumps({}),
             content_type='application/json'
@@ -136,18 +136,18 @@ class TestPostBasicInformation:
         # The API should handle this - let's check actual behavior
         assert response.status_code in [200, 400]
 
-    def test_no_body_returns_400(self, test_app, client, sample_basic_info):
+    def test_no_body_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when no request body provided."""
-        response = client.post(
+        response = authenticated_client.post(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             content_type='application/json'
         )
 
         assert response.status_code == 400
 
-    def test_invalid_json_returns_400(self, test_app, client, sample_basic_info):
+    def test_invalid_json_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when invalid JSON provided."""
-        response = client.post(
+        response = authenticated_client.post(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data='not valid json',
             content_type='application/json'
@@ -159,14 +159,14 @@ class TestPostBasicInformation:
 class TestPatchBasicInformation:
     """Tests for PATCH /api/v0/basic_information/<stock_id>"""
 
-    def test_patch_exchange_type(self, test_app, client, sample_basic_info):
+    def test_patch_exchange_type(self, test_app, authenticated_client, sample_basic_info):
         """Should update exchange_type successfully."""
         original_type = sample_basic_info.exchange_type
         new_type = 'otc' if original_type != 'otc' else 'sii'
 
         payload = {'exchangeType': new_type}
 
-        response = client.patch(
+        response = authenticated_client.patch(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data=json.dumps(payload),
             content_type='application/json'
@@ -180,11 +180,11 @@ class TestPatchBasicInformation:
         db.session.refresh(sample_basic_info)
         assert sample_basic_info.exchange_type == new_type
 
-    def test_patch_nonexistent_stock(self, test_app, client):
+    def test_patch_nonexistent_stock(self, test_app, authenticated_client):
         """Should return 404 when stock does not exist."""
         payload = {'exchangeType': 'sii'}
 
-        response = client.patch(
+        response = authenticated_client.patch(
             '/api/v0/basic_information/999999',
             data=json.dumps(payload),
             content_type='application/json'
@@ -194,18 +194,18 @@ class TestPatchBasicInformation:
         data = response.get_json()
         assert 'error' in data
 
-    def test_patch_empty_body_returns_400(self, test_app, client, sample_basic_info):
+    def test_patch_empty_body_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when request body is empty."""
-        response = client.patch(
+        response = authenticated_client.patch(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             content_type='application/json'
         )
 
         assert response.status_code == 400
 
-    def test_patch_invalid_json_returns_400(self, test_app, client, sample_basic_info):
+    def test_patch_invalid_json_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when invalid JSON provided."""
-        response = client.patch(
+        response = authenticated_client.patch(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data='not valid json',
             content_type='application/json'
@@ -213,11 +213,11 @@ class TestPatchBasicInformation:
 
         assert response.status_code == 400
 
-    def test_patch_missing_exchange_type_returns_400(self, test_app, client, sample_basic_info):
+    def test_patch_missing_exchange_type_returns_400(self, test_app, authenticated_client, sample_basic_info):
         """Should return 400 when exchangeType field is missing."""
         payload = {'otherField': 'value'}
 
-        response = client.patch(
+        response = authenticated_client.patch(
             f'/api/v0/basic_information/{sample_basic_info.id}',
             data=json.dumps(payload),
             content_type='application/json'
