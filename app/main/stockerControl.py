@@ -45,10 +45,13 @@ def use_screener():
 def get_incomesheet_announcement():
     payload = json.loads(request.data)
 
-    announce_handler = AnnounceHandler(payload['link'])
-    income_sheet = announce_handler.get_incomesheet_announce()
-    single_season_incomesheet = announce_handler.get_single_season_incomesheet(
-        income_sheet, payload['year'], payload['season'])
+    try:
+        announce_handler = AnnounceHandler(payload['link'])
+        income_sheet = announce_handler.get_incomesheet_announce()
+        single_season_incomesheet = announce_handler.get_single_season_incomesheet(
+            income_sheet, payload['year'], payload['season'])
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 422
     return jsonify(single_season_incomesheet)
 
 
