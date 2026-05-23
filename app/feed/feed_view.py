@@ -13,6 +13,7 @@ from app.services.feed_services import FeedServices
 from app.models import AnnouncementIncomeSheetAnalysis
 from app.schemas.announcement_income_sheet_analysis_schema import AnnouncementIncomeSheetAnalysisSchema
 from app.schemas.feed_schema import FeedSchema
+from app.database_setup import BasicInformation
 
 from app.utils.model_utilities import get_current_date
 from app.utils.announcement_handler import AnnounceHandler
@@ -93,7 +94,17 @@ class HandleFeed(MethodView):
             end_time = datetime.now()
 
         feeds = feed_services.get_feeds_by_time_range(start_time, end_time)
-        return FeedSchema(many=True).jsonify(feeds), 200
+        results = FeedSchema(many=True).dump(feeds)
+
+        stock_ids = {r['stock_id'] for r in results if r.get('stock_id')}
+        name_map = {
+            b.id: getattr(b, '公司簡稱', None)
+            for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
+        }
+        for r in results:
+            r['company_name'] = name_map.get(r.get('stock_id'))
+
+        return jsonify(results), 200
 
     def post(self) -> Response:
         try:
@@ -143,7 +154,17 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
             queries = queries.filter_by(processing_failed=processing_failed)
 
         announcement_income_sheet_analysis = queries.all()
-        return jsonify(announcement_income_sheet_analysis_schema.dump(announcement_income_sheet_analysis)), 200
+        results = announcement_income_sheet_analysis_schema.dump(announcement_income_sheet_analysis)
+
+        stock_ids = {r['stock_id'] for r in results if r.get('stock_id')}
+        name_map = {
+            b.id: getattr(b, '公司簡稱', None)
+            for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
+        }
+        for r in results:
+            r['company_name'] = name_map.get(r.get('stock_id'))
+
+        return jsonify(results), 200
 
 
 class AnnouncementIncomeSheetAnalysisDetailApi(MethodView):
