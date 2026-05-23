@@ -24,6 +24,8 @@ class MonthlyValuationService():
             stock_id=stock).filter(MonthlyValuation.year >= datetime.now().year-years).all()
         return data
 
+    _UPSERT_FIELDS = ['本益比', '淨值比', '殖利率', '均價']
+
     def create_monthly_valuation(self, monthly_valuation_data):
         try:
             validated_data = MonthlyValuationSchema().load(monthly_valuation_data)
@@ -31,27 +33,38 @@ class MonthlyValuationService():
             logger.error(err.messages)
             return None
 
-        new_monthly_valuation = self.get_stock_monthly_valuation(
+        existing = self.get_stock_monthly_valuation(
             monthly_valuation_data['stock_id'],
             monthly_valuation_data['year'],
             monthly_valuation_data['month']
         )
 
-        if new_monthly_valuation:
-            return new_monthly_valuation
-        else:
-            new_monthly_valuation = MonthlyValuation(**validated_data)
+        if existing:
+            for key in self._UPSERT_FIELDS:
+                if key in validated_data:
+                    setattr(existing, key, validated_data[key])
+            try:
+                db.session.commit()
+                return existing
+            except Exception as ex:
+                db.session.rollback()
+                logger.error(
+                    f'fail upsert monthly_valuation: {monthly_valuation_data.get("stock_id")}'
+                    f'-{monthly_valuation_data.get("year")}/{monthly_valuation_data.get("month")}, ex: {ex}'
+                )
+                return None
 
+        new_monthly_valuation = MonthlyValuation(**validated_data)
         try:
             db.session.add(new_monthly_valuation)
             db.session.commit()
             return new_monthly_valuation
         except Exception as ex:
             db.session.rollback()
-            logging.exception((
-                'fail create monthly_valuation: ' +
-                f'{monthly_valuation_data.stock_id}-{monthly_valuation_data.year}/{monthly_valuation_data.month}, ex: {ex}'
-            ))
+            logger.error(
+                f'fail create monthly_valuation: {monthly_valuation_data.get("stock_id")}'
+                f'-{monthly_valuation_data.get("year")}/{monthly_valuation_data.get("month")}, ex: {ex}'
+            )
             return None
 
     def update_monthly_valuation(self, monthly_valuation_data):
