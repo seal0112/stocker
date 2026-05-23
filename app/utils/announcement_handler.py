@@ -14,8 +14,8 @@ class AnnounceHandler:
         self.data_key = ['營業收入合計', '營業毛利', '營業利益', '稅前淨利', '本期淨利', '母公司業主淨利', '基本每股盈餘']
         self.ratio_key = ['營業毛利', '營業利益', '稅前淨利', '本期淨利']
         self.annual_growth_rate_key = ['營業收入合計', '營業毛利率', '營業利益率', '稅前淨利率', '本期淨利率', '基本每股盈餘']
-        # t05st02 頁面用「1月1日累計至本期止營業收入」而非「營業收入合計」，做 partial match
-        self._search_alias = {'營業收入合計': '營業收入'}
+        # 各公司公告用字不同，'收入' 可 match '營業收入合計'、'累計收入'、'1月1日累計至本期止營業收入'
+        self._search_alias = {'營業收入合計': '收入'}
 
     def _extract_stock_id(self):
         params = parse_qs(urlparse(self.announce_link).query)
@@ -44,11 +44,14 @@ class AnnounceHandler:
         soup = BeautifulSoup(res.text, 'html.parser')
 
         # Search across element types MOPS uses (font, pre, td)
-        # Use '營業收入' partial match to cover both '營業收入合計' and '1月1日累計至本期止營業收入'
+        # Try '營業收入' first (more specific), fallback to '收入' for summary-only announcements
         target_text = None
-        for tag in soup.find_all(['font', 'pre', 'td']):
-            if '營業收入' in tag.text:
-                target_text = tag.text
+        for trigger in ('營業收入', '收入'):
+            for tag in soup.find_all(['font', 'pre', 'td']):
+                if trigger in tag.text:
+                    target_text = tag.text
+                    break
+            if target_text is not None:
                 break
 
         if target_text is None:
