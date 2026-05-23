@@ -16,6 +16,13 @@ if [ -f "$PIDFILE" ]; then
 fi
 
 # 沒有現有服務，直接啟動
+echo "Running database migrations..."
+flask db upgrade
+if [ $? -ne 0 ]; then
+    echo "Migration failed, aborting startup."
+    exit 1
+fi
+
 echo "Starting new service..."
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$APP_DIR/log"

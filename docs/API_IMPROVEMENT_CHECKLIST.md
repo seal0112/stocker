@@ -47,19 +47,19 @@
 
 #### feed module
 - [ ] `GET /api/v0/feed/<stock_id>` - [app/feed/feed_view.py:27](../app/feed/feed_view.py#L27)
-- [ ] `GET /api/v0/feed` - [app/feed/feed_view.py:57](../app/feed/feed_view.py#L57)
-- [ ] `POST /api/v0/feed` - [app/feed/feed_view.py:70](../app/feed/feed_view.py#L70)
+- [x] `GET /api/v0/feed` - [app/feed/feed_view.py:57](../app/feed/feed_view.py#L57) ✅ 2026-05-09
+- [x] `POST /api/v0/feed` - [app/feed/feed_view.py:70](../app/feed/feed_view.py#L70) ✅ 2026-05-09
 - [ ] `GET /api/v0/feed/announcement_income_sheet_analysis` - [app/feed/feed_view.py](../app/feed/feed_view.py)
-- [ ] `PUT /api/v0/feed/<feed_id>/announcement_income_sheet_analysis` - [app/feed/feed_view.py](../app/feed/feed_view.py)
+- [x] `PUT /api/v0/feed/<feed_id>/announcement_income_sheet_analysis` - [app/feed/feed_view.py](../app/feed/feed_view.py) ✅ 2026-05-09
 
 #### basic_information module
-- [ ] `GET /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:41](../app/basic_information/view.py#L41)
-- [ ] `POST /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:54](../app/basic_information/view.py#L54)
-- [ ] `PATCH /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:115](../app/basic_information/view.py#L115)
+- [x] `GET /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:41](../app/basic_information/view.py#L41) ✅ 2026-05-09
+- [x] `POST /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:54](../app/basic_information/view.py#L54) ✅ 2026-05-09
+- [x] `PATCH /api/v0/basic_information/<stock_id>` - [app/basic_information/view.py:115](../app/basic_information/view.py#L115) ✅ 2026-05-09
 
 #### income_sheet module
-- [ ] `GET /api/v0/income_sheet/<stock_id>` - [app/income_sheet/view.py:43](../app/income_sheet/view.py#L43)
-- [ ] `POST /api/v0/income_sheet/<stock_id>` - [app/income_sheet/view.py:78](../app/income_sheet/view.py#L78)
+- [x] `GET /api/v0/income_sheet/<stock_id>` - [app/income_sheet/view.py:43](../app/income_sheet/view.py#L43) ✅ 2026-05-09
+- [x] `POST /api/v0/income_sheet/<stock_id>` - [app/income_sheet/view.py:78](../app/income_sheet/view.py#L78) ✅ 2026-05-09
 
 #### balance_sheet module
 - [ ] `GET /api/v0/balance_sheet/<stock_id>` - [app/balance_sheet/view.py:36](../app/balance_sheet/view.py#L36)
@@ -499,14 +499,14 @@ def get(self):
 
 | Phase | 總項目 | 已完成 | 完成率 |
 |-------|--------|--------|--------|
-| Phase 1: 安全性 | 25 | 2 | 8% |
+| Phase 1: 安全性 | 25 | 10 | 40% |
 | Phase 2: 一致性 | 18 | 18 | 100% |
 | Phase 3: 品質 | 10 | 9 | 90% |
 | Phase 4: 功能 | 14 | 0 | 0% |
 | Phase 5: AI 功能 | 16 | 0 | 0% |
 | Phase 6: Observability | 17 | 2 | 12% |
 | Phase 7: 篩選器視覺化 | 26 | 0 | 0% |
-| **總計** | **126** | **31** | **25%** |
+| **總計** | **126** | **39** | **31%** |
 
 ---
 
@@ -514,6 +514,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-05-09 | 完成 Phase 1.1 部分認證：basic_information、income_sheet、feed POST/GET/PUT (8項) | Claude |
 | 2026-01-30 | 統一所有 API 回傳 JSON 格式，完成 balance_sheet/cash_flow GET 實作 (4項) | Claude |
 | 2026-01-18 | 完成 6.2 structured logging (structlog) 及 request_id 追蹤 (2項) | Claude |
 | 2026-01-15 | 新增 Phase 7: 股票篩選器視覺化 - 拖拉介面、stock_metrics 彙總表 (26項) | Claude |
