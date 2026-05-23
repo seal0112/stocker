@@ -4,7 +4,8 @@ from flask import request, jsonify
 from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
-from app.models import AnnouncementIncomeSheetAnalysis
+from app import db
+from app.models import AnnouncementIncomeSheetAnalysis, Feed
 from . import announcement_income_sheet_analysis
 from .serializer import AnnouncementIncomeSheetAnalysisSchema
 
@@ -54,6 +55,42 @@ class AnnouncementIncomeSheetAnalysisListApi(MethodView):
         return jsonify(AnnouncementIncomeSheetAnalysisSchema(many=True).dump(results))
 
 
+class AnnouncementIncomeSheetAnalysisTriggerApi(MethodView):
+
+    @jwt_required()
+    def post(self):
+        date_str = request.args.get('date') or (request.get_json(silent=True) or {}).get('date')
+        if not date_str:
+            return jsonify({"error": "date is required"}), 400
+        try:
+            date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+        feeds = Feed.query.filter(
+            db.func.date(Feed.releaseTime) == date_obj,
+            Feed.feed_kind == 'announcement'
+        ).all()
+
+        triggered = 0
+        for feed in feeds:
+            try:
+                analysis = feed.create_default_announcement_income_sheet_analysis()
+                db.session.flush()
+                analysis.analysis_announcement_income_sheet()
+                triggered += 1
+            except Exception:
+                db.session.rollback()
+                continue
+
+        db.session.commit()
+        return jsonify({"triggered": triggered, "date": date_str})
+
+
 announcement_income_sheet_analysis.add_url_rule('',
     view_func=AnnouncementIncomeSheetAnalysisListApi.as_view('AnnouncementIncomeSheetAnalysisListApi'),
     methods=['GET'])
+
+announcement_income_sheet_analysis.add_url_rule('/trigger',
+    view_func=AnnouncementIncomeSheetAnalysisTriggerApi.as_view('AnnouncementIncomeSheetAnalysisTriggerApi'),
+    methods=['POST'])
