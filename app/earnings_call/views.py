@@ -235,12 +235,28 @@ class EarningsCallFeedsApi(MethodView):
         })
 
 
+class EarningsCallBoundFeedsApi(MethodView):
+    """Return feeds that were actually used in the AI analysis for this earnings call."""
+
+    def get(self, earnings_call_id):
+        earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
+        if not earnings_call:
+            return jsonify({"error": "Earnings call not found"}), 404
+
+        bound_feeds = earnings_call_service.get_bound_feeds(earnings_call_id)
+        return jsonify(bound_feeds)
+
+
 earnings_call.add_url_rule('/<int:earnings_call_id>/summary',
     view_func=EarningsCallSummaryApi.as_view('EarningsCallSummaryApi'),
     methods=['GET', 'PUT', 'POST'])
 
 earnings_call.add_url_rule('/<int:earnings_call_id>/feeds',
     view_func=EarningsCallFeedsApi.as_view('EarningsCallFeedsApi'),
+    methods=['GET'])
+
+earnings_call.add_url_rule('/<int:earnings_call_id>/bound_feeds',
+    view_func=EarningsCallBoundFeedsApi.as_view('EarningsCallBoundFeedsApi'),
     methods=['GET'])
 
 # earnings_call.add_url_rule('/<earnings_call_id>',

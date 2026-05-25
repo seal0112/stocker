@@ -180,6 +180,37 @@ class EarningsCallService():
 
         return query.order_by(Feed.releaseTime.desc()).limit(15).all()
 
+    def get_bound_feeds(self, earnings_call_id):
+        """Return feeds bound to this earnings call via news_contributions in summary."""
+        summary = self.get_earnings_call_summary(earnings_call_id)
+        if not summary or not summary.news_contributions:
+            return []
+
+        feed_id_to_contribution = {
+            nc['feed_id']: nc
+            for nc in summary.news_contributions
+            if nc.get('feed_id')
+        }
+        if not feed_id_to_contribution:
+            return []
+
+        feeds = Feed.query.filter(Feed.id.in_(feed_id_to_contribution.keys())).all()
+
+        result = []
+        for feed in feeds:
+            nc = feed_id_to_contribution[feed.id]
+            result.append({
+                'feed_id': feed.id,
+                'title': feed.title,
+                'link': feed.link,
+                'releaseTime': feed.releaseTime.isoformat() if feed.releaseTime else None,
+                'score_delta': nc.get('score_delta'),
+                'key_insight': nc.get('key_insight'),
+            })
+
+        result.sort(key=lambda x: -(x['score_delta'] or 0))
+        return result
+
     def get_pending_earnings_calls(self, meeting_date):
         """Get earnings calls that need AI summary processing."""
         from sqlalchemy import or_
