@@ -31,8 +31,8 @@ class EarningsCallService():
         if meeting_date:
             query = query.filter(EarningsCall.meeting_date == meeting_date)
         else:
-            start = date_from or (date.today() - timedelta(days=90))
-            end = date_to or (date.today() + timedelta(days=60))
+            start = date_from or date.today()
+            end = date_to or (date.today() + timedelta(days=90))
             query = query.filter(
                 EarningsCall.meeting_date >= start,
                 EarningsCall.meeting_date <= end,
