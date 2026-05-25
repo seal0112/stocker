@@ -2,8 +2,10 @@ from app.log_config import get_logger
 
 from flask import request, jsonify
 from flask.views import MethodView
+from flask_jwt_extended import jwt_required
 
 from app import db
+from app.decorators.auth import api_auth_required
 from .monthly_valuation_services import MonthlyValuationService
 from .serializer import MonthlyValuationSchema
 from . import monthly_valuation
@@ -15,6 +17,7 @@ monthly_valuation_service = MonthlyValuationService()
 
 
 class MonthlyValuationListApi(MethodView):
+    decorators = [api_auth_required]
 
     def get(self):
         stock = request.args.get('stock', '2330', type=str)
