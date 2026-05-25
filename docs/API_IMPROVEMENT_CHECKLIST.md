@@ -286,55 +286,48 @@ def get(self):
 
 > 當有法說會時，自動擷取相關新聞並透過 AI 摘要重點，儲存至資料庫。
 
-> ⚠️ **技術決策**：此功能使用 **Pydantic** 取代 Marshmallow，原因：
-> - LLM Structured Output 原生支援 Pydantic schema
-> - LangChain/LlamaIndex 內建 Pydantic 整合
-> - 自動生成 JSON Schema 可直接餵給 LLM
-> - 驗證可行後，可考慮全專案遷移至 Pydantic
+> ⚠️ **技術決策**：使用 **Gemini** (stocker-lambda) + Pydantic structured output；
+> stocker 後端用 Marshmallow 序列化。Provider 抽象層已設計（base/gemini/claude 骨架）。
 
 #### 5.1.1 資料模型設計
-- [ ] 建立 `EarningsCallSummary` model
-  - `earnings_call_id` (FK to earnings_call)
-  - `stock_id` (FK to basic_information)
-  - `created_at` (建立時間)
-  - `company_outlook` (公司前景摘要)
-  - `capex_plan` (資本支出計畫)
-  - `investment_focus` (投資重點：本業/其他)
-  - `investment_focus_detail` (投資重點詳細說明)
-  - `key_points` (JSON - 其他重點)
-  - `source_feed_ids` (JSON - 來源新聞 ID 列表)
-  - `raw_ai_response` (原始 AI 回應，供除錯用)
-  - `processing_status` (pending/processing/completed/failed)
+- [x] 建立 `EarningsCallSummary` model ✅ 2026-05-09
+  - `earnings_call_id`, `stock_id`, `created_at`, `updated_at`
+  - `capex`, `capex_industry`, `outlook`, `concerns_and_risks` (質化分析)
+  - `score` (-5~+5), `sentiment`, `impact_duration`, `source_reliability`, `reasoning` (評分系統)
+  - `news_contributions` (JSON - 每篇新聞分數貢獻)
+  - `source_feed_ids` (JSON), `raw_ai_response`, `processing_status`, `error_message`
+  - `input_tokens`, `output_tokens`, `total_tokens`, `cost_usd`, `cost_twd`
 
 #### 5.1.2 新聞比對服務
-- [ ] 建立 `EarningsCallNewsService`
-  - 根據 stock_id 和 meeting_date 查詢相關新聞
-  - 時間範圍：法說會前 N 天到當天
-  - 過濾條件：feedType = 'news' 或包含 'announcement'
+- [x] 建立 `get_related_feeds()` (在 EarningsCallService) ✅ 2026-05-09
+  - 支援 `days_after` 時間窗口和 `keywords` OR 過濾
+  - `GET /api/v0/earnings_call/<id>/feeds` endpoint
 
-#### 5.1.3 AI 整合
-- [ ] 選擇 LLM provider (OpenAI / Anthropic / 其他)
-- [ ] 建立 `AIService` 或 `LLMService`
-- [ ] 設計結構化 prompt (輸出 JSON 格式)
-- [ ] 處理 token 限制和長文本切割
-- [ ] 錯誤處理和重試機制
+#### 5.1.3 AI 整合 (stocker-lambda)
+- [x] LLM provider: Gemini (gemini-3-flash-preview) ✅ 2026-05-09
+- [x] Provider 抽象層 (base.py / gemini.py / claude.py 骨架) ✅ 2026-05-09
+- [x] Pydantic structured output schema (EarningsCallAnalysis, NewsContribution) ✅ 2026-05-09
+- [x] Token 使用量追蹤與費用計算 (USD/TWD) ✅ 2026-05-09
+- [x] 錯誤處理：processing_status = 'failed' + error_message ✅ 2026-05-09
 
 #### 5.1.4 觸發機制
-- [ ] 批次排程：每日檢查當日法說會
-- [ ] API endpoint：手動觸發摘要生成
-  - `POST /api/v1/earnings_call/<id>/summarize`
+- [x] 批次排程：Lambda EarningsCallSummaryTrigger，每日 8PM + 次日 8AM (台灣時間) ✅ 2026-05-09
+- [x] API endpoint：`POST /api/v0/earnings_call/<id>/summary` 手動觸發 + SQS ✅ 2026-05-09
 - [ ] 事件驅動：爬蟲抓到法說會時觸發 (optional)
 
 #### 5.1.5 API Endpoints
-- [ ] `GET /api/v1/earnings_call/<id>/summary` - 取得法說會摘要
-- [ ] `POST /api/v1/earnings_call/<id>/summarize` - 觸發 AI 摘要
-- [ ] `GET /api/v1/earnings_call/summaries` - 列出所有摘要 (分頁)
+- [x] `GET /api/v0/earnings_call/<id>/summary` - 取得 AI 摘要 ✅ 2026-05-09
+- [x] `PUT /api/v0/earnings_call/<id>/summary` - Lambda 回寫結果 ✅ 2026-05-09
+- [x] `POST /api/v0/earnings_call/<id>/summary` - 觸發 AI 分析（admin） ✅ 2026-05-09
+- [x] `GET /api/v0/earnings_call/<id>/bound_feeds` - 取得 AI 分析用到的新聞（含連結） ✅ 2026-05-26
+- [x] `GET /api/v0/earnings_call` - 列表含 summary.score/sentiment/status inline ✅ 2026-05-09
+- [ ] `GET /api/v0/earnings_call/summaries` - 獨立摘要列表 endpoint（目前用列表 inline）
 
 #### 5.1.6 測試
 - [ ] Unit tests for EarningsCallSummary model
-- [ ] Unit tests for EarningsCallNewsService
-- [ ] Integration tests for AI summarization
-- [ ] API endpoint tests
+- [ ] Unit tests for EarningsCallNewsService (get_related_feeds)
+- [ ] Integration tests for AI summarization (Gemini)
+- [x] API endpoint tests (46 tests covering List/Post/Pending/Summary/Feeds/BoundFeeds/ScoreFilter) ✅ 2026-05-26
 
 ---
 
@@ -503,10 +496,10 @@ def get(self):
 | Phase 2: 一致性 | 18 | 18 | 100% |
 | Phase 3: 品質 | 10 | 9 | 90% |
 | Phase 4: 功能 | 14 | 0 | 0% |
-| Phase 5: AI 功能 | 16 | 0 | 0% |
+| Phase 5: AI 功能 | 16 | 12 | 75% |
 | Phase 6: Observability | 17 | 2 | 12% |
 | Phase 7: 篩選器視覺化 | 26 | 0 | 0% |
-| **總計** | **126** | **39** | **31%** |
+| **總計** | **126** | **51** | **40%** |
 
 ---
 
@@ -514,6 +507,7 @@ def get(self):
 
 | 日期 | 修改內容 | 修改者 |
 |------|----------|--------|
+| 2026-05-26 | 更新 Phase 5 實際完成狀態：model、服務、Lambda AI、觸發機制、5 個 API endpoints、46 tests (12項) | Claude |
 | 2026-05-09 | 完成 Phase 1.1 部分認證：basic_information、income_sheet、feed POST/GET/PUT (8項) | Claude |
 | 2026-01-30 | 統一所有 API 回傳 JSON 格式，完成 balance_sheet/cash_flow GET 實作 (4項) | Claude |
 | 2026-01-18 | 完成 6.2 structured logging (structlog) 及 request_id 追蹤 (2項) | Claude |
