@@ -237,6 +237,7 @@ class EarningsCallFeedsApi(MethodView):
 
 class EarningsCallBoundFeedsApi(MethodView):
     """Return feeds that were actually used in the AI analysis for this earnings call."""
+    decorators = [jwt_required()]
 
     def get(self, earnings_call_id):
         earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
