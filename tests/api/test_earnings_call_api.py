@@ -402,6 +402,125 @@ class TestEarningsCallFeeds:
         assert data['feeds_count'] >= 1
 
 
+class TestEarningsCallBoundFeeds:
+    """Tests for GET /api/v0/earnings_call/<id>/bound_feeds"""
+
+    @pytest.fixture
+    def feed_with_contribution(self, test_app, sample_basic_info, sample_earnings_call):
+        """Create two feeds and a summary whose news_contributions point to them."""
+        meeting_dt = datetime.combine(sample_earnings_call.meeting_date, datetime.min.time())
+
+        feed_a = Feed(
+            stock_id=sample_basic_info.id,
+            releaseTime=meeting_dt + timedelta(hours=2),
+            title='AI晶片訂單能見度確立至2027年底',
+            link='https://test.com/bound-feed-a',
+            source='yahoo',
+            feedType='news'
+        )
+        feed_b = Feed(
+            stock_id=sample_basic_info.id,
+            releaseTime=meeting_dt + timedelta(hours=4),
+            title='美國關稅影響毛利率約2%',
+            link='https://test.com/bound-feed-b',
+            source='yahoo',
+            feedType='news'
+        )
+        db.session.add_all([feed_a, feed_b])
+        db.session.commit()
+
+        summary = EarningsCallSummary(
+            earnings_call_id=sample_earnings_call.id,
+            stock_id=sample_earnings_call.stock_id,
+            processing_status='completed',
+            score=2,
+            sentiment='Buy',
+            news_contributions=[
+                {'feed_id': feed_a.id, 'title': feed_a.title, 'score_delta': 3, 'key_insight': '長期利多'},
+                {'feed_id': feed_b.id, 'title': feed_b.title, 'score_delta': -1, 'key_insight': '短期壓力'},
+            ]
+        )
+        db.session.add(summary)
+        db.session.commit()
+
+        yield {'feed_a': feed_a, 'feed_b': feed_b, 'summary': summary}
+
+        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        Feed.query.filter(Feed.id.in_([feed_a.id, feed_b.id])).delete()
+        db.session.commit()
+
+    def test_returns_bound_feeds(self, test_app, client, sample_earnings_call, feed_with_contribution):
+        """Should return feeds linked via news_contributions."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert isinstance(data, list)
+        assert len(data) == 2
+
+    def test_feed_fields_present(self, test_app, client, sample_earnings_call, feed_with_contribution):
+        """Each item should have feed_id, title, link, releaseTime, score_delta, key_insight."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        assert response.status_code == 200
+        item = response.get_json()[0]
+        for field in ('feed_id', 'title', 'link', 'releaseTime', 'score_delta', 'key_insight'):
+            assert field in item, f"Missing field: {field}"
+
+    def test_link_is_correct(self, test_app, client, sample_earnings_call, feed_with_contribution):
+        """link field should come from the real Feed record, not the JSON snapshot."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        links = {item['link'] for item in response.get_json()}
+        assert 'https://test.com/bound-feed-a' in links
+        assert 'https://test.com/bound-feed-b' in links
+
+    def test_sorted_by_score_delta_desc(self, test_app, client, sample_earnings_call, feed_with_contribution):
+        """Items should be sorted by score_delta descending (highest first)."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        data = response.get_json()
+        scores = [item['score_delta'] for item in data]
+        assert scores == sorted(scores, reverse=True)
+
+    def test_empty_when_no_summary(self, test_app, client, sample_earnings_call):
+        """Should return empty list when earnings call has no summary."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        assert response.status_code == 200
+        assert response.get_json() == []
+
+    def test_empty_when_no_news_contributions(self, test_app, client, sample_earnings_call):
+        """Should return empty list when summary has no news_contributions."""
+        summary = EarningsCallSummary(
+            earnings_call_id=sample_earnings_call.id,
+            stock_id=sample_earnings_call.stock_id,
+            processing_status='pending',
+            news_contributions=None
+        )
+        db.session.add(summary)
+        db.session.commit()
+
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        assert response.status_code == 200
+        assert response.get_json() == []
+
+        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        db.session.commit()
+
+    def test_ec_not_found_404(self, test_app, client):
+        """Should return 404 for non-existent earnings call."""
+        response = client.get('/api/v0/earnings_call/99999/bound_feeds')
+        assert response.status_code == 404
+
+    def test_no_auth_required(self, test_app, client, sample_earnings_call, feed_with_contribution):
+        """Endpoint should be public (no JWT needed)."""
+        ec_id = sample_earnings_call.id
+        response = client.get(f'/api/v0/earnings_call/{ec_id}/bound_feeds')
+        assert response.status_code == 200
+
+
 class TestEarningsCallListScoreFilter:
     """Tests for score_min/score_max filtering in GET /api/v0/earnings_call."""
 
