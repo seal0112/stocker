@@ -37,12 +37,14 @@ class DataUpdateDateService:
             logger.exception(f'Failed to update news update date: {ex}')
             return False
 
-    def update_news_update_date(self, stock_id):
+    def update_news_update_date(self, stock_id, news_date=None):
         data_update_date = self.get_data_update_date(stock_id)
+        update_date = news_date or date.today()
 
         try:
-            data_update_date.news_last_update = date.today()
-            db.session.commit()
+            if data_update_date.news_last_update is None or update_date > data_update_date.news_last_update:
+                data_update_date.news_last_update = update_date
+                db.session.commit()
             return True
         except Exception as ex:
             db.session.rollback()

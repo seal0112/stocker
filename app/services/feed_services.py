@@ -76,7 +76,7 @@ class FeedServices():
 
             if stock:
                 if feed_data['feedType'] == 'news':
-                    self.data_update_date_service.update_news_update_date(stock_id)
+                    self.data_update_date_service.update_news_update_date(stock_id, releaseTime.date())
                 else:
                     if len(feed_data['tags']):
                         self.   data_update_date_service.update_announcement_update_date(stock_id)
