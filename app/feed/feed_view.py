@@ -1,5 +1,4 @@
 from app.log_config import get_logger
-import json
 import re
 from datetime import datetime, timedelta, date
 
@@ -7,7 +6,7 @@ from flask import request, jsonify, Response
 from flask.views import MethodView
 
 
-from .. import db, redis_client
+from .. import db
 from . import feed
 
 from app.services.feed_services import FeedServices
@@ -24,24 +23,6 @@ from app.decorators.auth import api_auth_required
 logger = get_logger(__name__)
 feed_services = FeedServices()
 
-FEED_CACHE_TTL = 300  # 5 minutes
-
-
-def _feed_cache_key(stock_id, page, page_size, start_date_str, sources):
-    src = ','.join(sorted(sources)) if sources else ''
-    return f'feed:{stock_id}:p{page}:ps{page_size}:sd{start_date_str or ""}:src{src}'
-
-
-def _invalidate_stock_feed_cache(stock_id):
-    pattern = f'feed:{stock_id}:*'
-    cursor = 0
-    while True:
-        cursor, keys = redis_client.scan(cursor, match=pattern, count=100)
-        if keys:
-            redis_client.delete(*keys)
-        if cursor == 0:
-            break
-
 
 @feed.route('/<stock_id>', methods=['GET'])
 def get_stock_feed(stock_id) -> Response:
@@ -55,31 +36,15 @@ def get_stock_feed(stock_id) -> Response:
         except ValueError:
             return jsonify({"error": "Invalid start_date format. Use YYYY-MM-DD"}), 400
     sources = request.args.getlist('source') or None
-
-    cache_key = _feed_cache_key(stock_id, page, page_size, start_date_str, sources)
-    try:
-        cached = redis_client.get(cache_key)
-        if cached:
-            return Response(cached, status=200, mimetype='application/json')
-    except Exception:
-        pass
-
     pagination = feed_services.get_feeds_by_stock(stock_id, page, page_size, start_date, sources)
-    result = {
+    return jsonify({
         'feeds': FeedSchema(many=True).dump(pagination.items),
         'total': pagination.total,
         'page': pagination.page,
         'pages': pagination.pages,
         'has_next': pagination.has_next,
         'has_prev': pagination.has_prev,
-    }
-    payload = json.dumps(result, ensure_ascii=False)
-    try:
-        redis_client.setex(cache_key, FEED_CACHE_TTL, payload)
-    except Exception:
-        pass
-
-    return Response(payload, status=200, mimetype='application/json')
+    }), 200
 
 
 class HandleFeed(MethodView):
@@ -159,12 +124,6 @@ class HandleFeed(MethodView):
             ):
                 announcement_income_sheet_analysis = feed.create_default_announcement_income_sheet_analysis()
                 announcement_income_sheet_analysis.analysis_announcement_income_sheet()
-
-            if feed.stock_id:
-                try:
-                    _invalidate_stock_feed_cache(feed.stock_id)
-                except Exception:
-                    pass
 
             return jsonify({'message': 'Created'}), 201
         except Exception as ex:
