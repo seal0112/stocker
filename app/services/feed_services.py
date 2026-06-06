@@ -1,5 +1,5 @@
 from app.log_config import get_logger
-from datetime import datetime
+from datetime import datetime, date
 
 from app.models import Feed, FeedTag
 from app.basic_information.basic_information_services import BasicInformationServices
@@ -76,10 +76,11 @@ class FeedServices():
 
             if stock:
                 if feed_data['feedType'] == 'news':
-                    self.data_update_date_service.update_news_update_date(stock_id, releaseTime.date())
+                    if releaseTime.date() == date.today():
+                        self.data_update_date_service.update_news_update_date(stock_id, releaseTime.date())
                 else:
                     if len(feed_data['tags']):
-                        self.   data_update_date_service.update_announcement_update_date(stock_id)
+                        self.data_update_date_service.update_announcement_update_date(stock_id)
 
             db.session.add(feed)
             db.session.commit()
