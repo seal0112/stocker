@@ -1,3 +1,6 @@
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+
 from flask import jsonify, request
 from flask.views import MethodView
 
@@ -83,6 +86,47 @@ class AiSettingApi(MethodView):
             return jsonify({'error': 'Failed to update setting'}), 500
 
         return jsonify(setting.to_dict())
+
+
+SSM_KEY_MAP = {
+    'gemini': '/stocker/gemini-api-key',
+    'claude': '/stocker/claude-api-key',
+}
+
+
+@ai_setting.route('/token', methods=['PUT'])
+@admin_required
+def update_ai_token():
+    """Store AI provider API key in SSM Parameter Store."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+    except Exception:
+        return jsonify({'error': 'Invalid JSON format'}), 400
+
+    provider = data.get('provider')
+    token = data.get('token', '').strip()
+
+    if provider not in VALID_PROVIDERS:
+        return jsonify({'error': f'Invalid provider. Must be one of: {", ".join(VALID_PROVIDERS)}'}), 400
+    if not token:
+        return jsonify({'error': 'token is required'}), 400
+
+    ssm_name = SSM_KEY_MAP[provider]
+    try:
+        ssm = boto3.client('ssm')
+        ssm.put_parameter(
+            Name=ssm_name,
+            Value=token,
+            Type='SecureString',
+            Overwrite=True
+        )
+    except (BotoCoreError, ClientError) as e:
+        logger.error(f'Failed to update SSM parameter {ssm_name}: {e}', exc_info=True)
+        return jsonify({'error': 'Failed to update API key'}), 500
+
+    return jsonify({'message': f'{provider} API key updated'}), 200
 
 
 ai_setting.add_url_rule('',
