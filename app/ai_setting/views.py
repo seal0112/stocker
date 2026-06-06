@@ -94,6 +94,24 @@ SSM_KEY_MAP = {
 }
 
 
+@ai_setting.route('/token', methods=['GET'])
+@admin_required
+def get_ai_tokens():
+    """Return masked API key status for all providers."""
+    result = {}
+    ssm = boto3.client('ssm')
+    for provider, ssm_name in SSM_KEY_MAP.items():
+        try:
+            resp = ssm.get_parameter(Name=ssm_name, WithDecryption=True)
+            value = resp['Parameter']['Value']
+            result[provider] = f'****{value[-4:]}' if len(value) >= 4 else '****'
+        except ssm.exceptions.ParameterNotFound:
+            result[provider] = None
+        except (BotoCoreError, ClientError):
+            result[provider] = None
+    return jsonify(result)
+
+
 @ai_setting.route('/token', methods=['PUT'])
 @admin_required
 def update_ai_token():
