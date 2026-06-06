@@ -1,3 +1,4 @@
+import os
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -93,13 +94,19 @@ SSM_KEY_MAP = {
     'claude': '/stocker/claude-api-key',
 }
 
+_AWS_REGION = os.environ.get('AWS_REGION', 'ap-northeast-1')
+
+
+def _ssm_client():
+    return boto3.client('ssm', region_name=_AWS_REGION)
+
 
 @ai_setting.route('/token', methods=['GET'])
 @admin_required
 def get_ai_tokens():
     """Return masked API key status for all providers."""
     result = {}
-    ssm = boto3.client('ssm')
+    ssm = _ssm_client()
     for provider, ssm_name in SSM_KEY_MAP.items():
         try:
             resp = ssm.get_parameter(Name=ssm_name, WithDecryption=True)
@@ -133,7 +140,7 @@ def update_ai_token():
 
     ssm_name = SSM_KEY_MAP[provider]
     try:
-        ssm = boto3.client('ssm')
+        ssm = _ssm_client()
         ssm.put_parameter(
             Name=ssm_name,
             Value=token,
