@@ -74,6 +74,7 @@ class EarningsCallSummary(db.Model):
     total_tokens = db.Column(db.Integer)  # 總 tokens
     cost_usd = db.Column(db.Numeric(10, 6))  # 費用 (USD)
     cost_twd = db.Column(db.Numeric(10, 2))  # 費用 (TWD)
+    model_name = db.Column(db.String(100))  # 使用的 AI 模型名稱
 
     # Relationships
     earnings_call = db.relationship("EarningsCall", backref=db.backref("summary", uselist=False))

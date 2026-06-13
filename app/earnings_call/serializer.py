@@ -25,7 +25,7 @@ class EarningsCallSummarySchema(ma.SQLAlchemyAutoSchema):
             "source_feed_ids",
             "processing_status", "error_message",
             "input_tokens", "output_tokens", "total_tokens",
-            "cost_usd", "cost_twd",
+            "cost_usd", "cost_twd", "model_name",
             "created_at", "updated_at"
         )
         load_instance = False
