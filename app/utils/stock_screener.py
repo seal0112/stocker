@@ -16,10 +16,10 @@ logger = get_logger(__name__)
 
 class StockScreenerManager:
 
-    def __init__(self, option, date=datetime.now()):
+    def __init__(self, option, date=None):
         self.option = option
         self.screener_format = self.get_screener_format(self.option)
-        self.now = date
+        self.now = date or datetime.now()
         month_list = [(10, 11, 12), (1, 2, 3), (4, 5, 6), (7, 8, 9)][math.floor((self.now.month-1)/3)]
         self.query_condition = {
             "date": self.now.strftime('%Y-%m-%d'),
