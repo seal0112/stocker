@@ -24,15 +24,22 @@ class EarningsCallListApi(MethodView):
         date_to = request.args.get('date_to', None)
         score_min = request.args.get('score_min', None, type=int)
         score_max = request.args.get('score_max', None, type=int)
+        page = request.args.get('page', None, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
 
-        earnings_calls = earnings_call_service.get_stock_all_earnings_call(
+        pagination_or_list = earnings_call_service.get_stock_all_earnings_call(
             stock_id=stock,
             meeting_date=meeting_date,
             date_from=date_from,
             date_to=date_to,
             score_min=score_min,
             score_max=score_max,
+            page=page,
+            page_size=page_size,
         )
+
+        is_paginated = page is not None
+        earnings_calls = pagination_or_list.items if is_paginated else pagination_or_list
 
         from app.database_setup import BasicInformation
         stock_ids = {ec.stock_id for ec in earnings_calls}
@@ -52,6 +59,15 @@ class EarningsCallListApi(MethodView):
                 'sentiment': s.sentiment if s else None,
             }
             result.append(item)
+
+        if is_paginated:
+            return jsonify({
+                'earnings_calls': result,
+                'total': pagination_or_list.total,
+                'page': pagination_or_list.page,
+                'pages': pagination_or_list.pages,
+                'has_next': pagination_or_list.has_next,
+            })
 
         return jsonify(result)
 

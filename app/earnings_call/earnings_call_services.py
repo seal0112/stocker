@@ -18,7 +18,8 @@ class EarningsCallService():
     def get_stock_all_earnings_call(
         self, stock_id=None, meeting_date=None,
         date_from=None, date_to=None,
-        score_min=None, score_max=None
+        score_min=None, score_max=None,
+        page=None, page_size=20,
     ):
         from datetime import date, timedelta
         from sqlalchemy.orm import joinedload
@@ -30,13 +31,19 @@ class EarningsCallService():
 
         if meeting_date:
             query = query.filter(EarningsCall.meeting_date == meeting_date)
-        else:
+        elif not stock_id:
+            # 全局列表才套預設日期範圍；個股頁不限制
             start = date_from or date.today()
             end = date_to or (date.today() + timedelta(days=90))
             query = query.filter(
                 EarningsCall.meeting_date >= start,
                 EarningsCall.meeting_date <= end,
             )
+        elif date_from or date_to:
+            if date_from:
+                query = query.filter(EarningsCall.meeting_date >= date_from)
+            if date_to:
+                query = query.filter(EarningsCall.meeting_date <= date_to)
 
         if score_min is not None or score_max is not None:
             query = query.join(
@@ -48,7 +55,12 @@ class EarningsCallService():
             if score_max is not None:
                 query = query.filter(EarningsCallSummary.score <= score_max)
 
-        return query.order_by(EarningsCall.meeting_date.desc()).limit(100).all()
+        query = query.order_by(EarningsCall.meeting_date.desc())
+
+        if page is not None:
+            return query.paginate(page=page, per_page=page_size, error_out=False)
+
+        return query.limit(100).all()
 
     def get_stock_earnings_call_by_date(self, stock_id, meeting_date):
         earning_call_query = EarningsCall.query
