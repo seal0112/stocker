@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required
 from flask.views import MethodView
 
 from app.utils.jwt_utils import get_current_user
+from app.decorators.auth import api_auth_required
 from . import push_notification
 from .. import db
 from ..database_setup import PushNotification
@@ -47,6 +48,7 @@ class PushNotificationApi(MethodView):
         user_notification.notify_news = payload.get('notify_news', False)
         user_notification.notify_announcement = payload.get('notify_announcement', False)
         user_notification.notify_earnings_call = payload.get('notify_earnings_call', False)
+        user_notification.notify_earnings_call_summary = payload.get('notify_earnings_call_summary', False)
 
         try:
             db.session.add(user_notification)
@@ -60,7 +62,32 @@ class PushNotificationApi(MethodView):
             return jsonify(PushNotificationSchema().dump(user_notification))
 
 
+class EarningsCallSummarySubscribersApi(MethodView):
+    """Return users subscribed to earnings call summary notifications (for Lambda use)."""
+    decorators = [api_auth_required]
+
+    def get(self):
+        subscribers = PushNotification.query.filter_by(
+            notify_enabled=True,
+            notify_earnings_call_summary=True
+        ).filter(
+            PushNotification.gmail.isnot(None),
+            PushNotification.gmail != '',
+            PushNotification.gmail_token.isnot(None),
+            PushNotification.gmail_token != '',
+        ).all()
+        return jsonify([
+            {'gmail': s.gmail, 'gmail_token': s.gmail_token}
+            for s in subscribers
+        ])
+
+
 push_notification.add_url_rule('/',
                   view_func=PushNotificationApi.as_view(
                       'push_notification_api'),
                   methods=['GET', 'PUT'])
+
+push_notification.add_url_rule('/earnings_call_summary_subscribers',
+                  view_func=EarningsCallSummarySubscribersApi.as_view(
+                      'earnings_call_summary_subscribers_api'),
+                  methods=['GET'])

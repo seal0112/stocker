@@ -126,6 +126,21 @@ class EarningsCallService():
             logger.error(ex)
 
     # Summary related methods
+    def get_completed_summaries(self, date):
+        """Get all completed summaries for a given date (for notification Lambda)."""
+        from sqlalchemy.orm import joinedload
+        summaries = (
+            EarningsCallSummary.query
+            .join(EarningsCall, EarningsCallSummary.earnings_call_id == EarningsCall.id)
+            .options(joinedload(EarningsCallSummary.earnings_call))
+            .filter(
+                EarningsCallSummary.processing_status == 'completed',
+                EarningsCall.meeting_date == date,
+            )
+            .all()
+        )
+        return summaries
+
     def get_earnings_call_summary(self, earnings_call_id):
         """Get summary for a specific earnings call."""
         return EarningsCallSummary.query.filter_by(

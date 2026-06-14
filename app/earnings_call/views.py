@@ -211,8 +211,55 @@ class EarningsCallPendingApi(MethodView):
         return jsonify(EarningsCallchema(many=True).dump(pending))
 
 
+class EarningsCallCompletedApi(MethodView):
+    """Return completed AI summaries for a given date (used by notification Lambda)."""
+    decorators = [api_auth_required]
+
+    def get(self):
+        date_str = request.args.get('date')
+        if not date_str:
+            return jsonify({"error": "date parameter is required"}), 400
+
+        try:
+            from datetime import date as date_type
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({"error": "Invalid date format, use YYYY-MM-DD"}), 400
+
+        from app.database_setup import BasicInformation
+        summaries = earnings_call_service.get_completed_summaries(target_date)
+        stock_ids = {s.stock_id for s in summaries}
+        name_map = {
+            b.id: getattr(b, '公司簡稱', None)
+            for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
+        }
+
+        result = []
+        for s in summaries:
+            result.append({
+                'earnings_call_id': s.earnings_call_id,
+                'stock_id': s.stock_id,
+                'company_name': name_map.get(s.stock_id),
+                'meeting_date': s.earnings_call.meeting_date.isoformat() if s.earnings_call else None,
+                'score': s.score,
+                'sentiment': s.sentiment,
+                'impact_duration': s.impact_duration,
+                'source_reliability': s.source_reliability,
+                'outlook': s.outlook,
+                'concerns_and_risks': s.concerns_and_risks,
+                'capex': s.capex,
+                'capex_industry': s.capex_industry,
+                'reasoning': s.reasoning,
+            })
+        return jsonify(result)
+
+
 earnings_call.add_url_rule('/pending',
     view_func=EarningsCallPendingApi.as_view('EarningsCallPendingApi'),
+    methods=['GET'])
+
+earnings_call.add_url_rule('/completed',
+    view_func=EarningsCallCompletedApi.as_view('EarningsCallCompletedApi'),
     methods=['GET'])
 
 earnings_call.add_url_rule('',
