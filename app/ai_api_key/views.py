@@ -48,6 +48,13 @@ def create_key():
     if AiApiKey.query.filter_by(name=data['name']).first():
         return jsonify({'error': 'Key name already exists'}), 409
 
+    from flask_jwt_extended import get_jwt_identity
+    try:
+        identity = get_jwt_identity()
+        owner = identity.get('username') if identity else None
+    except Exception:
+        owner = None
+
     ssm_path = f"/stocker/ai_key/{data['name']}"
 
     try:
@@ -58,7 +65,7 @@ def create_key():
     key = AiApiKey(
         name=data['name'],
         provider=data['provider'],
-        owner=data.get('owner'),
+        owner=owner,
         ssm_path=ssm_path,
         is_active=data.get('is_active', True),
     )
