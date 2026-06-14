@@ -52,6 +52,7 @@ def create_prompt():
         content=data['content'],
         is_active=data.get('is_active', True),
         description=data.get('description'),
+        api_key_id=data.get('api_key_id'),
         created_by=created_by,
     )
     db.session.add(prompt)
@@ -67,7 +68,7 @@ def update_prompt(prompt_id):
     if not data:
         return jsonify({'error': 'Request body is required'}), 400
 
-    for field in ('content', 'description', 'is_active'):
+    for field in ('content', 'description', 'is_active', 'api_key_id'):
         if field in data:
             setattr(prompt, field, data[field])
 

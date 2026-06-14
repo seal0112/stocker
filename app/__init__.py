@@ -77,6 +77,8 @@ def create_app(config_name):
     from app.user_management import user_management, roles_bp
     from app.ai_prompt import ai_prompt
     from app.ai_setting import ai_setting
+    from app.ai_api_key import ai_api_key
+    from app.ai_usage_report import ai_usage_report
 
     app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
     app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
@@ -96,6 +98,8 @@ def create_app(config_name):
     app.register_blueprint(roles_bp, url_prefix='/api/v1/roles')
     app.register_blueprint(ai_prompt, url_prefix='/api/v0/ai_prompt')
     app.register_blueprint(ai_setting, url_prefix='/api/v0/ai_setting')
+    app.register_blueprint(ai_api_key, url_prefix='/api/v0/ai_api_key')
+    app.register_blueprint(ai_usage_report, url_prefix='/api/v0/ai_usage_report')
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')
