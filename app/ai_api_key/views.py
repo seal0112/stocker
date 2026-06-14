@@ -65,6 +65,7 @@ def create_key():
     key = AiApiKey(
         name=data['name'],
         provider=data['provider'],
+        model=data.get('model') or None,
         owner=owner,
         ssm_path=ssm_path,
         is_active=data.get('is_active', True),
@@ -89,9 +90,9 @@ def update_key(key_id):
         except Exception as e:
             return jsonify({'error': f'SSM error: {str(e)}'}), 500
 
-    for field in ('owner', 'is_active'):
+    for field in ('owner', 'is_active', 'model'):
         if field in data:
-            setattr(key, field, data[field])
+            setattr(key, field, data[field] or None if field == 'model' else data[field])
 
     db.session.commit()
     return jsonify(key.to_dict()), 200

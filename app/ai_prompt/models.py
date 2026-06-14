@@ -34,6 +34,7 @@ class AiPrompt(db.Model):
             'api_key_id': self.api_key_id,
             'api_key_ssm_path': self.api_key.ssm_path if self.api_key else None,
             'api_key_name': self.api_key.name if self.api_key else None,
+            'api_key_model': self.api_key.model if self.api_key else None,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

@@ -8,6 +8,7 @@ class AiApiKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     provider = db.Column(db.String(50), nullable=False)  # gemini / claude
+    model = db.Column(db.String(100), nullable=True)     # 指定使用的模型（None 則用系統預設）
     owner = db.Column(db.String(100))                    # 誰的 key
     ssm_path = db.Column(db.String(200), nullable=False, unique=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -19,6 +20,7 @@ class AiApiKey(db.Model):
             'id': self.id,
             'name': self.name,
             'provider': self.provider,
+            'model': self.model,
             'owner': self.owner,
             'ssm_path': self.ssm_path,
             'is_active': self.is_active,
