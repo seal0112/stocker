@@ -1,14 +1,17 @@
 from app.log_config import get_logger
+from datetime import date, datetime, timedelta
 
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required
 from flask.views import MethodView
+from sqlalchemy import or_
 
 from app.utils.jwt_utils import get_current_user
 from app.decorators.auth import api_auth_required
 from . import push_notification
 from .. import db
-from ..database_setup import PushNotification
+from ..database_setup import PushNotification, DataUpdateDate
+from ..follow_stock.models import Follow_Stock
 from .serializer import PushNotificationSchema
 
 logger = get_logger(__name__)
@@ -86,6 +89,82 @@ push_notification.add_url_rule('/',
                   view_func=PushNotificationApi.as_view(
                       'push_notification_api'),
                   methods=['GET', 'PUT'])
+
+class PushNotificationDueApi(MethodView):
+    """Return users whose notify_time falls in the current 15-min window, with their stock updates."""
+    decorators = [api_auth_required]
+
+    def get(self):
+        now = datetime.utcnow() + timedelta(hours=8)  # Taiwan time (UTC+8)
+        window_start = (now - timedelta(minutes=15)).strftime('%H:%M')
+        window_end = (now + timedelta(minutes=14)).strftime('%H:%M')
+        today = date.today()
+
+        due = PushNotification.query.filter(
+            PushNotification.notify_enabled == True,
+            PushNotification.notify_time.between(window_start, window_end),
+            PushNotification.gmail.isnot(None),
+            PushNotification.gmail != '',
+            PushNotification.gmail_token.isnot(None),
+            PushNotification.gmail_token != '',
+        ).all()
+
+        result = []
+        for pn in due:
+            followed = Follow_Stock.query.filter_by(
+                user_id=pn.user_id, is_delete=False
+            ).all()
+            stock_ids = [f.stock_id for f in followed]
+            if not stock_ids:
+                continue
+
+            update_filters = []
+            if pn.notify_month_revenue:
+                update_filters.append(DataUpdateDate.month_revenue_last_update == today)
+            if pn.notify_announcement:
+                update_filters.append(DataUpdateDate.announcement_last_update == today)
+            if pn.notify_income_sheet:
+                update_filters.append(DataUpdateDate.income_sheet_last_update == today)
+            if pn.notify_news:
+                update_filters.append(DataUpdateDate.news_last_update == today)
+            if pn.notify_earnings_call:
+                update_filters.append(DataUpdateDate.earnings_call_last_update == today)
+
+            if not update_filters:
+                continue
+
+            rows = DataUpdateDate.query.filter(
+                DataUpdateDate.stock_id.in_(stock_ids),
+                or_(*update_filters),
+            ).all()
+
+            if not rows:
+                continue
+
+            stocks = []
+            for row in rows:
+                stocks.append({
+                    'stock_id': row.stock_id,
+                    'month_revenue': pn.notify_month_revenue and row.month_revenue_last_update == today,
+                    'announcement': pn.notify_announcement and row.announcement_last_update == today,
+                    'income_sheet': pn.notify_income_sheet and row.income_sheet_last_update == today,
+                    'news': pn.notify_news and row.news_last_update == today,
+                    'earnings_call': pn.notify_earnings_call and row.earnings_call_last_update == today,
+                })
+
+            result.append({
+                'gmail': pn.gmail,
+                'gmail_token': pn.gmail_token,
+                'stocks': stocks,
+            })
+
+        return jsonify(result)
+
+
+push_notification.add_url_rule('/due',
+                  view_func=PushNotificationDueApi.as_view(
+                      'push_notification_due_api'),
+                  methods=['GET'])
 
 push_notification.add_url_rule('/earnings_call_summary_subscribers',
                   view_func=EarningsCallSummarySubscribersApi.as_view(
