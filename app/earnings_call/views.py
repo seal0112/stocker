@@ -9,7 +9,7 @@ from app import db
 from . import earnings_call
 from .serializer import EarningsCallchema, EarningsCallSummarySchema
 from .earnings_call_services import EarningsCallService
-from app.decorators.auth import api_auth_required, admin_required
+from app.decorators.auth import api_auth_required
 
 logger = get_logger(__name__)
 earnings_call_service = EarningsCallService()
@@ -152,7 +152,7 @@ class EarningsCallSummaryApi(MethodView):
 
         return jsonify(EarningsCallSummarySchema().dump(summary))
 
-    @admin_required
+    @api_auth_required
     def post(self, earnings_call_id):
         """Trigger AI summary generation (creates pending record and sends to SQS)."""
         earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
@@ -221,7 +221,6 @@ class EarningsCallCompletedApi(MethodView):
             return jsonify({"error": "date parameter is required"}), 400
 
         try:
-            from datetime import date as date_type
             target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
         except ValueError:
             return jsonify({"error": "Invalid date format, use YYYY-MM-DD"}), 400
