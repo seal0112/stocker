@@ -238,10 +238,25 @@ class EarningsCallService():
         result.sort(key=lambda x: -(x['score_delta'] or 0))
         return result
 
+    def get_failed_for_retry(self, days_back=3):
+        """Get earnings calls with failed summaries from the past N days for retry."""
+        from datetime import date, timedelta
+        from sqlalchemy.orm import joinedload
+        date_from = date.today() - timedelta(days=days_back)
+        return (
+            EarningsCall.query
+            .join(EarningsCallSummary, EarningsCall.id == EarningsCallSummary.earnings_call_id)
+            .options(joinedload(EarningsCall.summary))
+            .filter(
+                EarningsCallSummary.processing_status == 'failed',
+                EarningsCall.meeting_date >= date_from,
+                EarningsCall.meeting_date < date.today(),
+            )
+            .all()
+        )
+
     def get_pending_earnings_calls(self, meeting_date):
         """Get earnings calls that need AI summary processing."""
-        from sqlalchemy import or_
-
         # Find earnings calls on the given date that:
         # 1. Have no summary record, OR
         # 2. Have summary with status 'pending' or 'failed'

@@ -253,8 +253,22 @@ class EarningsCallCompletedApi(MethodView):
         return jsonify(result)
 
 
+class EarningsCallFailedRetryApi(MethodView):
+    """Return earnings calls with failed summaries from recent days for retry."""
+    decorators = [api_auth_required]
+
+    def get(self):
+        days_back = request.args.get('days_back', 3, type=int)
+        failed = earnings_call_service.get_failed_for_retry(days_back=days_back)
+        return jsonify(EarningsCallchema(many=True).dump(failed))
+
+
 earnings_call.add_url_rule('/pending',
     view_func=EarningsCallPendingApi.as_view('EarningsCallPendingApi'),
+    methods=['GET'])
+
+earnings_call.add_url_rule('/failed_retry',
+    view_func=EarningsCallFailedRetryApi.as_view('EarningsCallFailedRetryApi'),
     methods=['GET'])
 
 earnings_call.add_url_rule('/completed',
