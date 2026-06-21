@@ -64,13 +64,37 @@ class AiReportService:
             raise ex
         return report
 
+    # Fields that belong inside key_points JSON (not top-level columns)
+    _KEY_POINT_FIELDS = {
+        'earnings_call': {
+            'capex', 'capex_industry', 'outlook', 'concerns_and_risks',
+            'impact_duration', 'source_reliability',
+            'news_contributions', 'source_feed_ids',
+        }
+    }
+    # Field name remapping: Lambda field → model column
+    _FIELD_REMAP = {
+        'reasoning': 'summary',
+    }
+
     def update_ai_report(self, report_id, data):
         report = self.get_ai_report(report_id)
         if not report:
             return None
+
+        kp_fields = self._KEY_POINT_FIELDS.get(report.report_type, set())
+        key_points = dict(report.key_points or {})
+
         for key, value in data.items():
-            if hasattr(report, key):
-                setattr(report, key, value)
+            remapped = self._FIELD_REMAP.get(key, key)
+            if key in kp_fields:
+                key_points[key] = value
+            elif hasattr(report, remapped):
+                setattr(report, remapped, value)
+
+        if key_points:
+            report.key_points = key_points
+
         try:
             db.session.commit()
         except Exception as ex:
