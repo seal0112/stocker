@@ -7,12 +7,14 @@ from flask_jwt_extended import jwt_required
 
 from app import db
 from . import earnings_call
-from .serializer import EarningsCallchema, EarningsCallSummarySchema
+from .serializer import EarningsCallchema
 from .earnings_call_services import EarningsCallService
 from app.decorators.auth import api_auth_required
+from app.ai_report.models import AiReport
 
 logger = get_logger(__name__)
 earnings_call_service = EarningsCallService()
+
 
 class EarningsCallListApi(MethodView):
 
@@ -48,15 +50,24 @@ class EarningsCallListApi(MethodView):
             for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
         }
 
+        ec_ids = [ec.id for ec in earnings_calls]
+        report_map = {
+            r.ref_id: r
+            for r in AiReport.query.filter(
+                AiReport.report_type == 'earnings_call',
+                AiReport.ref_id.in_(ec_ids),
+            ).all()
+        } if ec_ids else {}
+
         result = []
         for ec in earnings_calls:
             item = EarningsCallchema().dump(ec)
             item['company_name'] = name_map.get(ec.stock_id)
-            s = ec.summary
+            r = report_map.get(ec.id)
             item['summary'] = {
-                'processing_status': s.processing_status if s else None,
-                'score': s.score if s else None,
-                'sentiment': s.sentiment if s else None,
+                'processing_status': r.processing_status if r else None,
+                'score': r.score if r else None,
+                'sentiment': r.sentiment if r else None,
             }
             result.append(item)
 
@@ -97,6 +108,7 @@ class EarningsCallListApi(MethodView):
         else:
             return jsonify(EarningsCallchema().dump(earnings_call)), 201
 
+
 class EarningsCallDetailApi(MethodView):
     @jwt_required()
     def get(self):
@@ -120,84 +132,11 @@ class EarningsCallDetailApi(MethodView):
         return '', 204
 
 
-class EarningsCallSummaryApi(MethodView):
-    """API for earnings call AI summary."""
-
-    def get(self, earnings_call_id):
-        """Get AI summary for an earnings call."""
-        summary = earnings_call_service.get_earnings_call_summary(earnings_call_id)
-        if not summary:
-            return jsonify({"error": "Summary not found"}), 404
-
-        return jsonify(EarningsCallSummarySchema().dump(summary))
-
-    @api_auth_required
-    def put(self, earnings_call_id):
-        """Update summary with AI-generated content (Lambda callback)."""
-        try:
-            summary_data = request.get_json()
-            if not summary_data:
-                return jsonify({"error": "Request body is required"}), 400
-        except Exception:
-            return jsonify({"error": "Invalid JSON format"}), 400
-
-        try:
-            summary = earnings_call_service.update_earnings_call_summary(
-                earnings_call_id, summary_data)
-            if not summary:
-                return jsonify({"error": "Summary not found"}), 404
-        except Exception as e:
-            logger.error(f"Error updating summary: {e}", exc_info=True)
-            return jsonify({"error": "Failed to update summary"}), 400
-
-        return jsonify(EarningsCallSummarySchema().dump(summary))
-
-    @api_auth_required
-    def post(self, earnings_call_id):
-        """Trigger AI summary generation (creates pending record and sends to SQS)."""
-        earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
-        if not earnings_call:
-            return jsonify({"error": "Earnings call not found"}), 404
-
-        try:
-            summary = earnings_call_service.create_earnings_call_summary(
-                earnings_call_id, earnings_call.stock_id)
-        except Exception as e:
-            logger.error(f"Error creating summary: {e}", exc_info=True)
-            return jsonify({"error": "Failed to create summary"}), 400
-
-        try:
-            import json
-            import boto3
-            from flask import current_app
-            queue_url = current_app.config.get('EARNINGS_CALL_SUMMARY_QUEUE_URL')
-            if queue_url:
-                sqs = boto3.client('sqs', region_name=current_app.config.get('AWS_REGION', 'ap-northeast-1'))
-                sqs.send_message(
-                    QueueUrl=queue_url,
-                    MessageBody=json.dumps({
-                        'earnings_call_id': earnings_call_id,
-                        'stock_id': earnings_call.stock_id,
-                        'meeting_date': earnings_call.meeting_date.isoformat(),
-                        'days_after': 2,
-                    })
-                )
-                logger.info(f"Sent earnings call {earnings_call_id} to SQS for AI processing")
-            else:
-                logger.warning("EARNINGS_CALL_SUMMARY_QUEUE_URL not configured, skipping SQS")
-        except Exception as e:
-            logger.error(f"Failed to send to SQS: {e}", exc_info=True)
-            # Don't fail the request; record is created, Lambda trigger can pick it up
-
-        return jsonify(EarningsCallSummarySchema().dump(summary)), 201
-
-
 class EarningsCallPendingApi(MethodView):
     """API to get earnings calls pending AI summary."""
 
     @api_auth_required
     def get(self):
-        """Get earnings calls that need AI summary processing."""
         meeting_date_str = request.args.get('meeting_date')
         if not meeting_date_str:
             return jsonify({"error": "meeting_date parameter is required"}), 400
@@ -211,80 +150,11 @@ class EarningsCallPendingApi(MethodView):
         return jsonify(EarningsCallchema(many=True).dump(pending))
 
 
-class EarningsCallCompletedApi(MethodView):
-    """Return completed AI summaries for a given date (used by notification Lambda)."""
-    decorators = [api_auth_required]
-
-    def get(self):
-        date_str = request.args.get('date')
-        if not date_str:
-            return jsonify({"error": "date parameter is required"}), 400
-
-        try:
-            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return jsonify({"error": "Invalid date format, use YYYY-MM-DD"}), 400
-
-        from app.database_setup import BasicInformation
-        summaries = earnings_call_service.get_completed_summaries(target_date)
-        stock_ids = {s.stock_id for s in summaries}
-        name_map = {
-            b.id: getattr(b, '公司簡稱', None)
-            for b in BasicInformation.query.filter(BasicInformation.id.in_(stock_ids)).all()
-        }
-
-        result = []
-        for s in summaries:
-            result.append({
-                'earnings_call_id': s.earnings_call_id,
-                'stock_id': s.stock_id,
-                'company_name': name_map.get(s.stock_id),
-                'meeting_date': s.earnings_call.meeting_date.isoformat() if s.earnings_call else None,
-                'score': s.score,
-                'sentiment': s.sentiment,
-                'impact_duration': s.impact_duration,
-                'source_reliability': s.source_reliability,
-                'outlook': s.outlook,
-                'concerns_and_risks': s.concerns_and_risks,
-                'capex': s.capex,
-                'capex_industry': s.capex_industry,
-                'reasoning': s.reasoning,
-            })
-        return jsonify(result)
-
-
-class EarningsCallFailedRetryApi(MethodView):
-    """Return earnings calls with failed summaries from recent days for retry."""
-    decorators = [api_auth_required]
-
-    def get(self):
-        days_back = request.args.get('days_back', 3, type=int)
-        failed = earnings_call_service.get_failed_for_retry(days_back=days_back)
-        return jsonify(EarningsCallchema(many=True).dump(failed))
-
-
-earnings_call.add_url_rule('/pending',
-    view_func=EarningsCallPendingApi.as_view('EarningsCallPendingApi'),
-    methods=['GET'])
-
-earnings_call.add_url_rule('/failed_retry',
-    view_func=EarningsCallFailedRetryApi.as_view('EarningsCallFailedRetryApi'),
-    methods=['GET'])
-
-earnings_call.add_url_rule('/completed',
-    view_func=EarningsCallCompletedApi.as_view('EarningsCallCompletedApi'),
-    methods=['GET'])
-
-earnings_call.add_url_rule('',
-    view_func=EarningsCallListApi.as_view('EarningsCallListApi'),
-    methods=['GET', 'POST'])
-
 class EarningsCallFeedsApi(MethodView):
     """API to get related feeds for an earnings call."""
 
     @api_auth_required
     def get(self, earnings_call_id):
-        """Get related news feeds after an earnings call."""
         from app.schemas.feed_schema import FeedSchema
 
         earnings_call = earnings_call_service.get_earnings_call(earnings_call_id)
@@ -324,9 +194,13 @@ class EarningsCallBoundFeedsApi(MethodView):
         return jsonify(bound_feeds)
 
 
-earnings_call.add_url_rule('/<int:earnings_call_id>/summary',
-    view_func=EarningsCallSummaryApi.as_view('EarningsCallSummaryApi'),
-    methods=['GET', 'PUT', 'POST'])
+earnings_call.add_url_rule('/pending',
+    view_func=EarningsCallPendingApi.as_view('EarningsCallPendingApi'),
+    methods=['GET'])
+
+earnings_call.add_url_rule('',
+    view_func=EarningsCallListApi.as_view('EarningsCallListApi'),
+    methods=['GET', 'POST'])
 
 earnings_call.add_url_rule('/<int:earnings_call_id>/feeds',
     view_func=EarningsCallFeedsApi.as_view('EarningsCallFeedsApi'),
@@ -335,8 +209,3 @@ earnings_call.add_url_rule('/<int:earnings_call_id>/feeds',
 earnings_call.add_url_rule('/<int:earnings_call_id>/bound_feeds',
     view_func=EarningsCallBoundFeedsApi.as_view('EarningsCallBoundFeedsApi'),
     methods=['GET'])
-
-# earnings_call.add_url_rule('/<earnings_call_id>',
-#     view_func=EarningsCallDetailApi.as_view(
-#     'earnings_call_detail_api'),
-#     methods=['GET', 'PATCH'])

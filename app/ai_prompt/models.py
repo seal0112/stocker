@@ -17,6 +17,14 @@ class AiPrompt(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
 
+    # Schedule settings (for news report type)
+    report_source = db.Column(db.String(20))
+    schedule_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    schedule_frequency = db.Column(db.Enum('weekly', 'monthly', name='ai_prompt_schedule_freq_enum'))
+    schedule_day = db.Column(db.Integer)    # weekly: 0~6 (Mon=0); monthly: 1~31
+    schedule_hour = db.Column(db.Integer)   # Taiwan time 0~23
+    schedule_days_back = db.Column(db.Integer)
+
     api_key = db.relationship('AiApiKey', lazy='joined')
 
     __table_args__ = (
@@ -35,6 +43,12 @@ class AiPrompt(db.Model):
             'api_key_ssm_path': self.api_key.ssm_path if self.api_key else None,
             'api_key_name': self.api_key.name if self.api_key else None,
             'api_key_model': self.api_key.model if self.api_key else None,
+            'report_source': self.report_source,
+            'schedule_enabled': self.schedule_enabled,
+            'schedule_frequency': self.schedule_frequency,
+            'schedule_day': self.schedule_day,
+            'schedule_hour': self.schedule_hour,
+            'schedule_days_back': self.schedule_days_back,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,

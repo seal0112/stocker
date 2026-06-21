@@ -4,11 +4,12 @@ from sqlalchemy import func
 
 from . import ai_usage_report
 from app.decorators.auth import admin_required
-from app.earnings_call.models import EarningsCallSummary
+from app.ai_report.models import AiReport
 
 # 功能對應中文名稱（未來新增功能在此擴充）
 FEATURE_LABELS = {
-    'earnings_call_summary': '法說會摘要',
+    'earnings_call': '法說會摘要',
+    'news': '新聞摘要',
 }
 
 
@@ -24,34 +25,34 @@ def _build_sources(date_from, date_to):
     dt_from = datetime.combine(date_from, datetime.min.time())
     dt_to = datetime.combine(date_to, datetime.max.time())
 
-    base = EarningsCallSummary.query.filter(
-        EarningsCallSummary.processing_status == 'completed',
-        EarningsCallSummary.created_at >= dt_from,
-        EarningsCallSummary.created_at <= dt_to,
+    base = AiReport.query.filter(
+        AiReport.processing_status == 'completed',
+        AiReport.created_at >= dt_from,
+        AiReport.created_at <= dt_to,
     )
 
     # by_model
     by_model = base.with_entities(
-        EarningsCallSummary.model_name,
-        func.sum(EarningsCallSummary.input_tokens).label('input_tokens'),
-        func.sum(EarningsCallSummary.output_tokens).label('output_tokens'),
-        func.sum(EarningsCallSummary.total_tokens).label('total_tokens'),
-        func.sum(EarningsCallSummary.cost_usd).label('cost_usd'),
-        func.sum(EarningsCallSummary.cost_twd).label('cost_twd'),
-        func.count(EarningsCallSummary.id).label('count'),
-    ).group_by(EarningsCallSummary.model_name).all()
+        AiReport.model_name,
+        func.sum(AiReport.input_tokens).label('input_tokens'),
+        func.sum(AiReport.output_tokens).label('output_tokens'),
+        func.sum(AiReport.total_tokens).label('total_tokens'),
+        func.sum(AiReport.cost_usd).label('cost_usd'),
+        func.sum(AiReport.cost_twd).label('cost_twd'),
+        func.count(AiReport.id).label('count'),
+    ).group_by(AiReport.model_name).all()
 
     # daily（每日 × model）
     daily = base.with_entities(
-        func.date(EarningsCallSummary.created_at).label('date'),
-        EarningsCallSummary.model_name,
-        func.sum(EarningsCallSummary.cost_twd).label('cost_twd'),
-        func.sum(EarningsCallSummary.cost_usd).label('cost_usd'),
-        func.count(EarningsCallSummary.id).label('count'),
+        func.date(AiReport.created_at).label('date'),
+        AiReport.model_name,
+        func.sum(AiReport.cost_twd).label('cost_twd'),
+        func.sum(AiReport.cost_usd).label('cost_usd'),
+        func.count(AiReport.id).label('count'),
     ).group_by(
-        func.date(EarningsCallSummary.created_at),
-        EarningsCallSummary.model_name,
-    ).order_by(func.date(EarningsCallSummary.created_at)).all()
+        func.date(AiReport.created_at),
+        AiReport.model_name,
+    ).order_by(func.date(AiReport.created_at)).all()
 
     return by_model, daily
 
@@ -66,7 +67,7 @@ def get_usage_report():
     by_model_rows, daily_rows = _build_sources(date_from, date_to)
 
     # by_feature：目前只有法說會摘要，未來可新增更多來源彙總
-    feature_label = FEATURE_LABELS['earnings_call_summary']
+    feature_label = FEATURE_LABELS['earnings_call']
     by_feature = [{
         'feature': feature_label,
         'input_tokens': int(sum(r.input_tokens or 0 for r in by_model_rows)),
