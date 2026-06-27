@@ -41,6 +41,7 @@ def upgrade():
         db.session.add(stock_search_count)
         db.session.commit()
 
+    db.session.close()
     # ### end Alembic commands ###
 
 
