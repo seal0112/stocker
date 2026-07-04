@@ -255,10 +255,6 @@ class StockScreenerManager:
         if not last_income_sheet:
             return False
 
-        average_monthly_price = stock.get_average_monthly_price(3)
-        if average_monthly_price is None:
-            return False
-
         # Check if daily_information exists before accessing
         if not stock.daily_information or stock.daily_information.本日收盤價 is None:
             return False
@@ -291,7 +287,4 @@ class StockScreenerManager:
             return False
 
         # Final valuation checks
-        return (
-            stock_price < (average_monthly_price * 1.25) and
-            (stock_price / (last_income_sheet_eps * 4)) < pe_average
-        )
+        return (stock_price / (last_income_sheet_eps * 4)) < pe_average
