@@ -29,7 +29,7 @@ class FollowStockSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Follow_Stock
         fields = (
-            "id", "stock", "last_update_time",
+            "id", "stock", "create_time", "last_update_time",
             "comment", "long_or_short"
         )
         load_instance = False
