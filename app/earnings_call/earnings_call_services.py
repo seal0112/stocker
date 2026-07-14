@@ -223,7 +223,16 @@ class EarningsCallService():
                 or_(*[Feed.title.contains(kw) for kw in keywords])
             )
 
-        return query.order_by(Feed.releaseTime.desc()).limit(15).all()
+        feeds = query.order_by(Feed.releaseTime.desc()).all()
+        seen_titles = set()
+        unique_feeds = []
+        for feed in feeds:
+            if feed.title not in seen_titles:
+                seen_titles.add(feed.title)
+                unique_feeds.append(feed)
+            if len(unique_feeds) >= 15:
+                break
+        return unique_feeds
 
     def get_bound_feeds(self, earnings_call_id):
         """Return feeds bound to this earnings call via news_contributions in ai_report."""
