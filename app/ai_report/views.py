@@ -10,7 +10,6 @@ from .serializer import AiReportSchema
 from .ai_report_service import AiReportService
 from ..decorators.auth import api_auth_required
 from ..schemas.feed_schema import FeedSchema
-from ..earnings_call.serializer import EarningsCallchema
 
 logger = get_logger(__name__)
 ai_report_service = AiReportService()

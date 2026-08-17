@@ -8,7 +8,7 @@ class AiReport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     report_type = db.Column(
-        db.Enum('earnings_call', 'news', name='ai_report_type_enum'),
+        db.Enum('earnings_call', 'news', 'stock_analysis', name='ai_report_type_enum'),
         nullable=False, index=True)
     subject = db.Column(db.String(50), nullable=False, index=True)
     period_start = db.Column(db.Date, nullable=False, index=True)

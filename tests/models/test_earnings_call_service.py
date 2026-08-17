@@ -3,7 +3,8 @@ import pytest
 from datetime import date, datetime, timedelta
 
 from app import db
-from app.earnings_call.models import EarningsCall, EarningsCallSummary
+from app.earnings_call.models import EarningsCall
+from app.ai_report.models import AiReport
 from app.earnings_call.earnings_call_services import EarningsCallService
 from app.models import Feed
 
@@ -126,10 +127,14 @@ class TestGetPendingEarningsCalls:
         assert ec.id in ids
 
     def test_completed_summary_excluded(self, test_app, ec):
-        summary = EarningsCallSummary(
-            earnings_call_id=ec.id,
-            stock_id=ec.stock_id,
-            processing_status='completed'
+        summary = AiReport(
+            report_type='earnings_call',
+            ref_id=ec.id,
+            subject=ec.stock_id,
+            period_start=ec.meeting_date,
+            period_end=ec.meeting_date,
+            prompt_name='earnings-call-summary',
+            processing_status='completed',
         )
         db.session.add(summary)
         db.session.commit()
@@ -138,14 +143,18 @@ class TestGetPendingEarningsCalls:
         ids = [e.id for e in pending]
         assert ec.id not in ids
 
-        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        AiReport.query.filter_by(id=summary.id).delete()
         db.session.commit()
 
     def test_failed_summary_is_pending(self, test_app, ec):
-        summary = EarningsCallSummary(
-            earnings_call_id=ec.id,
-            stock_id=ec.stock_id,
-            processing_status='failed'
+        summary = AiReport(
+            report_type='earnings_call',
+            ref_id=ec.id,
+            subject=ec.stock_id,
+            period_start=ec.meeting_date,
+            period_end=ec.meeting_date,
+            prompt_name='earnings-call-summary',
+            processing_status='failed',
         )
         db.session.add(summary)
         db.session.commit()
@@ -154,7 +163,7 @@ class TestGetPendingEarningsCalls:
         ids = [e.id for e in pending]
         assert ec.id in ids
 
-        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        AiReport.query.filter_by(id=summary.id).delete()
         db.session.commit()
 
     def test_different_date_excluded(self, test_app, ec):
@@ -167,10 +176,14 @@ class TestGetPendingEarningsCalls:
 class TestUpdateEarningsCallSummary:
 
     def test_updates_scoring_fields(self, test_app, ec):
-        summary = EarningsCallSummary(
-            earnings_call_id=ec.id,
-            stock_id=ec.stock_id,
-            processing_status='processing'
+        summary = AiReport(
+            report_type='earnings_call',
+            ref_id=ec.id,
+            subject=ec.stock_id,
+            period_start=ec.meeting_date,
+            period_end=ec.meeting_date,
+            prompt_name='earnings-call-summary',
+            processing_status='processing',
         )
         db.session.add(summary)
         db.session.commit()
@@ -188,12 +201,12 @@ class TestUpdateEarningsCallSummary:
         assert result.processing_status == 'completed'
         assert result.score == 4
         assert result.sentiment == 'Strong Buy'
-        assert result.impact_duration == 'Long'
-        assert result.source_reliability == 'Official'
-        assert result.reasoning == '測試評分依據'
-        assert isinstance(result.news_contributions, list)
+        assert result.key_points.get('impact_duration') == 'Long'
+        assert result.key_points.get('source_reliability') == 'Official'
+        assert result.summary == '測試評分依據'
+        assert isinstance(result.key_points.get('news_contributions'), list)
 
-        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        AiReport.query.filter_by(id=summary.id).delete()
         db.session.commit()
 
     def test_returns_none_when_not_found(self, test_app):
