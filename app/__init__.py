@@ -11,13 +11,11 @@ from app.utils.request_id import RequestID
 from config import config
 from app.log_config import setup_logging
 from app.utils.request_logger import register_request_logging
-from app.tasks import celery_init_app
 
 db = SQLAlchemy()
 jwt = JWTManager()
 ma = Marshmallow()
 migrate = Migrate()
-celery = celery_init_app(__name__, os.getenv('FLASK_CONFIG'))
 
 redis_client = Redis(
     host=os.environ.get('REDIS_HOST') or 'localhost',
@@ -56,9 +54,14 @@ def create_app(config_name):
         response = jsonify({'error': 'Missing token', 'message': error_string})
         response.status_code = 401
         return response
-    celery.conf.update(app.config)
     RequestID(app)
     register_request_logging(app)
+
+    # Import AiApiKey first: AiPrompt has a relationship to AiApiKey, and
+    # marshmallow triggers mapper configuration when BasicInformationSchema is
+    # defined. If AiApiKey isn't registered by then, SQLAlchemy can't resolve
+    # the string reference in AiPrompt.api_key relationship.
+    from app.ai_api_key.models import AiApiKey  # noqa: F401
 
     from app.basic_information import basic_information
     from app.income_sheet import income_sheet
@@ -75,11 +78,12 @@ def create_app(config_name):
     from app.announcement_income_sheet_analysis import announcement_income_sheet_analysis
     from app.api_token import api_token
     from app.user_management import user_management, roles_bp
+    from app.ai_api_key import ai_api_key
     from app.ai_prompt import ai_prompt
     from app.ai_setting import ai_setting
-    from app.ai_api_key import ai_api_key
     from app.ai_usage_report import ai_usage_report
     from app.ai_report import ai_report
+    from app.stock_analysis import stock_analysis
 
     app.register_blueprint(basic_information, url_prefix='/api/v0/basic_information')
     app.register_blueprint(income_sheet, url_prefix='/api/v0/income_sheet')
@@ -97,11 +101,12 @@ def create_app(config_name):
     app.register_blueprint(api_token, url_prefix='/api/v1/token')
     app.register_blueprint(user_management, url_prefix='/api/v1/users')
     app.register_blueprint(roles_bp, url_prefix='/api/v1/roles')
+    app.register_blueprint(ai_api_key, url_prefix='/api/v0/ai_api_key')
     app.register_blueprint(ai_prompt, url_prefix='/api/v0/ai_prompt')
     app.register_blueprint(ai_setting, url_prefix='/api/v0/ai_setting')
-    app.register_blueprint(ai_api_key, url_prefix='/api/v0/ai_api_key')
     app.register_blueprint(ai_usage_report, url_prefix='/api/v0/ai_usage_report')
     app.register_blueprint(ai_report, url_prefix='/api/v0/ai_report')
+    app.register_blueprint(stock_analysis, url_prefix='/api/v0/stock_analysis')
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/api/v0')

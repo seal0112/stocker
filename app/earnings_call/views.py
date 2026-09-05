@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required
 
 from app import db
 from . import earnings_call
-from .serializer import EarningsCallchema
+from .serializer import EarningsCallchema, EarningsCallSummarySchema
 from .earnings_call_services import EarningsCallService
 from app.decorators.auth import api_auth_required
 from app.ai_report.models import AiReport
@@ -194,6 +194,48 @@ class EarningsCallBoundFeedsApi(MethodView):
         return jsonify(bound_feeds)
 
 
+class EarningsCallSummaryApi(MethodView):
+    """GET/POST/PUT /api/v0/earnings_call/<id>/summary"""
+
+    def get(self, earnings_call_id):
+        ec = earnings_call_service.get_earnings_call(earnings_call_id)
+        if not ec:
+            return jsonify({'error': 'Earnings call not found'}), 404
+        report = earnings_call_service.get_earnings_call_summary(earnings_call_id)
+        if not report:
+            return jsonify({'error': 'Summary not found'}), 404
+        return jsonify(EarningsCallSummarySchema().dump(report))
+
+    @api_auth_required
+    def post(self, earnings_call_id):
+        from flask import g
+        from app.models import User
+        if g.auth_type == 'jwt':
+            user = User.query.get(g.current_user.get('id'))
+            if not user or not user.has_role('admin'):
+                return jsonify({'error': 'Access denied', 'message': 'Admin role required'}), 403
+
+        ec = earnings_call_service.get_earnings_call(earnings_call_id)
+        if not ec:
+            return jsonify({'error': 'Earnings call not found'}), 404
+        report = earnings_call_service.create_earnings_call_summary(earnings_call_id, ec.stock_id)
+        return jsonify(EarningsCallSummarySchema().dump(report)), 201
+
+    @jwt_required()
+    def put(self, earnings_call_id):
+        try:
+            summary_data = request.get_json()
+            if summary_data is None:
+                return jsonify({'error': 'Request body is required'}), 400
+        except Exception:
+            return jsonify({'error': 'Invalid JSON format'}), 400
+
+        report = earnings_call_service.update_earnings_call_summary(earnings_call_id, summary_data)
+        if not report:
+            return jsonify({'error': 'Summary not found'}), 404
+        return jsonify(EarningsCallSummarySchema().dump(report))
+
+
 earnings_call.add_url_rule('/pending',
     view_func=EarningsCallPendingApi.as_view('EarningsCallPendingApi'),
     methods=['GET'])
@@ -209,3 +251,7 @@ earnings_call.add_url_rule('/<int:earnings_call_id>/feeds',
 earnings_call.add_url_rule('/<int:earnings_call_id>/bound_feeds',
     view_func=EarningsCallBoundFeedsApi.as_view('EarningsCallBoundFeedsApi'),
     methods=['GET'])
+
+earnings_call.add_url_rule('/<int:earnings_call_id>/summary',
+    view_func=EarningsCallSummaryApi.as_view('EarningsCallSummaryApi'),
+    methods=['GET', 'POST', 'PUT'])

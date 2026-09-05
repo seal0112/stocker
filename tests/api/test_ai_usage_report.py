@@ -1,70 +1,75 @@
 """Tests for GET /api/v0/ai_usage_report"""
 import pytest
-from datetime import datetime
+from datetime import datetime, date
 
 from app import db
-from app.earnings_call.models import EarningsCall, EarningsCallSummary
+from app.earnings_call.models import EarningsCall
+from app.ai_report.models import AiReport
 from app.database_setup import BasicInformation
 
 
 @pytest.fixture(autouse=True)
 def clean_data(test_app):
-    with test_app.app_context():
-        EarningsCallSummary.query.delete()
-        EarningsCall.query.delete()
-        db.session.commit()
+    AiReport.query.filter(AiReport.report_type == 'earnings_call').delete()
+    EarningsCall.query.delete()
+    db.session.commit()
     yield
-    with test_app.app_context():
-        EarningsCallSummary.query.delete()
-        EarningsCall.query.delete()
-        db.session.commit()
+    AiReport.query.filter(AiReport.report_type == 'earnings_call').delete()
+    EarningsCall.query.delete()
+    db.session.commit()
 
 
 @pytest.fixture
 def stock(test_app):
-    with test_app.app_context():
-        s = BasicInformation.query.filter_by(id='2330').first()
-        if not s:
-            s = BasicInformation(id='2330', 公司名稱='台積電')
-            db.session.add(s)
-            db.session.commit()
-        yield '2330'
+    s = BasicInformation.query.filter_by(id='2330').first()
+    if not s:
+        s = BasicInformation(id='2330', 公司名稱='台積電')
+        db.session.add(s)
+        db.session.commit()
+    yield '2330'
 
 
 @pytest.fixture
 def sample_summaries(test_app, stock):
-    with test_app.app_context():
-        ec1 = EarningsCall(stock_id='2330', meeting_date='2026-06-01')
-        ec2 = EarningsCall(stock_id='2330', meeting_date='2026-06-10')
-        db.session.add_all([ec1, ec2])
-        db.session.flush()
+    ec1 = EarningsCall(stock_id='2330', meeting_date=date(2026, 6, 1))
+    ec2 = EarningsCall(stock_id='2330', meeting_date=date(2026, 6, 10))
+    db.session.add_all([ec1, ec2])
+    db.session.flush()
 
-        s1 = EarningsCallSummary(
-            earnings_call_id=ec1.id,
-            stock_id='2330',
-            processing_status='completed',
-            model_name='gemini-2.0-flash',
-            input_tokens=1000,
-            output_tokens=200,
-            total_tokens=1200,
-            cost_usd=0.001,
-            cost_twd=0.032,
-            created_at=datetime(2026, 6, 1, 10, 0, 0),
-        )
-        s2 = EarningsCallSummary(
-            earnings_call_id=ec2.id,
-            stock_id='2330',
-            processing_status='completed',
-            model_name='gemini-2.0-flash',
-            input_tokens=2000,
-            output_tokens=400,
-            total_tokens=2400,
-            cost_usd=0.002,
-            cost_twd=0.065,
-            created_at=datetime(2026, 6, 10, 10, 0, 0),
-        )
-        db.session.add_all([s1, s2])
-        db.session.commit()
+    s1 = AiReport(
+        report_type='earnings_call',
+        ref_id=ec1.id,
+        subject='2330',
+        period_start=ec1.meeting_date,
+        period_end=ec1.meeting_date,
+        prompt_name='earnings-call-summary',
+        processing_status='completed',
+        model_name='gemini-2.0-flash',
+        input_tokens=1000,
+        output_tokens=200,
+        total_tokens=1200,
+        cost_usd=0.001,
+        cost_twd=0.032,
+        created_at=datetime(2026, 6, 1, 10, 0, 0),
+    )
+    s2 = AiReport(
+        report_type='earnings_call',
+        ref_id=ec2.id,
+        subject='2330',
+        period_start=ec2.meeting_date,
+        period_end=ec2.meeting_date,
+        prompt_name='earnings-call-summary',
+        processing_status='completed',
+        model_name='gemini-2.0-flash',
+        input_tokens=2000,
+        output_tokens=400,
+        total_tokens=2400,
+        cost_usd=0.002,
+        cost_twd=0.065,
+        created_at=datetime(2026, 6, 10, 10, 0, 0),
+    )
+    db.session.add_all([s1, s2])
+    db.session.commit()
 
 
 class TestUsageReport:
@@ -134,20 +139,23 @@ class TestUsageReport:
         assert by_model[0]['input_tokens'] == 1000
 
     def test_failed_records_excluded(self, admin_authenticated_client, test_app, stock):
-        with test_app.app_context():
-            ec = EarningsCall(stock_id='2330', meeting_date='2026-06-15')
-            db.session.add(ec)
-            db.session.flush()
-            s = EarningsCallSummary(
-                earnings_call_id=ec.id,
-                stock_id='2330',
-                processing_status='failed',
-                model_name='gemini-2.0-flash',
-                cost_twd=9.99,
-                created_at=datetime(2026, 6, 15, 10, 0, 0),
-            )
-            db.session.add(s)
-            db.session.commit()
+        ec = EarningsCall(stock_id='2330', meeting_date=date(2026, 6, 15))
+        db.session.add(ec)
+        db.session.flush()
+        s = AiReport(
+            report_type='earnings_call',
+            ref_id=ec.id,
+            subject='2330',
+            period_start=ec.meeting_date,
+            period_end=ec.meeting_date,
+            prompt_name='earnings-call-summary',
+            processing_status='failed',
+            model_name='gemini-2.0-flash',
+            cost_twd=9.99,
+            created_at=datetime(2026, 6, 15, 10, 0, 0),
+        )
+        db.session.add(s)
+        db.session.commit()
 
         resp = admin_authenticated_client.get(
             '/api/v0/ai_usage_report?date_from=2026-06-01&date_to=2026-06-30'

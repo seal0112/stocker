@@ -4,35 +4,42 @@ import pytest
 from datetime import date, datetime, timedelta
 
 from app import db
-from app.earnings_call.models import EarningsCall, EarningsCallSummary
+from app.earnings_call.models import EarningsCall
+from app.ai_report.models import AiReport
 from app.models import Feed
 
 
 @pytest.fixture
 def earnings_call_summary(test_app, sample_earnings_call):
-    """Create an EarningsCallSummary for the sample earnings call."""
-    summary = EarningsCallSummary(
-        earnings_call_id=sample_earnings_call.id,
-        stock_id=sample_earnings_call.stock_id,
+    """Create an AiReport summary for the sample earnings call."""
+    summary = AiReport(
+        report_type='earnings_call',
+        ref_id=sample_earnings_call.id,
+        subject=sample_earnings_call.stock_id,
+        period_start=sample_earnings_call.meeting_date,
+        period_end=sample_earnings_call.meeting_date,
+        prompt_name='earnings-call-summary',
         processing_status='completed',
-        capex='100億',
-        capex_industry='半導體',
-        outlook='正面展望',
-        concerns_and_risks='地緣政治風險',
         score=3,
         sentiment='Buy',
-        impact_duration='Long',
-        source_reliability='Official',
-        reasoning='官方確認長期資本支出計畫',
-        news_contributions=[{'feed_id': 1, 'title': '法說', 'score_delta': 3, 'key_insight': '利多'}],
-        source_feed_ids=[1, 2, 3]
+        summary='官方確認長期資本支出計畫',
+        key_points={
+            'capex': '100億',
+            'capex_industry': '半導體',
+            'outlook': '正面展望',
+            'concerns_and_risks': '地緣政治風險',
+            'impact_duration': 'Long',
+            'source_reliability': 'Official',
+            'news_contributions': [{'feed_id': 1, 'title': '法說', 'score_delta': 3, 'key_insight': '利多'}],
+            'source_feed_ids': [1, 2, 3],
+        },
     )
     db.session.add(summary)
     db.session.commit()
 
     yield summary
 
-    EarningsCallSummary.query.filter_by(id=summary.id).delete()
+    AiReport.query.filter_by(id=summary.id).delete()
     db.session.commit()
 
 
@@ -258,7 +265,7 @@ class TestEarningsCallSummaryApi:
         assert data['processing_status'] == 'pending'
 
         # Cleanup
-        EarningsCallSummary.query.filter_by(earnings_call_id=ec_id).delete()
+        AiReport.query.filter_by(report_type='earnings_call', ref_id=ec_id).delete()
         db.session.commit()
 
     def test_post_returns_existing_idempotent(self, test_app, admin_authenticated_client, sample_earnings_call, earnings_call_summary):
@@ -429,23 +436,29 @@ class TestEarningsCallBoundFeeds:
         db.session.add_all([feed_a, feed_b])
         db.session.commit()
 
-        summary = EarningsCallSummary(
-            earnings_call_id=sample_earnings_call.id,
-            stock_id=sample_earnings_call.stock_id,
+        summary = AiReport(
+            report_type='earnings_call',
+            ref_id=sample_earnings_call.id,
+            subject=sample_earnings_call.stock_id,
+            period_start=sample_earnings_call.meeting_date,
+            period_end=sample_earnings_call.meeting_date,
+            prompt_name='earnings-call-summary',
             processing_status='completed',
             score=2,
             sentiment='Buy',
-            news_contributions=[
-                {'feed_id': feed_a.id, 'title': feed_a.title, 'score_delta': 3, 'key_insight': '長期利多'},
-                {'feed_id': feed_b.id, 'title': feed_b.title, 'score_delta': -1, 'key_insight': '短期壓力'},
-            ]
+            key_points={
+                'news_contributions': [
+                    {'feed_id': feed_a.id, 'title': feed_a.title, 'score_delta': 3, 'key_insight': '長期利多'},
+                    {'feed_id': feed_b.id, 'title': feed_b.title, 'score_delta': -1, 'key_insight': '短期壓力'},
+                ],
+            },
         )
         db.session.add(summary)
         db.session.commit()
 
         yield {'feed_a': feed_a, 'feed_b': feed_b, 'summary': summary}
 
-        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        AiReport.query.filter_by(id=summary.id).delete()
         Feed.query.filter(Feed.id.in_([feed_a.id, feed_b.id])).delete()
         db.session.commit()
 
@@ -492,11 +505,14 @@ class TestEarningsCallBoundFeeds:
 
     def test_empty_when_no_news_contributions(self, test_app, authenticated_client, sample_earnings_call):
         """Should return empty list when summary has no news_contributions."""
-        summary = EarningsCallSummary(
-            earnings_call_id=sample_earnings_call.id,
-            stock_id=sample_earnings_call.stock_id,
+        summary = AiReport(
+            report_type='earnings_call',
+            ref_id=sample_earnings_call.id,
+            subject=sample_earnings_call.stock_id,
+            period_start=sample_earnings_call.meeting_date,
+            period_end=sample_earnings_call.meeting_date,
+            prompt_name='earnings-call-summary',
             processing_status='pending',
-            news_contributions=None
         )
         db.session.add(summary)
         db.session.commit()
@@ -506,7 +522,7 @@ class TestEarningsCallBoundFeeds:
         assert response.status_code == 200
         assert response.get_json() == []
 
-        EarningsCallSummary.query.filter_by(id=summary.id).delete()
+        AiReport.query.filter_by(id=summary.id).delete()
         db.session.commit()
 
     def test_ec_not_found_404(self, test_app, authenticated_client):

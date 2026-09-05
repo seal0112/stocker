@@ -3,6 +3,7 @@ import os
 
 from sqlalchemy import create_engine, text
 from app import create_app, db
+from app.ai_api_key.models import AiApiKey  # noqa: F401 — must be imported before AiPrompt
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -168,4 +169,6 @@ pytest_plugins = [
     'tests.fixtures.models.announcement_income_sheet_analysis',
     # 6. User-Stock relations (用戶與股票的關聯)
     'tests.fixtures.models.follow_stock',
+    # 7. Stock analysis (AI 質化分析)
+    'tests.fixtures.models.stock_analysis',
 ]

@@ -52,13 +52,6 @@ class Config:
     JWT_COOKIE_CSRF_PROTECT = True
     JWT_CSRF_IN_COOKIES = True
 
-    # celery config
-    broker_url = os.environ.get('CELERY_BROKER_URL') or REDIS_URL
-    result_backend = os.environ.get('CELERY_RESULT_BACKEND') or REDIS_URL
-    broker_connection_retry_on_startup = True
-    result_expires = 1800
-    worker_concurrency = os.environ.get('CELERY_WORKER_CONCURRENCY') or 2
-
     CLIENT_SECRET = client_secret
 
     AWS_SQS_URL = os.environ.get('AWS_SQS_URL')

@@ -1,4 +1,4 @@
-from app import celery, db
+from app import db
 from app.utils.announcement_handler import AnnounceHandler
 from app.utils.model_utilities import get_current_date
 from app.models import AnnouncementIncomeSheetAnalysis
@@ -9,8 +9,6 @@ from app.log_config import get_logger
 logger = get_logger(__name__)
 
 
-# rate_limit='10/m' means 10 tasks per minute
-@celery.task(rate_limit='10/m', ignore_result=True)
 def analyze_announcement_incomesheet(feed_id, link, year=2024, season=1):
     announce_handler = AnnounceHandler(link)
     try:
