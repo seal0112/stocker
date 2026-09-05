@@ -39,14 +39,7 @@ jobs:
             flask db upgrade
 
             echo "=== Restarting gunicorn ==="
-            pkill -f "gunicorn.*wsgi:app" || true
-            sleep 2
-
-            nohup gunicorn -w 4 -b 0.0.0.0:5000 wsgi:app \
-              --pid gunicorn.pid \
-              --access-logfile logs/access.log \
-              --error-logfile logs/error.log \
-              --daemon
+            ./gunicorn.sh
 
             echo "=== Verifying deployment ==="
             sleep 3

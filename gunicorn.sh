@@ -29,9 +29,7 @@ mkdir -p "$APP_DIR/log"
 gunicorn wsgi:app \
   --daemon \
   --chdir "$APP_DIR" \
-  --pid "$PIDFILE" \
-  --access-logfile "$APP_DIR/log/gunicorn-access.log" \
-  --error-logfile "$APP_DIR/log/gunicorn-error.log"
+  --pid "$PIDFILE"
 
 sleep 2
 if [ -f "$PIDFILE" ]; then
